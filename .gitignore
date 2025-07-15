@@ -55,6 +55,7 @@ logs/
 # Configuration files with sensitive data
 credentials.json
 token.json
+token_*.json
 config.json
 
 # Application-specific
