@@ -62,10 +62,6 @@ class CombinedApp:
         self.gmail_downloader = None
         self.kb_processor = KBProcessor()
         self.load_config_to_gui()
-        
-        # Track which operations are running
-        self.gmail_running = False
-        self.kb_running = False
     
     def get_app_directory(self):
         """Get the directory where the application is located (works for both .py and .exe)"""
@@ -147,14 +143,27 @@ class CombinedApp:
         self.keep_renamed_var = tk.BooleanVar()
         
         # Status
-        self.status_var = tk.StringVar(value="Redo att börja")
+        self.status_var = tk.StringVar(value="Fyll i fälten nedan")
         
         # Progress
         self.progress_message_var = tk.StringVar(value="")
         
+        # Track which operations are running
+        self.gmail_running = False
+        self.kb_running = False
+        
         # Bind checkbox events
         self.gmail_enabled.trace('w', self.on_gmail_toggle)
         self.kb_enabled.trace('w', self.on_kb_toggle)
+        
+        # Bind field change events to update status
+        self.gmail_account_var.trace('w', self.update_status_message)
+        self.credentials_file_var.trace('w', self.update_status_message)
+        self.start_date_var.trace('w', self.update_status_message)
+        self.excel_path_var.trace('w', self.update_status_message)
+        self.kb_input_dir_var.trace('w', self.update_status_message)
+        self.kb_output_dir_var.trace('w', self.update_status_message)
+        self.gmail_output_dir_var.trace('w', self.update_status_message)
     
     def create_widgets(self):
         """Create all GUI widgets"""
@@ -666,6 +675,9 @@ class CombinedApp:
             
         # Enable/disable start button
         self.start_btn.config(state="normal" if (gmail_on or kb_on) else "disabled")
+        
+        # Update status message
+        self.update_status_message()
     
     def load_config_to_gui(self):
         """Load saved configuration to GUI"""
@@ -727,7 +739,6 @@ class CombinedApp:
                     data = json.load(f)
                     if 'installed' in data or 'web' in data:
                         self.credentials_file_var.set(file_path)
-                        self.status_var.set("Credentials-fil vald")
                     else:
                         messagebox.showerror("Ogiltig fil", 
                                            "Den valda filen verkar inte vara en giltig Google API credentials-fil.")
@@ -754,7 +765,6 @@ class CombinedApp:
             if is_valid:
                 self.excel_path_var.set(file_path)
                 self.excel_validation_label.config(text=f"✓ {message}", foreground="green")
-                self.status_var.set("Excel-fil vald och validerad")
             else:
                 self.excel_validation_label.config(text="", foreground="green")
                 messagebox.showerror("Ogiltig Excel-fil", message)
@@ -823,6 +833,43 @@ class CombinedApp:
     def update_status(self, message: str):
         """Update status message"""
         self.status_var.set(message)
+    
+    def update_status_message(self, *args):
+        """Update status message based on form completion"""
+        if self.gmail_running or self.kb_running:
+            return  # Don't update during processing
+        
+        gmail_on = self.gmail_enabled.get()
+        kb_on = self.kb_enabled.get()
+        
+        if not gmail_on and not kb_on:
+            self.status_var.set("Välj minst ett verktyg")
+            return
+        
+        # Check if required fields are filled
+        fields_complete = True
+        
+        if gmail_on:
+            if (not self.gmail_account_var.get().strip() or 
+                self.credentials_file_var.get() in ["Ingen fil vald", ""] or
+                not self.start_date_var.get().strip() or
+                not self.gmail_output_dir_var.get().strip()):
+                fields_complete = False
+        
+        if kb_on:
+            if (self.excel_path_var.get() in ["Ingen fil vald", ""] or
+                not self.kb_output_dir_var.get().strip()):
+                fields_complete = False
+            
+            # Check KB input directory (unless auto-linked)
+            if not (gmail_on and kb_on):  # Not auto-linked
+                if not self.kb_input_dir_var.get().strip():
+                    fields_complete = False
+        
+        if fields_complete:
+            self.status_var.set("Redo att börja")
+        else:
+            self.status_var.set("Fyll i fälten nedan")
     
     def gui_update(self):
         """Update GUI"""
@@ -923,6 +970,9 @@ class CombinedApp:
                     self.progress_frame.pack_forget()
                     self.start_btn.config(state="normal")
                     self.cancel_btn.config(state="disabled")
+                    self.gmail_running = False
+                    self.kb_running = False
+                    self.update_status("Inga mejl hittades")
                     return
 
                 if both_on:
@@ -965,6 +1015,9 @@ class CombinedApp:
             # Hide progress
             self.progress_frame.pack_forget()
             
+            # Update status to show completion
+            self.update_status("Färdig")
+            
             # Show results
             self.show_results(gmail_result, kb_result, both_on)
             
@@ -973,7 +1026,9 @@ class CombinedApp:
             error_msg = f"Ett fel uppstod: {str(e)}"
             logger.error(error_msg)
             messagebox.showerror("Fel", error_msg)
-            self.status_var.set("Fel uppstod")
+            self.gmail_running = False
+            self.kb_running = False
+            self.update_status("Fel uppstod")
         
         finally:
             # Re-enable controls
@@ -981,13 +1036,16 @@ class CombinedApp:
             self.cancel_btn.config(state="disabled")
             self.gmail_running = False
             self.kb_running = False
+            # Don't call update_status_message here to preserve final status
     
     def cleanup_after_cancel(self):
         """Clean up after cancellation"""
         self.progress_frame.pack_forget()
-        self.status_var.set("Avbruten")
+        self.gmail_running = False
+        self.kb_running = False
         self.start_btn.config(state="normal")
         self.cancel_btn.config(state="disabled")
+        self.update_status("Avbruten")
         logger.info("Processing cancelled by user")
     
     def show_results(self, gmail_result, kb_result, both_operations):
