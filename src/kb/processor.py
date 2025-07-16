@@ -75,8 +75,8 @@ class KBProcessor:
         return len(errors) == 0, errors
     
     def process_files(self, excel_path: str, input_dir: str, output_dir: str, 
-                     keep_renamed: bool = False, progress_callback=None, 
-                     gui_update_callback=None) -> Dict:
+                     keep_renamed: bool = False, delete_originals: bool = True,
+                     progress_callback=None, gui_update_callback=None) -> Dict:
         """Process KB files - real implementation"""
         self.reset_cancel_state()
         
@@ -89,6 +89,7 @@ class KBProcessor:
             logger.info(f"Input dir: {input_dir}")
             logger.info(f"Output dir: {output_dir}")
             logger.info(f"Keep renamed: {keep_renamed}")
+            logger.info(f"Delete originals: {delete_originals}")
             
             # Load Excel file
             if progress_callback:
@@ -180,11 +181,17 @@ class KBProcessor:
                 dest = temp_path / new_name
                 
                 try:
-                    shutil.copy(file, dest)
+                    if delete_originals:
+                        # Move (rename) the file instead of copying
+                        shutil.move(str(file), str(dest))
+                        logger.debug(f"Moved and renamed: {file.name} -> {new_name}")
+                    else:
+                        # Copy the file, keeping original
+                        shutil.copy(file, dest)
+                        logger.debug(f"Copied and renamed: {file.name} -> {new_name}")
                     renamed_files.append(dest)
-                    logger.debug(f"Renamed: {file.name} -> {new_name}")
                 except Exception as e:
-                    logger.error(f"Failed to copy {file.name}: {e}")
+                    logger.error(f"Failed to {'move' if delete_originals else 'copy'} {file.name}: {e}")
                     continue
             
             logger.info(f"Successfully renamed {len(renamed_files)} files")

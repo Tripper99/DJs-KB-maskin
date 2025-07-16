@@ -141,6 +141,7 @@ class CombinedApp:
         self.kb_output_dir_var = tk.StringVar()
         self.keep_renamed_var = tk.BooleanVar()
         self.use_same_output_dir_var = tk.BooleanVar(value=True)  # Default to True
+        self.delete_original_files_var = tk.BooleanVar(value=True)  # Default to True (delete)
         
         # Status
         self.status_var = tk.StringVar(value="Fyll i fälten nedan")
@@ -238,7 +239,7 @@ class CombinedApp:
 
     def create_gmail_section(self, parent):
         """Create Gmail downloader section"""
-        self.gmail_frame = tb.LabelFrame(parent, text="Gmail JPG Nedladdare", padding=20)
+        self.gmail_frame = tb.LabelFrame(parent, text="Gmail jpg-nedladdare", padding=20)
         
         # Gmail account
         gmail_account_frame = tb.Frame(self.gmail_frame)
@@ -450,31 +451,9 @@ class CombinedApp:
     
     def create_kb_section(self, parent):
         """Create KB processor section"""
-        self.kb_frame = tb.LabelFrame(parent, text="KB Filbearbetning", padding=20)
+        self.kb_frame = tb.LabelFrame(parent, text="Bearbetning av jpg-filer från KB", padding=20)
         
-        # Excel file
-        excel_frame = tb.Frame(self.kb_frame)
-        excel_frame.pack(fill="x", pady=(0, 15))
-        
-        tb.Label(excel_frame, text="Excel-fil med bib-koder översatta till tidningsnamn):", font=('Arial', 10)).pack(anchor="w", pady=(0, 5))
-        
-        excel_path_frame = tb.Frame(excel_frame)
-        excel_path_frame.pack(fill="x")
-        
-        excel_entry = tb.Entry(excel_path_frame, textvariable=self.excel_path_var, 
-                              font=('Arial', 10), state="readonly")
-        excel_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        
-        browse_excel_btn = tb.Button(excel_path_frame, text="Välj fil...", 
-                                    command=self.browse_excel_file, 
-                                    bootstyle=INFO, width=12)
-        browse_excel_btn.pack(side="right")
-        
-        # Excel validation label
-        self.excel_validation_label = tb.Label(excel_frame, text="", font=('Arial', 9), foreground="green")
-        self.excel_validation_label.pack(anchor="w", pady=(5, 0))
-        
-        # Input directory
+        # Input directory (moved to top)
         kb_input_frame = tb.Frame(self.kb_frame)
         kb_input_frame.pack(fill="x", pady=(0, 15))
         
@@ -494,8 +473,27 @@ class CombinedApp:
         
         # Auto-link info
         self.kb_auto_info = tb.Label(kb_input_frame, 
-                                    text="📁 Om båda verktygen är aktiverade så används samma mapp där jpg-filerna sparades.",
+                                    text="📁 Om båda verktygen körs så används automatiskt nedladdningsmappen.",
                                     font=('Arial', 9), foreground="lightgreen")
+        
+        # Delete original files option
+        delete_files_frame = tb.Frame(self.kb_frame)
+        delete_files_frame.pack(fill="x", pady=(10, 15))
+        
+        # Create a frame for the checkbox, text and help button
+        delete_checkbox_frame = tb.Frame(delete_files_frame)
+        delete_checkbox_frame.pack(anchor="w")
+        
+        # Create the checkbox with text
+        tb.Checkbutton(delete_checkbox_frame, text="Radera bib-filerna efter omdöpning?", 
+                      variable=self.delete_original_files_var, 
+                      bootstyle="warning-round-toggle").pack(side="left")
+        
+        # Create help button with question mark
+        delete_help_btn = tb.Button(delete_checkbox_frame, text="?", width=3, 
+                                   command=self.show_delete_files_help,
+                                   bootstyle="info-outline")
+        delete_help_btn.pack(side="left", padx=(10, 0))
         
         # Output directory
         kb_output_frame = tb.Frame(self.kb_frame)
@@ -528,27 +526,42 @@ class CombinedApp:
         keep_frame = tb.Frame(self.kb_frame)
         keep_frame.pack(fill="x", pady=(0, 10))
         
-        # Create a frame for the checkbox and colored text
+        # Create a frame for the checkbox, text and help button
         checkbox_frame = tb.Frame(keep_frame)
         checkbox_frame.pack(anchor="w")
         
-        # Create the checkbox without text
-        tb.Checkbutton(checkbox_frame, text="", variable=self.keep_renamed_var, 
+        # Create the checkbox with text
+        tb.Checkbutton(checkbox_frame, text="Spara omdöpta jpg-filer i en underkatalog?", 
+                      variable=self.keep_renamed_var, 
                       bootstyle="info-round-toggle").pack(side="left")
         
-        # Create a text widget for colored text
-        text_widget = tk.Text(checkbox_frame, height=1, width=70, wrap="word", 
-                             borderwidth=0, relief="flat", background="SystemButtonFace", 
-                             font=('Arial', 9), cursor="hand2")
-        text_widget.pack(side="left", padx=(5, 0))
-        text_widget.insert("1.0", "Spara omdöpta jpg-filer i en underkatalog?")
-        text_widget.config(state="disabled")  # Make it read-only
+        # Create help button with question mark
+        help_btn = tb.Button(checkbox_frame, text="?", width=3, 
+                            command=self.show_keep_renamed_help,
+                            bootstyle="info-outline")
+        help_btn.pack(side="left", padx=(10, 0))
         
-        # Bind click events to toggle the checkbox
-        def toggle_checkbox(event):
-            self.keep_renamed_var.set(not self.keep_renamed_var.get())
+        # Excel file (moved to bottom)
+        excel_frame = tb.Frame(self.kb_frame)
+        excel_frame.pack(fill="x", pady=(15, 0))
         
-        text_widget.bind("<Button-1>", toggle_checkbox)
+        tb.Label(excel_frame, text="Excel-fil med bib-koder översatta till tidningsnamn:", font=('Arial', 10)).pack(anchor="w", pady=(0, 5))
+        
+        excel_path_frame = tb.Frame(excel_frame)
+        excel_path_frame.pack(fill="x")
+        
+        excel_entry = tb.Entry(excel_path_frame, textvariable=self.excel_path_var, 
+                              font=('Arial', 10), state="readonly")
+        excel_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        
+        browse_excel_btn = tb.Button(excel_path_frame, text="Välj fil...", 
+                                    command=self.browse_excel_file, 
+                                    bootstyle=INFO, width=12)
+        browse_excel_btn.pack(side="right")
+        
+        # Excel validation label
+        self.excel_validation_label = tb.Label(excel_frame, text="", font=('Arial', 9), foreground="green")
+        self.excel_validation_label.pack(anchor="w", pady=(5, 0))
     
     def create_action_section(self, parent):
         """Create action buttons and progress section"""
@@ -605,6 +618,56 @@ class CombinedApp:
                  font=("Arial", 10), wraplength=550).pack(anchor="w", pady=10)
         
         tb.Button(content_frame, text="Stäng", command=about_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
+    
+    def show_keep_renamed_help(self):
+        """Show help dialog for keep renamed files option"""
+        help_win = tb.Toplevel()
+        help_win.title("Hjälp - Spara omdöpta jpg-filer")
+        help_win.geometry("500x300")
+        
+        # Center window
+        help_win.update_idletasks()
+        x = (help_win.winfo_screenwidth() // 2) - (250)
+        y = (help_win.winfo_screenheight() // 2) - (150)
+        help_win.geometry(f"500x300+{x}+{y}")
+        
+        content_frame = tb.Frame(help_win)
+        content_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        tb.Label(content_frame, 
+                 text="Under behandlingen av jpg-filerna skapar programmet tillfälligt omdöpta filer med begripliga namn.\n\n"
+                      "Om denna ruta är ikryssad sparas de omdöpta jpg-filerna i en underkatalog som heter 'Jpg-filer med fina namn'.\n\n"
+                      "Detta är användbart för redigerare som vill ha tillgång till jpg-filerna med begripliga namn utan att behöva "
+                      "konvertera tillbaka från PDF-format.\n\n"
+                      "Om rutan inte är ikryssad raderas de omdöpta jpg-filerna efter att PDF-filerna har skapats.",
+                 font=("Arial", 10), wraplength=450, justify="left").pack(anchor="w", pady=10)
+        
+        tb.Button(content_frame, text="Stäng", command=help_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
+    
+    def show_delete_files_help(self):
+        """Show help dialog for delete original files option"""
+        help_win = tb.Toplevel()
+        help_win.title("Hjälp - Radera bib-filerna")
+        help_win.geometry("500x250")
+        
+        # Center window
+        help_win.update_idletasks()
+        x = (help_win.winfo_screenwidth() // 2) - (250)
+        y = (help_win.winfo_screenheight() // 2) - (125)
+        help_win.geometry(f"500x250+{x}+{y}")
+        
+        content_frame = tb.Frame(help_win)
+        content_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        tb.Label(content_frame, 
+                 text="Appen kopierar och döper om jpg-filerna från KB, som har obegripliga namn.\n\n"
+                      "Originalfilerna raderas som standard för att spara diskutrymme och undvika förvirring.\n\n"
+                      "Om du av någon anledning vill ha kvar originalfilerna med deras obegripliga namn "
+                      "så kan du slå av den här brytaren.\n\n"
+                      "Observera att detta kan leda till dubbelt så många filer i mappen.",
+                 font=("Arial", 10), wraplength=450, justify="left").pack(anchor="w", pady=10)
+        
+        tb.Button(content_frame, text="Stäng", command=help_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
     
     def open_manual(self):
         """Open Manual.docx with the default application"""
@@ -749,6 +812,9 @@ class CombinedApp:
         # Load use_same_output_dir setting (default True)
         self.use_same_output_dir_var.set(self.config.get("use_same_output_dir", True))
         
+        # Load delete_original_files setting (default True)
+        self.delete_original_files_var.set(self.config.get("delete_original_files", True))
+        
         self.update_ui_state()
     
     def save_config_from_gui(self):
@@ -766,7 +832,8 @@ class CombinedApp:
             "kb_input_dir": self.kb_input_dir_var.get(),
             "kb_output_dir": self.kb_output_dir_var.get(),
             "keep_renamed": self.keep_renamed_var.get(),
-            "use_same_output_dir": self.use_same_output_dir_var.get()
+            "use_same_output_dir": self.use_same_output_dir_var.get(),
+            "delete_original_files": self.delete_original_files_var.get()
         })
         save_config(self.config)
     
@@ -1057,6 +1124,7 @@ class CombinedApp:
                     input_dir=self.kb_input_dir_var.get(),
                     output_dir=output_dir,
                     keep_renamed=self.keep_renamed_var.get(),
+                    delete_originals=self.delete_original_files_var.get(),
                     progress_callback=kb_progress_callback,
                     gui_update_callback=self.gui_update
                 )
