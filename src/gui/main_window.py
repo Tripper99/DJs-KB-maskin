@@ -87,12 +87,12 @@ class CombinedApp:
         except Exception as e:
             logger.warning(f"Could not set window icon: {e}")
         
-        self.root.geometry("1000x1400")  # Increased height from 1200 to 1400
+        self.root.geometry("1000x1500")  # Increased height from 1400 to 1500
         self.root.update_idletasks()
         # Position window at top-left corner
         x = 10  # 10 pixels from left edge
         y = 10  # 10 pixels from top edge
-        self.root.geometry(f"1000x1400+{x}+{y}")
+        self.root.geometry(f"1000x1500+{x}+{y}")
         # Add a canvas+scrollbar for main content
         canvas = tk.Canvas(self.root)
         scrollbar = tb.Scrollbar(self.root, orient="vertical", command=canvas.yview)
@@ -1237,22 +1237,27 @@ class CombinedApp:
             for line in kb_text:
                 tb.Label(content_frame, text=line, font=("Arial", 10)).pack(anchor="w", pady=1)
             
-            # Show sample newspapers
-            if kb_result.get('pdfs_per_tidning'):
-                pdfs_per_tidning = kb_result['pdfs_per_tidning']
-                tb.Label(content_frame, text="Exempel på tidningar:", 
+            # Show unknown bib codes information
+            if kb_result.get('unknown_bib_count', 0) > 0:
+                tb.Label(content_frame, text="Okända bib-koder:", 
                          font=("Arial", 10, "bold")).pack(anchor="w", pady=(10, 5))
                 
-                sample_newspapers = list(sorted(pdfs_per_tidning.items()))[:5]
-                for tidning, antal in sample_newspapers:
-                    tb.Label(content_frame, 
-                            text=f"  • {tidning}: {antal} PDF-fil{'er' if antal > 1 else ''}", 
-                            font=("Arial", 9)).pack(anchor="w", pady=1)
+                unknown_count = kb_result['unknown_bib_count']
+                tb.Label(content_frame, 
+                        text=f"• {unknown_count} filer innehöll bib-koder som saknades i Excel-dokumentet", 
+                        font=("Arial", 9)).pack(anchor="w", pady=1)
                 
-                if len(pdfs_per_tidning) > 5:
-                    tb.Label(content_frame, 
-                            text=f"  ... och {len(pdfs_per_tidning) - 5} fler tidningar", 
-                            font=("Arial", 9, "italic")).pack(anchor="w", pady=1)
+                tb.Label(content_frame, 
+                        text="• Dessa PDF-filer är märkta med tidningsnamnet 'OKÄND'", 
+                        font=("Arial", 9)).pack(anchor="w", pady=1)
+                
+                tb.Label(content_frame, 
+                        text="• Den okända bib-koden bevaras i filnamnet", 
+                        font=("Arial", 9)).pack(anchor="w", pady=1)
+                
+                tb.Label(content_frame, 
+                        text="Tips: Öppna filerna, kolla tidningsnamnen och uppdatera Excel-dokumentet med de nya bib-koderna", 
+                        font=("Arial", 9), foreground="yellow", wraplength=550).pack(anchor="w", pady=(5, 0))
         
         # Close button
         tb.Button(content_frame, text="Stäng", command=result_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)

@@ -135,6 +135,7 @@ class KBProcessor:
             
             renamed_files = []
             total_files = len(jpg_files)
+            unknown_bib_codes = set()  # Track unknown bib codes
             
             for i, file in enumerate(jpg_files):
                 if self.cancel_requested:
@@ -176,8 +177,15 @@ class KBProcessor:
                 siffergrupper = "_".join(parts[2:5])
                 tidning = bib_dict.get(bib, "OKÄND").upper()
                 
-                # Create new filename with bib code included
-                new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
+                # Track unknown bib codes
+                if tidning == "OKÄND":
+                    unknown_bib_codes.add(bib)
+                
+                # Create new filename with bib code included - for OKÄND files, include the bib code
+                if tidning == "OKÄND":
+                    new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
+                else:
+                    new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
                 dest = temp_path / new_name
                 
                 try:
@@ -209,8 +217,13 @@ class KBProcessor:
                     logger.warning(f"Unexpected renamed file format: {f.name}")
                     continue
                 
-                # Group by date and newspaper (excluding bib and numbers)
-                key = (parts[0], " ".join(parts[1:-2]))
+                # For OKÄND files, include bib code in grouping key
+                if parts[1] == "OKÄND":
+                    # Group by date, newspaper, and bib code for OKÄND files
+                    key = (parts[0], f"{parts[1]} {parts[2]}")
+                else:
+                    # Group by date and newspaper (excluding bib and numbers)
+                    key = (parts[0], " ".join(parts[1:-2]))
                 grouped.setdefault(key, []).append(f)
             
             logger.info(f"Grouped {len(renamed_files)} files into {len(grouped)} PDF groups")
@@ -384,7 +397,9 @@ class KBProcessor:
                 "overwritten_count": overwritten_count,
                 "skipped_count": skipped_count,
                 "pdfs_per_tidning": dict(pdfs_per_tidning),
-                "output_path": str(output_path.absolute())
+                "output_path": str(output_path.absolute()),
+                "unknown_bib_codes": list(unknown_bib_codes),
+                "unknown_bib_count": len(unknown_bib_codes)
             }
             
             logger.info(f"KB processing completed successfully: {result}")
