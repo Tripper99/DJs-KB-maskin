@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 class KBProcessor:
     def __init__(self):
-        self.cancel_requested = False
+        self.cancel_requested = False  # Keep for backward compatibility
+        self.cancel_event = None  # Will be set by GUI
         self.root = None  # Reference to root window for dialogs
     
     def sanitize_filename(self, filename: str) -> str:
@@ -95,7 +96,7 @@ class KBProcessor:
         actual_batch_size = min(batch_size, MAX_BATCH_SIZE)
         
         for i in range(0, len(file_paths), actual_batch_size):
-            if self.cancel_requested:
+            if self.is_cancelled():
                 break
                 
             batch = file_paths[i:i + actual_batch_size]
@@ -104,7 +105,7 @@ class KBProcessor:
             try:
                 # Load batch of images
                 for file_path in batch:
-                    if self.cancel_requested:
+                    if self.is_cancelled():
                         break
                     images.append(self.load_image_safely(file_path))
                 
@@ -144,9 +145,19 @@ class KBProcessor:
     
     def cancel_operation(self):
         self.cancel_requested = True
+        if self.cancel_event:
+            self.cancel_event.set()
     
     def reset_cancel_state(self):
         self.cancel_requested = False
+        if self.cancel_event:
+            self.cancel_event.clear()
+    
+    def is_cancelled(self):
+        """Check if operation has been cancelled"""
+        if self.cancel_event and self.cancel_event.is_set():
+            return True
+        return self.cancel_requested
     
     def validate_excel_file(self, file_path: str) -> Tuple[bool, str]:
         """Validate Excel file format and content"""
@@ -255,7 +266,7 @@ class KBProcessor:
                 unknown_bib_codes = set()  # Track unknown bib codes
             
                 for i, file in enumerate(jpg_files):
-                    if self.cancel_requested:
+                    if self.is_cancelled():
                         return {"cancelled": True}
                     
                     # Update progress for renaming phase with percentage
@@ -363,7 +374,7 @@ class KBProcessor:
                 total_pdfs = len(grouped)
                 
                 for pdf_num, ((date, newspaper), files) in enumerate(grouped.items(), 1):
-                    if self.cancel_requested:
+                    if self.is_cancelled():
                         return {"cancelled": True}
                     
                     # Update progress for PDF creation phase with percentage
@@ -506,7 +517,7 @@ class KBProcessor:
                                 # Load additional images safely
                                 additional_images = []
                                 for f in valid_files[1:]:
-                                    if self.cancel_requested:
+                                    if self.is_cancelled():
                                         break
                                     additional_images.append(self.load_image_safely(f))
                                 

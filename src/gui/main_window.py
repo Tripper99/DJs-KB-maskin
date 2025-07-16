@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
@@ -29,7 +30,6 @@ from ..kb.processor import KBProcessor
 logger = logging.getLogger(__name__)
 
 # Global variables
-cancel_requested = False
 VERSION = "1.1"
 
 # Check for required dependencies
@@ -61,6 +61,13 @@ class CombinedApp:
         self.config = load_config()
         self.gmail_downloader = None
         self.kb_processor = KBProcessor()
+        
+        # Thread-safe cancellation event
+        self.cancel_event = threading.Event()
+        
+        # Set cancel event for processors
+        self.kb_processor.cancel_event = self.cancel_event
+        
         self.load_config_to_gui()
     
     def get_app_directory(self):
@@ -940,13 +947,31 @@ class CombinedApp:
         return len(errors) == 0, errors
     
     def update_progress(self, message: str, progress: int):
-        """Update progress bar and message"""
-        self.progress_message_var.set(message)
-        self.progress_bar['value'] = progress
+        """Update progress bar and message - thread-safe"""
+        # Schedule progress update on the main thread
+        self.root.after_idle(self._safe_progress_update, message, progress)
+    
+    def _safe_progress_update(self, message: str, progress: int):
+        """Internal progress update that runs on main thread"""
+        try:
+            self.progress_message_var.set(message)
+            self.progress_bar['value'] = progress
+        except tk.TclError:
+            # GUI might have been destroyed
+            pass
     
     def update_status(self, message: str):
-        """Update status message"""
-        self.status_var.set(message)
+        """Update status message - thread-safe"""
+        # Schedule status update on the main thread
+        self.root.after_idle(self._safe_status_update, message)
+    
+    def _safe_status_update(self, message: str):
+        """Internal status update that runs on main thread"""
+        try:
+            self.status_var.set(message)
+        except tk.TclError:
+            # GUI might have been destroyed
+            pass
     
     def update_status_message(self, *args):
         """Update status message based on form completion"""
@@ -990,13 +1015,21 @@ class CombinedApp:
             self.status_var.set("Fyll i fälten nedan")
     
     def gui_update(self):
-        """Update GUI"""
-        self.root.update()
+        """Update GUI - thread-safe version"""
+        # Schedule GUI update on the main thread
+        self.root.after_idle(self._safe_gui_update)
+    
+    def _safe_gui_update(self):
+        """Internal GUI update that runs on main thread"""
+        try:
+            self.root.update_idletasks()
+        except tk.TclError:
+            # GUI might have been destroyed
+            pass
     
     def cancel_processing(self):
         """Cancel current processing"""
-        global cancel_requested
-        cancel_requested = True
+        self.cancel_event.set()
         
         if self.gmail_downloader:
             self.gmail_downloader.cancel_operation()
@@ -1017,8 +1050,8 @@ class CombinedApp:
         # Save configuration
         self.save_config_from_gui()
         
-        global cancel_requested
-        cancel_requested = False
+        # Clear any previous cancel request
+        self.cancel_event.clear()
         
         # Disable controls
         self.start_btn.config(state="disabled")
@@ -1057,7 +1090,7 @@ class CombinedApp:
                     gui_update_callback=self.gui_update
                 )
                 
-                if cancel_requested:
+                if self.cancel_event.is_set():
                     self.cleanup_after_cancel()
                     return
                 
