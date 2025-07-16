@@ -87,13 +87,12 @@ class CombinedApp:
         except Exception as e:
             logger.warning(f"Could not set window icon: {e}")
         
-        self.root.geometry("1320x1440")  # 20% larger: 1100*1.2=1320, 1200*1.2=1440
+        self.root.geometry("1000x1400")  # Increased height from 1200 to 1400
         self.root.update_idletasks()
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-        x = (screen_width // 2) - (660)  # 1320/2=660
-        y = 10  # Position window very close to the top of the screen
-        self.root.geometry(f"1320x1440+{x}+{y}")
+        # Position window at top-left corner
+        x = 10  # 10 pixels from left edge
+        y = 10  # 10 pixels from top edge
+        self.root.geometry(f"1000x1400+{x}+{y}")
         # Add a canvas+scrollbar for main content
         canvas = tk.Canvas(self.root)
         scrollbar = tb.Scrollbar(self.root, orient="vertical", command=canvas.yview)
@@ -141,6 +140,7 @@ class CombinedApp:
         self.kb_input_dir_var = tk.StringVar()
         self.kb_output_dir_var = tk.StringVar()
         self.keep_renamed_var = tk.BooleanVar()
+        self.use_same_output_dir_var = tk.BooleanVar(value=True)  # Default to True
         
         # Status
         self.status_var = tk.StringVar(value="Fyll i fälten nedan")
@@ -155,6 +155,7 @@ class CombinedApp:
         # Bind checkbox events
         self.gmail_enabled.trace('w', self.on_gmail_toggle)
         self.kb_enabled.trace('w', self.on_kb_toggle)
+        self.use_same_output_dir_var.trace('w', self.on_same_output_dir_toggle)
         
         # Bind field change events to update status
         self.gmail_account_var.trace('w', self.update_status_message)
@@ -164,6 +165,9 @@ class CombinedApp:
         self.kb_input_dir_var.trace('w', self.update_status_message)
         self.kb_output_dir_var.trace('w', self.update_status_message)
         self.gmail_output_dir_var.trace('w', self.update_status_message)
+        
+        # Bind input directory changes to auto-update output if same dir is selected
+        self.kb_input_dir_var.trace('w', self.on_kb_input_dir_change)
     
     def create_widgets(self):
         """Create all GUI widgets"""
@@ -499,17 +503,26 @@ class CombinedApp:
         
         tb.Label(kb_output_frame, text="Var ska pdf:erna sparas?", font=('Arial', 10)).pack(anchor="w", pady=(0, 5))
         
+        # Same directory switch
+        same_dir_frame = tb.Frame(kb_output_frame)
+        same_dir_frame.pack(fill="x", pady=(0, 10))
+        
+        self.same_dir_check = tb.Checkbutton(same_dir_frame, text="Använd mappen där jpg-filerna finns", 
+                                           variable=self.use_same_output_dir_var, 
+                                           bootstyle="info-round-toggle")
+        self.same_dir_check.pack(anchor="w")
+        
         kb_output_path_frame = tb.Frame(kb_output_frame)
         kb_output_path_frame.pack(fill="x")
         
-        kb_output_entry = tb.Entry(kb_output_path_frame, textvariable=self.kb_output_dir_var, 
-                                  font=('Arial', 10))
-        kb_output_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.kb_output_entry = tb.Entry(kb_output_path_frame, textvariable=self.kb_output_dir_var, 
+                                       font=('Arial', 10))
+        self.kb_output_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
-        browse_kb_output_btn = tb.Button(kb_output_path_frame, text="Bläddra...", 
-                                        command=self.browse_kb_output_dir, 
-                                        bootstyle=INFO, width=12)
-        browse_kb_output_btn.pack(side="right")
+        self.browse_kb_output_btn = tb.Button(kb_output_path_frame, text="Bläddra...", 
+                                             command=self.browse_kb_output_dir, 
+                                             bootstyle=INFO, width=12)
+        self.browse_kb_output_btn.pack(side="right")
         
         # Keep renamed files checkbox (moved under output directory)
         keep_frame = tb.Frame(self.kb_frame)
@@ -629,6 +642,30 @@ class CombinedApp:
                                  "KB-funktionalitet är inte tillgänglig.")
             self.kb_enabled.set(False)
     
+    def on_same_output_dir_toggle(self, *args):
+        """Handle same output directory checkbox toggle"""
+        self.update_kb_output_ui_state()
+        if self.use_same_output_dir_var.get():
+            # Auto-set output dir to input dir
+            self.kb_output_dir_var.set(self.kb_input_dir_var.get())
+    
+    def on_kb_input_dir_change(self, *args):
+        """Handle KB input directory change"""
+        if self.use_same_output_dir_var.get():
+            # Auto-update output dir when input dir changes
+            self.kb_output_dir_var.set(self.kb_input_dir_var.get())
+    
+    def update_kb_output_ui_state(self):
+        """Update KB output directory UI state based on same directory setting"""
+        if self.use_same_output_dir_var.get():
+            # Disable manual output directory selection
+            self.kb_output_entry.config(state="readonly")
+            self.browse_kb_output_btn.config(state="disabled")
+        else:
+            # Enable manual output directory selection
+            self.kb_output_entry.config(state="normal")
+            self.browse_kb_output_btn.config(state="normal")
+    
     def update_ui_state(self):
         """Update UI state based on enabled tools"""
         gmail_on = self.gmail_enabled.get()
@@ -678,6 +715,9 @@ class CombinedApp:
         
         # Update status message
         self.update_status_message()
+        
+        # Update KB output directory UI state
+        self.update_kb_output_ui_state()
     
     def load_config_to_gui(self):
         """Load saved configuration to GUI"""
@@ -705,6 +745,10 @@ class CombinedApp:
         self.kb_output_dir_var.set(default_kb_output)
         # Always start with keep_renamed enabled, regardless of saved config
         self.keep_renamed_var.set(True)
+        
+        # Load use_same_output_dir setting (default True)
+        self.use_same_output_dir_var.set(self.config.get("use_same_output_dir", True))
+        
         self.update_ui_state()
     
     def save_config_from_gui(self):
@@ -721,7 +765,8 @@ class CombinedApp:
             "excel_path": self.excel_path_var.get(),
             "kb_input_dir": self.kb_input_dir_var.get(),
             "kb_output_dir": self.kb_output_dir_var.get(),
-            "keep_renamed": self.keep_renamed_var.get()
+            "keep_renamed": self.keep_renamed_var.get(),
+            "use_same_output_dir": self.use_same_output_dir_var.get()
         })
         save_config(self.config)
     
@@ -820,8 +865,10 @@ class CombinedApp:
                 if not self.kb_input_dir_var.get().strip():
                     errors.append("KB input-mapp måste anges")
             
-            if not self.kb_output_dir_var.get().strip():
-                errors.append("KB output-mapp måste anges")
+            # Check KB output directory (unless using same directory)
+            if not self.use_same_output_dir_var.get():
+                if not self.kb_output_dir_var.get().strip():
+                    errors.append("KB output-mapp måste anges")
         
         return len(errors) == 0, errors
     
@@ -857,13 +904,17 @@ class CombinedApp:
                 fields_complete = False
         
         if kb_on:
-            if (self.excel_path_var.get() in ["Ingen fil vald", ""] or
-                not self.kb_output_dir_var.get().strip()):
+            if self.excel_path_var.get() in ["Ingen fil vald", ""]:
                 fields_complete = False
             
             # Check KB input directory (unless auto-linked)
             if not (gmail_on and kb_on):  # Not auto-linked
                 if not self.kb_input_dir_var.get().strip():
+                    fields_complete = False
+            
+            # Check KB output directory (unless using same directory)
+            if not self.use_same_output_dir_var.get():
+                if not self.kb_output_dir_var.get().strip():
                     fields_complete = False
         
         if fields_complete:
@@ -996,10 +1047,15 @@ class CombinedApp:
                     adjusted_progress = progress_offset + (progress * (50 if gmail_on else 100) // 100)
                     self.update_progress(message, adjusted_progress)
                 
+                # Determine output directory
+                output_dir = self.kb_output_dir_var.get()
+                if self.use_same_output_dir_var.get():
+                    output_dir = self.kb_input_dir_var.get()
+
                 kb_result = self.kb_processor.process_files(
                     excel_path=self.excel_path_var.get(),
                     input_dir=self.kb_input_dir_var.get(),
-                    output_dir=self.kb_output_dir_var.get(),
+                    output_dir=output_dir,
                     keep_renamed=self.keep_renamed_var.get(),
                     progress_callback=kb_progress_callback,
                     gui_update_callback=self.gui_update
