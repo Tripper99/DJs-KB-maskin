@@ -17,9 +17,15 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from src.gui.main_window import CombinedApp
 
 def setup_logging():
-    """Setup logging to file in the same directory as the script"""
+    """Setup logging to file in date-based subdirectories"""
     script_dir = Path(__file__).parent
-    log_filename = script_dir / f"combined_app_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    now = datetime.datetime.now()
+    
+    # Create logs directory with year-month subdirectory
+    log_dir = script_dir / "logs" / now.strftime('%Y-%m')
+    log_dir.mkdir(parents=True, exist_ok=True)
+    
+    log_filename = log_dir / f"combined_app_{now.strftime('%Y%m%d_%H%M%S')}.log"
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',

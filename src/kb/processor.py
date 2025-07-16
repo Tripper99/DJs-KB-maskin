@@ -5,6 +5,7 @@ KB file processing functionality
 
 import logging
 import os
+import re
 import shutil
 import tempfile
 import tkinter as tk
@@ -25,6 +26,48 @@ class KBProcessor:
     def __init__(self):
         self.cancel_requested = False
         self.root = None  # Reference to root window for dialogs
+    
+    def sanitize_filename(self, filename: str) -> str:
+        """Sanitize filename to prevent path traversal and invalid characters"""
+        # Remove or replace dangerous characters
+        # Keep Swedish characters and common punctuation
+        filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
+        filename = re.sub(r'\.\.+', '.', filename)  # Replace multiple dots
+        filename = filename.strip('. ')  # Remove leading/trailing dots and spaces
+        
+        # Ensure filename is not empty and not too long
+        if not filename:
+            filename = "unnamed"
+        if len(filename) > 200:  # Reasonable limit
+            filename = filename[:200]
+        
+        return filename
+    
+    def validate_image_file(self, file_path: Path) -> Tuple[bool, str]:
+        """Validate that a file is a valid image"""
+        try:
+            if not IMAGE_PROCESSING_AVAILABLE:
+                return False, "PIL inte tillgängligt"
+            
+            # Check file size (reasonable limit: 100MB)
+            file_size = file_path.stat().st_size
+            if file_size > 100 * 1024 * 1024:  # 100MB
+                return False, f"Filen är för stor ({file_size / 1024 / 1024:.1f} MB)"
+            
+            # Try to open and verify the image
+            with Image.open(file_path) as img:
+                # Verify image format
+                if img.format not in ['JPEG', 'JPG', 'PNG', 'BMP', 'TIFF']:
+                    return False, f"Bildformat '{img.format}' stöds inte"
+                
+                # Try to load image data to verify it's not corrupted
+                # Use load() instead of verify() to avoid destroying the image
+                img.load()
+                
+                return True, "Giltig bildfil"
+                
+        except Exception as e:
+            return False, f"Ogiltig bildfil: {str(e)}"
     
     def set_root(self, root: tk.Tk):
         """Set the root window for dialog purposes"""
@@ -149,6 +192,12 @@ class KBProcessor:
                 if gui_update_callback:
                     gui_update_callback()
                 
+                # Validate image file
+                is_valid, validation_message = self.validate_image_file(file)
+                if not is_valid:
+                    logger.warning(f"Skipping invalid image {file.name}: {validation_message}")
+                    continue
+                
                 stem = file.stem
                 suffix = file.suffix
                 extra = ""
@@ -186,6 +235,9 @@ class KBProcessor:
                     new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
                 else:
                     new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
+                
+                # Sanitize filename for security
+                new_name = self.sanitize_filename(new_name)
                 dest = temp_path / new_name
                 
                 try:
@@ -254,9 +306,23 @@ class KBProcessor:
                 # Sort files for consistent ordering
                 sorted_files = sorted(files)
                 
-                # Determine PDF filename - always include page count
-                pdf_name = f"{date} {newspaper} ({len(sorted_files)} sid).pdf"
+                # Pre-validate files to get accurate page count
+                valid_files_count = 0
+                for img_file in sorted_files:
+                    is_valid, _ = self.validate_image_file(img_file)
+                    if is_valid:
+                        valid_files_count += 1
                 
+                # Skip if no valid files
+                if valid_files_count == 0:
+                    logger.warning(f"No valid images found for group {date} {newspaper}")
+                    continue
+                
+                # Determine PDF filename - always include page count
+                pdf_name = f"{date} {newspaper} ({valid_files_count} sid).pdf"
+                
+                # Sanitize PDF filename for security
+                pdf_name = self.sanitize_filename(pdf_name)
                 pdf_path = output_path / pdf_name
                 
                 # Handle existing PDF files with dialog
@@ -348,8 +414,22 @@ class KBProcessor:
                 
                 # Create PDF using PIL
                 try:
+                    # Validate all images before processing
+                    valid_files = []
+                    for img_file in sorted_files:
+                        is_valid, validation_message = self.validate_image_file(img_file)
+                        if not is_valid:
+                            logger.error(f"Invalid image in PDF group {pdf_name}: {img_file.name} - {validation_message}")
+                        else:
+                            valid_files.append(img_file)
+                    
+                    # Skip PDF creation if no valid files
+                    if not valid_files:
+                        logger.error(f"No valid images found for PDF {pdf_name}")
+                        continue
+                    
                     # Verify first image is valid
-                    with Image.open(sorted_files[0]) as first_img:
+                    with Image.open(valid_files[0]) as first_img:
                         if first_img.mode != 'RGB':
                             first_img = first_img.convert('RGB')
                         
@@ -361,13 +441,13 @@ class KBProcessor:
                                 append_images=[
                                     Image.open(f).convert('RGB') if Image.open(f).mode != 'RGB' 
                                     else Image.open(f)
-                                    for f in sorted_files[1:]
+                                    for f in valid_files[1:]
                                     if not self.cancel_requested
                                 ]
                             )
                     
                     pdfs_per_tidning[newspaper] += 1
-                    logger.info(f"Created PDF: {pdf_name} ({len(sorted_files)} pages)")
+                    logger.info(f"Created PDF: {pdf_name} ({len(valid_files)} pages)")
                     
                 except Exception as e:
                     logger.error(f"Failed to create PDF {pdf_name}: {e}")
