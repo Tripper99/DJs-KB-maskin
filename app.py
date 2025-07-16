@@ -25,7 +25,7 @@ def setup_logging():
     log_dir = script_dir / "logs" / now.strftime('%Y-%m')
     log_dir.mkdir(parents=True, exist_ok=True)
     
-    log_filename = log_dir / f"combined_app_{now.strftime('%Y%m%d_%H%M%S')}.log"
+    log_filename = log_dir / f"djs_kb_maskin_{now.strftime('%Y%m%d_%H%M%S')}.log"
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',

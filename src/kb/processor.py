@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import tkinter as tk
 from collections import defaultdict
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -60,6 +61,11 @@ class KBProcessor:
                 if img.format not in ['JPEG', 'JPG', 'PNG', 'BMP', 'TIFF']:
                     return False, f"Bildformat '{img.format}' stöds inte"
                 
+                # Check image dimensions (reasonable limit: 50MP)
+                width, height = img.size
+                if width * height > 50 * 1024 * 1024:  # 50 megapixels
+                    return False, f"Bilden är för stor ({width}x{height} pixlar)"
+                
                 # Try to load image data to verify it's not corrupted
                 # Use load() instead of verify() to avoid destroying the image
                 img.load()
@@ -68,6 +74,69 @@ class KBProcessor:
                 
         except Exception as e:
             return False, f"Ogiltig bildfil: {str(e)}"
+    
+    def load_image_safely(self, file_path: Path) -> Image.Image:
+        """Load an image with proper resource management"""
+        img = Image.open(file_path)
+        # Convert to RGB if needed and return a copy to avoid issues with file handles
+        if img.mode != 'RGB':
+            rgb_img = img.convert('RGB')
+            img.close()  # Close original
+            return rgb_img
+        else:
+            # Create a copy to avoid file handle issues
+            img_copy = img.copy()
+            img.close()  # Close original
+            return img_copy
+    
+    def process_images_in_batches(self, file_paths: List[Path], batch_size: int = 10):
+        """Process images in batches to manage memory usage"""
+        MAX_BATCH_SIZE = 10  # Limit batch size to prevent memory issues
+        actual_batch_size = min(batch_size, MAX_BATCH_SIZE)
+        
+        for i in range(0, len(file_paths), actual_batch_size):
+            if self.cancel_requested:
+                break
+                
+            batch = file_paths[i:i + actual_batch_size]
+            images = []
+            
+            try:
+                # Load batch of images
+                for file_path in batch:
+                    if self.cancel_requested:
+                        break
+                    images.append(self.load_image_safely(file_path))
+                
+                yield images
+                
+            finally:
+                # Clean up batch images
+                for img in images:
+                    try:
+                        img.close()
+                    except:
+                        pass
+    
+    @contextmanager
+    def temporary_directory(self, output_path: Path, keep_renamed: bool):
+        """Context manager for temporary directory handling"""
+        if keep_renamed:
+            temp_path = output_path / "Jpg-filer med fina namn"
+            temp_path.mkdir(parents=True, exist_ok=True)
+            yield temp_path
+            # No cleanup needed for permanent directory
+        else:
+            temp_path = Path(tempfile.mkdtemp(prefix="renamed_jpgs_"))
+            try:
+                yield temp_path
+            finally:
+                # Always cleanup temporary directory
+                try:
+                    shutil.rmtree(temp_path, ignore_errors=True)
+                    logger.info("Cleaned up temporary files")
+                except Exception as e:
+                    logger.warning(f"Failed to cleanup temp files: {e}")
     
     def set_root(self, root: tk.Tk):
         """Set the root window for dialog purposes"""
@@ -152,12 +221,6 @@ class KBProcessor:
             output_path = Path(output_dir)
             output_path.mkdir(parents=True, exist_ok=True)
             
-            if keep_renamed:
-                temp_path = output_path / "Jpg-filer med fina namn"
-                temp_path.mkdir(parents=True, exist_ok=True)
-            else:
-                temp_path = Path(tempfile.mkdtemp(prefix="renamed_jpgs_"))
-            
             # Find JPG files
             jpg_files = sorted(f for f in input_path.glob("*.jpg") if f.is_file())
             
@@ -170,250 +233,259 @@ class KBProcessor:
             
             logger.info(f"Found {len(jpg_files)} JPG files to process")
             
-            # Phase 1: Rename files
-            if progress_callback:
-                progress_callback("Fas 1: Döper om filer...", 5)
-            if gui_update_callback:
-                gui_update_callback()
+            # Setup temporary directory (with manual cleanup)
+            if keep_renamed:
+                temp_path = output_path / "Jpg-filer med fina namn"
+                temp_path.mkdir(parents=True, exist_ok=True)
+                cleanup_temp = False
+            else:
+                temp_path = Path(tempfile.mkdtemp(prefix="renamed_jpgs_"))
+                cleanup_temp = True
             
-            renamed_files = []
-            total_files = len(jpg_files)
-            unknown_bib_codes = set()  # Track unknown bib codes
-            
-            for i, file in enumerate(jpg_files):
-                if self.cancel_requested:
-                    return {"cancelled": True}
+            try:
                 
-                # Update progress for renaming phase with percentage
-                rename_progress = 5 + int((i / total_files) * 30)  # 5-35%
-                percentage = int(((i + 1) / total_files) * 100)
+                # Phase 1: Rename files
                 if progress_callback:
-                    progress_callback(f"Döper om fil {i+1}/{total_files} ({percentage}%): {file.name}", rename_progress)
+                    progress_callback("Fas 1: Döper om filer...", 5)
                 if gui_update_callback:
                     gui_update_callback()
                 
-                # Validate image file
-                is_valid, validation_message = self.validate_image_file(file)
-                if not is_valid:
-                    logger.warning(f"Skipping invalid image {file.name}: {validation_message}")
-                    continue
-                
-                stem = file.stem
-                suffix = file.suffix
-                extra = ""
-                
-                # Handle duplicate numbering in parentheses
-                if "(" in stem and ")" in stem[-3:]:
-                    base, extra = stem.rsplit("(", 1)
-                    extra = "(" + extra
-                    stem = base.strip("_ ")
-                
-                parts = stem.split("_")
-                if len(parts) < 5:
-                    logger.warning(f"Skipping file with unexpected format: {file.name}")
-                    continue
-                
-                bib = parts[0]
-                date_raw = parts[1]
-                
-                # Format date
-                try:
-                    date = f"{date_raw[:4]}-{date_raw[4:6]}-{date_raw[6:]}"
-                except:
-                    date = "0000-00-00"
-                    logger.warning(f"Could not parse date from: {date_raw}")
-                
-                siffergrupper = "_".join(parts[2:5])
-                tidning = bib_dict.get(bib, "OKÄND").upper()
-                
-                # Track unknown bib codes
-                if tidning == "OKÄND":
-                    unknown_bib_codes.add(bib)
-                
-                # Create new filename with bib code included - for OKÄND files, include the bib code
-                if tidning == "OKÄND":
-                    new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
-                else:
-                    new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
-                
-                # Sanitize filename for security
-                new_name = self.sanitize_filename(new_name)
-                dest = temp_path / new_name
-                
-                try:
-                    if delete_originals:
-                        # Move (rename) the file instead of copying
-                        shutil.move(str(file), str(dest))
-                        logger.debug(f"Moved and renamed: {file.name} -> {new_name}")
-                    else:
-                        # Copy the file, keeping original
-                        shutil.copy(file, dest)
-                        logger.debug(f"Copied and renamed: {file.name} -> {new_name}")
-                    renamed_files.append(dest)
-                except Exception as e:
-                    logger.error(f"Failed to {'move' if delete_originals else 'copy'} {file.name}: {e}")
-                    continue
+                renamed_files = []
+                total_files = len(jpg_files)
+                unknown_bib_codes = set()  # Track unknown bib codes
             
-            logger.info(f"Successfully renamed {len(renamed_files)} files")
-            
-            # Group files for PDF creation
-            if progress_callback:
-                progress_callback("Grupperar filer för PDF-skapande...", 35)
-            if gui_update_callback:
-                gui_update_callback()
-            
-            grouped = {}
-            for f in renamed_files:
-                parts = f.stem.split()
-                if len(parts) < 4:  # date, newspaper, bib, numbers
-                    logger.warning(f"Unexpected renamed file format: {f.name}")
-                    continue
-                
-                # For OKÄND files, include bib code in grouping key
-                if parts[1] == "OKÄND":
-                    # Group by date, newspaper, and bib code for OKÄND files
-                    key = (parts[0], f"{parts[1]} {parts[2]}")
-                else:
-                    # Group by date and newspaper (excluding bib and numbers)
-                    key = (parts[0], " ".join(parts[1:-2]))
-                grouped.setdefault(key, []).append(f)
-            
-            logger.info(f"Grouped {len(renamed_files)} files into {len(grouped)} PDF groups")
-            
-            # Phase 2: Create PDFs
-            created_count = 0
-            overwritten_count = 0
-            skipped_count = 0
-            pdfs_per_tidning = defaultdict(int)
-            
-            total_pdfs = len(grouped)
-            
-            for pdf_num, ((date, newspaper), files) in enumerate(grouped.items(), 1):
-                if self.cancel_requested:
-                    return {"cancelled": True}
-                
-                # Update progress for PDF creation phase with percentage
-                pdf_progress = 35 + int((pdf_num / total_pdfs) * 60)  # 35-95%
-                percentage = int((pdf_num / total_pdfs) * 100)
-                if progress_callback:
-                    progress_callback(f"Skapar PDF {pdf_num}/{total_pdfs} ({percentage}%): {newspaper}", pdf_progress)
-                if gui_update_callback:
-                    gui_update_callback()
-                
-                if not files:
-                    continue
-                
-                # Sort files for consistent ordering
-                sorted_files = sorted(files)
-                
-                # Pre-validate files to get accurate page count
-                valid_files_count = 0
-                for img_file in sorted_files:
-                    is_valid, _ = self.validate_image_file(img_file)
-                    if is_valid:
-                        valid_files_count += 1
-                
-                # Skip if no valid files
-                if valid_files_count == 0:
-                    logger.warning(f"No valid images found for group {date} {newspaper}")
-                    continue
-                
-                # Determine PDF filename - always include page count
-                pdf_name = f"{date} {newspaper} ({valid_files_count} sid).pdf"
-                
-                # Sanitize PDF filename for security
-                pdf_name = self.sanitize_filename(pdf_name)
-                pdf_path = output_path / pdf_name
-                
-                # Handle existing PDF files with dialog
-                if pdf_path.exists():
-                    # Show dialog for PDF file conflict
-                    dialog = tk.Toplevel(self.root)
-                    dialog.title("PDF-filkonflikt")
-                    dialog.geometry("500x400")
-                    dialog.transient(self.root)
-                    dialog.grab_set()
-                    dialog.lift()
-                    dialog.focus_force()
-                    dialog.attributes('-topmost', True)
-                    dialog.after(100, lambda: dialog.attributes('-topmost', False))
-                    
-                    # Center the dialog
-                    dialog.update_idletasks()
-                    x = (dialog.winfo_screenwidth() // 2) - (250)
-                    y = (dialog.winfo_screenheight() // 2) - (200)
-                    dialog.geometry(f"500x400+{x}+{y}")
-                    
-                    tk.Label(dialog, text=f"PDF-filen {pdf_name} finns redan.\nVad vill du göra?", 
-                            font=("Arial", 12)).pack(pady=20)
-                    
-                    # Variables for dialog result
-                    dialog_result = {"action": None}
-                    
-                    def set_overwrite():
-                        dialog_result["action"] = "overwrite"
-                        dialog.destroy()
-                    
-                    def set_overwrite_all():
-                        dialog_result["action"] = "overwrite_all"
-                        dialog.destroy()
-                    
-                    def set_skip():
-                        dialog_result["action"] = "skip"
-                        dialog.destroy()
-                    
-                    def set_skip_all():
-                        dialog_result["action"] = "skip_all"
-                        dialog.destroy()
-                    
-                    def set_cancel():
-                        dialog_result["action"] = "cancel"
-                        dialog.destroy()
-                    
-                    # Button frame for better layout
-                    button_frame = tk.Frame(dialog)
-                    button_frame.pack(pady=20)
-                    
-                    tk.Button(button_frame, text="Skriv över", command=set_overwrite, 
-                             width=15, font=("Arial", 10)).pack(pady=3)
-                    tk.Button(button_frame, text="Skriv över alla", command=set_overwrite_all, 
-                             width=15, font=("Arial", 10)).pack(pady=3)
-                    tk.Button(button_frame, text="Hoppa över", command=set_skip, 
-                             width=15, font=("Arial", 10)).pack(pady=3)
-                    tk.Button(button_frame, text="Hoppa över alla", command=set_skip_all, 
-                             width=15, font=("Arial", 10)).pack(pady=3)
-                    tk.Button(button_frame, text="Avbryt", command=set_cancel, 
-                             width=15, font=("Arial", 10)).pack(pady=3)
-                    
-                    # Wait for dialog result
-                    dialog.wait_window()
-                    
-                    # Handle dialog result
-                    if dialog_result["action"] == "cancel":
+                for i, file in enumerate(jpg_files):
+                    if self.cancel_requested:
                         return {"cancelled": True}
-                    elif dialog_result["action"] == "skip":
-                        skipped_count += 1
-                        logger.info(f"Skipped existing PDF: {pdf_name}")
+                    
+                    # Update progress for renaming phase with percentage
+                    rename_progress = 5 + int((i / total_files) * 30)  # 5-35%
+                    percentage = int(((i + 1) / total_files) * 100)
+                    if progress_callback:
+                        progress_callback(f"Döper om fil {i+1}/{total_files} ({percentage}%): {file.name}", rename_progress)
+                    if gui_update_callback:
+                        gui_update_callback()
+                    
+                    # Validate image file
+                    is_valid, validation_message = self.validate_image_file(file)
+                    if not is_valid:
+                        logger.warning(f"Skipping invalid image {file.name}: {validation_message}")
                         continue
-                    elif dialog_result["action"] == "skip_all":
-                        # Skip all remaining PDFs
-                        for remaining_pdf in grouped.items():
-                            if remaining_pdf[0] != (date, newspaper):
-                                skipped_count += 1
-                        logger.info(f"Skipping all remaining PDFs")
-                        break
-                    elif dialog_result["action"] == "overwrite_all":
-                        # Overwrite all remaining PDFs
-                        overwritten_count += 1
-                        logger.info(f"Overwriting existing PDF: {pdf_name}")
-                    else:  # overwrite
-                        overwritten_count += 1
-                        logger.info(f"Overwriting existing PDF: {pdf_name}")
-                else:
-                    created_count += 1
+                    
+                    stem = file.stem
+                    suffix = file.suffix
+                    extra = ""
+                    
+                    # Handle duplicate numbering in parentheses
+                    if "(" in stem and ")" in stem[-3:]:
+                        base, extra = stem.rsplit("(", 1)
+                        extra = "(" + extra
+                        stem = base.strip("_ ")
+                    
+                    parts = stem.split("_")
+                    if len(parts) < 5:
+                        logger.warning(f"Skipping file with unexpected format: {file.name}")
+                        continue
+                    
+                    bib = parts[0]
+                    date_raw = parts[1]
+                    
+                    # Format date
+                    try:
+                        date = f"{date_raw[:4]}-{date_raw[4:6]}-{date_raw[6:]}"
+                    except:
+                        date = "0000-00-00"
+                        logger.warning(f"Could not parse date from: {date_raw}")
+                    
+                    siffergrupper = "_".join(parts[2:5])
+                    tidning = bib_dict.get(bib, "OKÄND").upper()
+                    
+                    # Track unknown bib codes
+                    if tidning == "OKÄND":
+                        unknown_bib_codes.add(bib)
+                    
+                    # Create new filename with bib code included - for OKÄND files, include the bib code
+                    if tidning == "OKÄND":
+                        new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
+                    else:
+                        new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
+                    
+                    # Sanitize filename for security
+                    new_name = self.sanitize_filename(new_name)
+                    dest = temp_path / new_name
+                    
+                    try:
+                        if delete_originals:
+                            # Move (rename) the file instead of copying
+                            shutil.move(str(file), str(dest))
+                            logger.debug(f"Moved and renamed: {file.name} -> {new_name}")
+                        else:
+                            # Copy the file, keeping original
+                            shutil.copy(file, dest)
+                            logger.debug(f"Copied and renamed: {file.name} -> {new_name}")
+                        renamed_files.append(dest)
+                    except Exception as e:
+                        logger.error(f"Failed to {'move' if delete_originals else 'copy'} {file.name}: {e}")
+                        continue
                 
-                # Create PDF using PIL
-                try:
+                logger.info(f"Successfully renamed {len(renamed_files)} files")
+            
+                # Group files for PDF creation
+                if progress_callback:
+                    progress_callback("Grupperar filer för PDF-skapande...", 35)
+                if gui_update_callback:
+                    gui_update_callback()
+                
+                grouped = {}
+                for f in renamed_files:
+                    parts = f.stem.split()
+                    if len(parts) < 4:  # date, newspaper, bib, numbers
+                        logger.warning(f"Unexpected renamed file format: {f.name}")
+                        continue
+                    
+                    # For OKÄND files, include bib code in grouping key
+                    if parts[1] == "OKÄND":
+                        # Group by date, newspaper, and bib code for OKÄND files
+                        key = (parts[0], f"{parts[1]} {parts[2]}")
+                    else:
+                        # Group by date and newspaper (excluding bib and numbers)
+                        key = (parts[0], " ".join(parts[1:-2]))
+                    grouped.setdefault(key, []).append(f)
+                
+                logger.info(f"Grouped {len(renamed_files)} files into {len(grouped)} PDF groups")
+            
+                # Phase 2: Create PDFs
+                created_count = 0
+                overwritten_count = 0
+                skipped_count = 0
+                pdfs_per_tidning = defaultdict(int)
+                
+                total_pdfs = len(grouped)
+                
+                for pdf_num, ((date, newspaper), files) in enumerate(grouped.items(), 1):
+                    if self.cancel_requested:
+                        return {"cancelled": True}
+                    
+                    # Update progress for PDF creation phase with percentage
+                    pdf_progress = 35 + int((pdf_num / total_pdfs) * 60)  # 35-95%
+                    percentage = int((pdf_num / total_pdfs) * 100)
+                    if progress_callback:
+                        progress_callback(f"Skapar PDF {pdf_num}/{total_pdfs} ({percentage}%): {newspaper}", pdf_progress)
+                    if gui_update_callback:
+                        gui_update_callback()
+                    
+                    if not files:
+                        continue
+                    
+                    # Sort files for consistent ordering
+                    sorted_files = sorted(files)
+                    
+                    # Pre-validate files to get accurate page count
+                    valid_files_count = 0
+                    for img_file in sorted_files:
+                        is_valid, _ = self.validate_image_file(img_file)
+                        if is_valid:
+                            valid_files_count += 1
+                    
+                    # Skip if no valid files
+                    if valid_files_count == 0:
+                        logger.warning(f"No valid images found for group {date} {newspaper}")
+                        continue
+                    
+                    # Determine PDF filename - always include page count
+                    pdf_name = f"{date} {newspaper} ({valid_files_count} sid).pdf"
+                    
+                    # Sanitize PDF filename for security
+                    pdf_name = self.sanitize_filename(pdf_name)
+                    pdf_path = output_path / pdf_name
+                
+                    # Handle existing PDF files with dialog
+                    if pdf_path.exists():
+                        # Show dialog for PDF file conflict
+                        dialog = tk.Toplevel(self.root)
+                        dialog.title("PDF-filkonflikt")
+                        dialog.geometry("500x400")
+                        dialog.transient(self.root)
+                        dialog.grab_set()
+                        dialog.lift()
+                        dialog.focus_force()
+                        dialog.attributes('-topmost', True)
+                        dialog.after(100, lambda: dialog.attributes('-topmost', False))
+                        
+                        # Center the dialog
+                        dialog.update_idletasks()
+                        x = (dialog.winfo_screenwidth() // 2) - (250)
+                        y = (dialog.winfo_screenheight() // 2) - (200)
+                        dialog.geometry(f"500x400+{x}+{y}")
+                        
+                        tk.Label(dialog, text=f"PDF-filen {pdf_name} finns redan.\nVad vill du göra?", 
+                                font=("Arial", 12)).pack(pady=20)
+                    
+                        # Variables for dialog result
+                        dialog_result = {"action": None}
+                        
+                        def set_overwrite():
+                            dialog_result["action"] = "overwrite"
+                            dialog.destroy()
+                        
+                        def set_overwrite_all():
+                            dialog_result["action"] = "overwrite_all"
+                            dialog.destroy()
+                        
+                        def set_skip():
+                            dialog_result["action"] = "skip"
+                            dialog.destroy()
+                        
+                        def set_skip_all():
+                            dialog_result["action"] = "skip_all"
+                            dialog.destroy()
+                        
+                        def set_cancel():
+                            dialog_result["action"] = "cancel"
+                            dialog.destroy()
+                        
+                        # Button frame for better layout
+                        button_frame = tk.Frame(dialog)
+                        button_frame.pack(pady=20)
+                        
+                        tk.Button(button_frame, text="Skriv över", command=set_overwrite, 
+                                 width=15, font=("Arial", 10)).pack(pady=3)
+                        tk.Button(button_frame, text="Skriv över alla", command=set_overwrite_all, 
+                                 width=15, font=("Arial", 10)).pack(pady=3)
+                        tk.Button(button_frame, text="Hoppa över", command=set_skip, 
+                                 width=15, font=("Arial", 10)).pack(pady=3)
+                        tk.Button(button_frame, text="Hoppa över alla", command=set_skip_all, 
+                                 width=15, font=("Arial", 10)).pack(pady=3)
+                        tk.Button(button_frame, text="Avbryt", command=set_cancel, 
+                                 width=15, font=("Arial", 10)).pack(pady=3)
+                        
+                        # Wait for dialog result
+                        dialog.wait_window()
+                    
+                        # Handle dialog result
+                        if dialog_result["action"] == "cancel":
+                            return {"cancelled": True}
+                        elif dialog_result["action"] == "skip":
+                            skipped_count += 1
+                            logger.info(f"Skipped existing PDF: {pdf_name}")
+                            continue
+                        elif dialog_result["action"] == "skip_all":
+                            # Skip all remaining PDFs
+                            for remaining_pdf in grouped.items():
+                                if remaining_pdf[0] != (date, newspaper):
+                                    skipped_count += 1
+                            logger.info(f"Skipping all remaining PDFs")
+                            break
+                        elif dialog_result["action"] == "overwrite_all":
+                            # Overwrite all remaining PDFs
+                            overwritten_count += 1
+                            logger.info(f"Overwriting existing PDF: {pdf_name}")
+                        else:  # overwrite
+                            overwritten_count += 1
+                            logger.info(f"Overwriting existing PDF: {pdf_name}")
+                    else:
+                        created_count += 1
+                
                     # Validate all images before processing
                     valid_files = []
                     for img_file in sorted_files:
@@ -424,66 +496,67 @@ class KBProcessor:
                             valid_files.append(img_file)
                     
                     # Skip PDF creation if no valid files
-                    if not valid_files:
-                        logger.error(f"No valid images found for PDF {pdf_name}")
-                        continue
-                    
-                    # Verify first image is valid
-                    with Image.open(valid_files[0]) as first_img:
-                        if first_img.mode != 'RGB':
-                            first_img = first_img.convert('RGB')
+                    if valid_files:
+                        # Create PDF using PIL
+                        try:
+                            # Load first image safely
+                            first_img = self.load_image_safely(valid_files[0])
                         
-                        # Stream images directly to PDF to minimize memory usage
-                        with first_img as base_img:
-                            base_img.save(
-                                pdf_path,
-                                save_all=True,
-                                append_images=[
-                                    Image.open(f).convert('RGB') if Image.open(f).mode != 'RGB' 
-                                    else Image.open(f)
-                                    for f in valid_files[1:]
-                                    if not self.cancel_requested
-                                ]
-                            )
-                    
-                    pdfs_per_tidning[newspaper] += 1
-                    logger.info(f"Created PDF: {pdf_name} ({len(valid_files)} pages)")
-                    
-                except Exception as e:
-                    logger.error(f"Failed to create PDF {pdf_name}: {e}")
-                    continue
+                            try:
+                                # Load additional images safely
+                                additional_images = []
+                                for f in valid_files[1:]:
+                                    if self.cancel_requested:
+                                        break
+                                    additional_images.append(self.load_image_safely(f))
+                                
+                                # Create PDF with proper resource management
+                                first_img.save(
+                                    pdf_path,
+                                    save_all=True,
+                                    append_images=additional_images
+                                )
+                            finally:
+                                # Clean up image resources
+                                first_img.close()
+                                for img in additional_images:
+                                    img.close()
+                        
+                            pdfs_per_tidning[newspaper] += 1
+                            logger.info(f"Created PDF: {pdf_name} ({len(valid_files)} pages)")
+                            
+                        except Exception as e:
+                            logger.error(f"Failed to create PDF {pdf_name}: {e}")
+                    else:
+                        logger.error(f"No valid images found for PDF {pdf_name}")
             
-            # Cleanup temporary files
-            if not keep_renamed:
+                # Cleanup is handled by context manager
                 if progress_callback:
-                    progress_callback("Städar temporära filer...", 98)
+                    progress_callback("KB-bearbetning slutförd!", 100)
                 if gui_update_callback:
                     gui_update_callback()
                 
-                try:
-                    shutil.rmtree(temp_path, ignore_errors=True)
-                    logger.info("Cleaned up temporary files")
-                except Exception as e:
-                    logger.warning(f"Failed to cleanup temp files: {e}")
-            
-            if progress_callback:
-                progress_callback("KB-bearbetning slutförd!", 100)
-            if gui_update_callback:
-                gui_update_callback()
-            
-            result = {
-                "total_files": len(jpg_files),
-                "created_count": created_count,
-                "overwritten_count": overwritten_count,
-                "skipped_count": skipped_count,
-                "pdfs_per_tidning": dict(pdfs_per_tidning),
-                "output_path": str(output_path.absolute()),
-                "unknown_bib_codes": list(unknown_bib_codes),
-                "unknown_bib_count": len(unknown_bib_codes)
-            }
-            
-            logger.info(f"KB processing completed successfully: {result}")
-            return result
+                result = {
+                    "total_files": len(jpg_files),
+                    "created_count": created_count,
+                    "overwritten_count": overwritten_count,
+                    "skipped_count": skipped_count,
+                    "pdfs_per_tidning": dict(pdfs_per_tidning),
+                    "output_path": str(output_path.absolute()),
+                    "unknown_bib_codes": list(unknown_bib_codes),
+                    "unknown_bib_count": len(unknown_bib_codes)
+                }
+                
+                logger.info(f"KB processing completed successfully: {result}")
+                return result
+            finally:
+                # Cleanup temporary directory if needed
+                if cleanup_temp:
+                    try:
+                        shutil.rmtree(temp_path, ignore_errors=True)
+                        logger.info("Cleaned up temporary files")
+                    except Exception as e:
+                        logger.warning(f"Failed to cleanup temp files: {e}")
             
         except Exception as e:
             logger.error(f"KB processing error: {e}")
