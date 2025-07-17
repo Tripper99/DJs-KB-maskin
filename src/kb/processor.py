@@ -554,29 +554,71 @@ class KBProcessor:
                                     first_img.close()
                                     return {"cancelled": True}
                                 
-                                # Load additional images safely
-                                additional_images = []
-                                for f in valid_files[1:]:
+                                # For large PDFs (>10 pages), show loading progress
+                                if len(valid_files) > 10:
+                                    # Load additional images with progress tracking
+                                    additional_images = []
+                                    for i, f in enumerate(valid_files[1:], 1):
+                                        if self.is_cancelled():
+                                            # Clean up loaded images before breaking
+                                            for img in additional_images:
+                                                img.close()
+                                            break
+                                        
+                                        # Update progress for loading large PDFs
+                                        load_progress = int((i / (len(valid_files) - 1)) * 50)  # 50% of sub-progress for loading
+                                        sub_progress = pdf_progress + (load_progress * 0.3)  # 30% of total progress for this PDF
+                                        if progress_callback:
+                                            progress_callback(f"Laddar bilder för stor PDF {pdf_num}/{total_pdfs}: {i+1}/{len(valid_files)}", int(sub_progress))
+                                        if gui_update_callback:
+                                            gui_update_callback()
+                                        
+                                        additional_images.append(self.load_image_safely(f))
+                                    
+                                    # Final cancellation check before PDF save
                                     if self.is_cancelled():
-                                        # Clean up loaded images before breaking
+                                        first_img.close()
                                         for img in additional_images:
                                             img.close()
-                                        break
-                                    additional_images.append(self.load_image_safely(f))
-                                
-                                # Final cancellation check before PDF save
-                                if self.is_cancelled():
-                                    first_img.close()
-                                    for img in additional_images:
-                                        img.close()
-                                    return {"cancelled": True}
-                                
-                                # Create PDF with proper resource management
-                                first_img.save(
-                                    pdf_path,
-                                    save_all=True,
-                                    append_images=additional_images
-                                )
+                                        return {"cancelled": True}
+                                    
+                                    # Show PDF creation progress
+                                    save_progress = pdf_progress + 15  # 15% more progress for saving
+                                    if progress_callback:
+                                        progress_callback(f"Skapar stor PDF {pdf_num}/{total_pdfs}: {newspaper} ({len(valid_files)} sidor)", int(save_progress))
+                                    if gui_update_callback:
+                                        gui_update_callback()
+                                    
+                                    # Create PDF with proper resource management
+                                    first_img.save(
+                                        pdf_path,
+                                        save_all=True,
+                                        append_images=additional_images
+                                    )
+                                else:
+                                    # Small PDFs - load normally without sub-progress
+                                    additional_images = []
+                                    for f in valid_files[1:]:
+                                        if self.is_cancelled():
+                                            # Clean up loaded images before breaking
+                                            for img in additional_images:
+                                                img.close()
+                                            break
+                                        additional_images.append(self.load_image_safely(f))
+                                    
+                                    # Final cancellation check before PDF save
+                                    if self.is_cancelled():
+                                        first_img.close()
+                                        for img in additional_images:
+                                            img.close()
+                                        return {"cancelled": True}
+                                    
+                                    # Create PDF with proper resource management
+                                    first_img.save(
+                                        pdf_path,
+                                        save_all=True,
+                                        append_images=additional_images
+                                    )
                             finally:
                                 # Clean up image resources
                                 first_img.close()

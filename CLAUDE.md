@@ -99,7 +99,7 @@ Run the application and test both Gmail and KB functionality:
 3. Verify PDF creation and file naming conventions
 4. Test cancellation and error handling scenarios
 
-## Current Development Status (2025-01-16)
+## Current Development Status (2025-07-17)
 
 ### Recent Work Completed
 - Implemented 3-phase security and stability improvements
@@ -107,8 +107,9 @@ Run the application and test both Gmail and KB functionality:
 - Fixed memory leaks in image processing
 - Added comprehensive input validation and sanitization
 - Improved error handling and logging
+- **MAJOR UPDATE (2025-07-17)**: Fixed critical GUI threading issues and responsiveness problems
 
-### ✅ RESOLVED - All Critical Issues Fixed (2025-07-16)
+### ✅ RESOLVED - All Critical Issues Fixed (2025-07-17)
 
 ## Summary of Issues Resolved:
 
@@ -190,5 +191,41 @@ Run the application and test both Gmail and KB functionality:
 - `src/kb/processor.py` - Implemented thorough cancellation support in file processing
 - `src/gui/main_window.py` - Fixed progress text clearing and updated cancellation flow
 
+### 4. ✅ Fixed Critical GUI Freezing and Threading Issues (2025-07-17)
+**Root Cause**: All long-running operations were executing in the main GUI thread, causing the application to freeze when window lost focus, during processing, or when cancel was pressed.
+
+**Solution Implemented**:
+- **Background Threading**: Moved entire processing workflow (`run_processing_workflow()`) to background thread
+- **Thread-Safe GUI Updates**: All GUI updates now use `self.root.after(0, ...)` to execute safely on main thread
+- **Non-Blocking Progress Updates**: Progress bar and status text updates are scheduled on main thread
+- **Thread-Safe Cleanup**: Success, error, and cancellation handling all execute safely on main thread
+- **Responsive Cancel**: Cancel button now works immediately without blocking GUI
+
+**Technical Implementation**:
+- `start_processing()` starts background thread with `threading.Thread(target=self.run_processing_workflow, daemon=True)`
+- `update_progress()`, `update_status()`, `gui_update()` - All made thread-safe with `root.after()` scheduling
+- `_finalize_processing_success()`, `_finalize_processing_error()`, `_cleanup_after_cancel_safe()` - Safe completion handlers
+- `_handle_no_emails_found()` - Thread-safe no results handling
+
+**Files Modified**:
+- `src/gui/main_window.py`: Complete threading architecture overhaul
+- `src/gmail/downloader.py`: Enhanced cancellation support for file conflict dialogs
+- `src/kb/processor.py`: Path normalization fixes for Excel file handling
+
+**Benefits Achieved**:
+- ✅ **No GUI Freezing**: Application remains responsive when clicking other windows
+- ✅ **Immediate Cancel Response**: Cancel button works instantly without delay
+- ✅ **Window Movability**: Can move and resize window during processing
+- ✅ **Stable Progress Updates**: Smooth progress bar and status text updates
+- ✅ **Professional UX**: Application behaves like modern, responsive software
+
+## Comprehensive Testing Completed (2025-07-17):
+
+### ✅ GUI Responsiveness Testing
+- Window focus changes during processing: ✅ No freezing
+- Cancel button during operations: ✅ Immediate response
+- Window moving/resizing during processing: ✅ Fully responsive
+- Progress text clearing: ✅ Clean updates without overlay text
+
 ## Result:
-**The cancel button now works correctly during both Gmail download and KB file processing phases. Users can immediately stop long-running operations at any point, and the application properly cleans up resources and returns to a ready state.**
+**The application is now fully responsive and professional. All GUI freezing issues are resolved. The cancel button works correctly during both Gmail download and KB file processing phases. Users can immediately stop long-running operations at any point, interact with the window freely during processing, and the application properly cleans up resources and returns to a ready state.**

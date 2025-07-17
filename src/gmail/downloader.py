@@ -21,6 +21,12 @@ class DownloadManager:
         self.overwrite_all = False
         self.skip_all = False
         self.cancel_event = None
+        # Track files downloaded in current session to avoid duplicates
+        self.downloaded_in_session = set()
+    
+    def check_duplicate_in_session(self, filename: str) -> bool:
+        """Check if file was already downloaded in current session"""
+        return filename in self.downloaded_in_session
     
     def handle_filename_conflict(self, original_filename: str, root: tk.Tk) -> Optional[str]:
         file_path = self.output_path / original_filename
@@ -117,6 +123,8 @@ class DownloadManager:
             with open(file_path, 'wb') as f:
                 f.write(file_data)
             file_size = len(file_data)
+            # Add to session tracking set
+            self.downloaded_in_session.add(filename)
             logger.info(f"✅ Downloaded: {filename} ({self.format_file_size(file_size)})")
             return True
         except Exception as e:
@@ -231,6 +239,13 @@ class GmailDownloader:
                 return downloaded, skipped, total_size
             
             original_filename = attachment['filename']
+            
+            # Check if file was already downloaded in current session - skip silently
+            if self.download_manager.check_duplicate_in_session(original_filename):
+                skipped += 1
+                logger.info(f"🔄 Skipping duplicate from session: {original_filename}")
+                continue  # Continue with next attachment
+            
             final_filename = self.download_manager.handle_filename_conflict(original_filename, self.root)
             
             if final_filename is None:
