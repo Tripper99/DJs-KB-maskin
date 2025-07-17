@@ -190,6 +190,7 @@ class CombinedApp:
         self.kb_input_dir_var.trace('w', self.update_status_message)
         self.kb_output_dir_var.trace('w', self.update_status_message)
         self.gmail_output_dir_var.trace('w', self.update_status_message)
+        self.gmail_output_dir_var.trace('w', self.on_gmail_output_dir_change)
         
         # Bind input directory changes to auto-update output if same dir is selected
         self.kb_input_dir_var.trace('w', self.on_kb_input_dir_change)
@@ -737,21 +738,39 @@ class CombinedApp:
             # Auto-set output dir to input dir
             self.kb_output_dir_var.set(self.kb_input_dir_var.get())
     
+    def on_gmail_output_dir_change(self, *args):
+        """Handle Gmail output directory change - update KB input if auto-linked"""
+        gmail_on = self.gmail_enabled.get()
+        kb_on = self.kb_enabled.get()
+        both_on = gmail_on and kb_on
+        
+        if both_on:
+            # Update KB input field with Gmail output path
+            gmail_output = self.gmail_output_dir_var.get()
+            if gmail_output:
+                self.kb_input_dir_var.set(gmail_output)
+    
     def on_kb_input_dir_change(self, *args):
         """Handle KB input directory change"""
         if self.use_same_output_dir_var.get():
             # Auto-update output dir when input dir changes
-            self.kb_output_dir_var.set(self.kb_input_dir_var.get())
+            self.update_kb_output_ui_state()
     
     def update_kb_output_ui_state(self):
         """Update KB output directory UI state based on same directory setting"""
         if self.use_same_output_dir_var.get():
-            # Disable manual output directory selection
-            self.kb_output_entry.config(state="readonly")
+            # Disable manual output directory selection and show input path
+            self.kb_output_entry.config(state="readonly", foreground="gray")
             self.browse_kb_output_btn.config(state="disabled")
+            # Show input directory path in output field
+            input_path = self.kb_input_dir_var.get()
+            if input_path and input_path != "(Använder nedladdningsmapp från Gmail)":
+                self.kb_output_dir_var.set(input_path)
+            else:
+                self.kb_output_dir_var.set("(Samma som jpg-filernas mapp)")
         else:
             # Enable manual output directory selection
-            self.kb_output_entry.config(state="normal")
+            self.kb_output_entry.config(state="normal", foreground="white")
             self.browse_kb_output_btn.config(state="normal")
     
     def update_ui_state(self):
@@ -776,16 +795,20 @@ class CombinedApp:
         # Show auto-link info when both are enabled
         if both_on:
             self.kb_auto_info.pack(anchor="w", pady=(5, 0))
-            # Disable KB input browsing when auto-linked and clear the field
-            self.kb_input_entry.config(state="readonly")
+            # Disable KB input browsing when auto-linked
+            self.kb_input_entry.config(state="readonly", foreground="gray")
             self.browse_kb_input_btn.config(state="disabled")
-            # Clear KB input field since it will use Gmail output dir
-            self.kb_input_dir_var.set("")
+            # Show Gmail output dir in KB input field (auto-linked)
+            gmail_output = self.gmail_output_dir_var.get()
+            if gmail_output:
+                self.kb_input_dir_var.set(gmail_output)
+            else:
+                self.kb_input_dir_var.set("(Använder nedladdningsmapp från Gmail)")
         else:
             self.kb_auto_info.pack_forget()
             # Enable KB input browsing when not auto-linked
             if kb_on:
-                self.kb_input_entry.config(state="normal")
+                self.kb_input_entry.config(state="normal", foreground="white")
                 self.browse_kb_input_btn.config(state="normal")
         
         # Update start button text
