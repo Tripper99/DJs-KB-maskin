@@ -494,7 +494,7 @@ class CombinedApp:
         # Create the checkbox with text
         tb.Checkbutton(delete_checkbox_frame, text="Radera bib-filerna efter omdöpning?", 
                       variable=self.delete_original_files_var, 
-                      bootstyle="warning-round-toggle").pack(side="left")
+                      bootstyle="info-round-toggle").pack(side="left")
         
         # Create help button with question mark
         delete_help_btn = tb.Button(delete_checkbox_frame, text="?", width=3, 
@@ -1332,7 +1332,7 @@ class CombinedApp:
             gmail_text = [
                 f"• Emails genomsökta: {gmail_result.get('total_emails', 0)}",
                 f"• Filer nedladdade: {gmail_result.get('downloaded', 0)}",
-                f"• Filer hoppade över: {gmail_result.get('skipped', 0)}",
+                f"• Dublettfiler som hoppats över: {gmail_result.get('skipped', 0)}",
                 f"• Total storlek: {gmail_result.get('total_size', 0) / 1024 / 1024:.1f} MB" if gmail_result.get('total_size') else "• Total storlek: 0 MB",
                 f"• Sparade i: {gmail_result.get('output_path', 'N/A')}"
             ]

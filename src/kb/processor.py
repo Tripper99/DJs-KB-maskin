@@ -431,7 +431,7 @@ class KBProcessor:
                         # Show dialog for PDF file conflict
                         dialog = tk.Toplevel(self.root)
                         dialog.title("PDF-filkonflikt")
-                        dialog.geometry("500x400")
+                        dialog.geometry("600x500")
                         dialog.transient(self.root)
                         dialog.grab_set()
                         dialog.lift()
@@ -439,14 +439,56 @@ class KBProcessor:
                         dialog.attributes('-topmost', True)
                         dialog.after(100, lambda: dialog.attributes('-topmost', False))
                         
-                        # Center the dialog
+                        # Center the dialog over the parent window (app window)
                         dialog.update_idletasks()
-                        x = (dialog.winfo_screenwidth() // 2) - (250)
-                        y = (dialog.winfo_screenheight() // 2) - (200)
-                        dialog.geometry(f"500x400+{x}+{y}")
+                        self.root.update_idletasks()
                         
-                        tk.Label(dialog, text=f"PDF-filen {pdf_name} finns redan.\nVad vill du göra?", 
-                                font=("Arial", 12)).pack(pady=20)
+                        # Get parent window position and size
+                        parent_x = self.root.winfo_x()
+                        parent_y = self.root.winfo_y()
+                        parent_width = self.root.winfo_width()
+                        parent_height = self.root.winfo_height()
+                        
+                        # Calculate position to center dialog over parent window
+                        dialog_width = 600
+                        dialog_height = 500
+                        x = parent_x + (parent_width // 2) - (dialog_width // 2)
+                        y = parent_y + (parent_height // 2) - (dialog_height // 2)
+                        
+                        dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
+                        
+                        # Create main frame for content
+                        main_frame = tk.Frame(dialog)
+                        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+                        
+                        # Create scrollable frame
+                        try:
+                            import tkinter.ttk as ttk
+                            # Create canvas and scrollbar for scrolling
+                            canvas = tk.Canvas(main_frame, highlightthickness=0)
+                            scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+                            scrollable_frame = tk.Frame(canvas)
+                            
+                            scrollable_frame.bind(
+                                "<Configure>",
+                                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+                            )
+                            
+                            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+                            canvas.configure(yscrollcommand=scrollbar.set)
+                            
+                            # Pack scrollbar and canvas
+                            scrollbar.pack(side="right", fill="y")
+                            canvas.pack(side="left", fill="both", expand=True)
+                            
+                            content_frame = scrollable_frame
+                        except ImportError:
+                            # Fallback if ttk not available
+                            content_frame = main_frame
+                        
+                        # Message label
+                        tk.Label(content_frame, text=f"PDF-filen {pdf_name} finns redan.\n\nVad vill du göra?", 
+                                font=("Arial", 11), wraplength=550, justify="center").pack(pady=20)
                     
                         # Variables for dialog result
                         dialog_result = {"action": None}
@@ -483,7 +525,7 @@ class KBProcessor:
                             dialog.destroy()
                         
                         # Button frame for better layout
-                        button_frame = tk.Frame(dialog)
+                        button_frame = tk.Frame(content_frame)
                         button_frame.pack(pady=20)
                         
                         tk.Button(button_frame, text="Skriv över", command=set_overwrite, 
