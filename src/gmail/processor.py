@@ -19,9 +19,20 @@ class AttachmentProcessor:
     def __init__(self, gmail_service):
         self.service = gmail_service
     
-    def get_email_details(self, message_id: str) -> Optional[Dict]:
+    def get_email_details(self, message_id: str, cancel_check=None) -> Optional[Dict]:
         try:
+            # Check cancellation before API call
+            if cancel_check and cancel_check():
+                logger.info("Email details retrieval cancelled")
+                return None
+                
             message = self.service.users().messages().get(userId='me', id=message_id).execute()
+            
+            # Check cancellation after API call
+            if cancel_check and cancel_check():
+                logger.info("Email details processing cancelled")
+                return None
+                
             headers = message['payload'].get('headers', [])
             subject = next((h['value'] for h in headers if h['name'] == 'Subject'), 'Inget ämne')
             sender = next((h['value'] for h in headers if h['name'] == 'From'), 'Okänd avsändare')
@@ -60,9 +71,20 @@ class AttachmentProcessor:
         self._process_email_part(payload, attachments)
         return attachments
     
-    def download_attachment(self, message_id: str, attachment_id: str) -> Optional[bytes]:
+    def download_attachment(self, message_id: str, attachment_id: str, cancel_check=None) -> Optional[bytes]:
         try:
+            # Check cancellation before API call
+            if cancel_check and cancel_check():
+                logger.info("Attachment download cancelled")
+                return None
+                
             attachment = self.service.users().messages().attachments().get(userId='me', messageId=message_id, id=attachment_id).execute()
+            
+            # Check cancellation after API call but before data processing
+            if cancel_check and cancel_check():
+                logger.info("Attachment download cancelled after API call")
+                return None
+                
             data = attachment['data']
             file_data = base64.urlsafe_b64decode(data)
             return file_data

@@ -185,7 +185,7 @@ class CombinedApp:
         
         # Title
         title_label = tb.Label(main_frame, text="DJs app för hantering av filer från 'Svenska Tidningar'", 
-                              font=('Arial', 18, 'bold'))
+                              font=('Arial', 12, 'bold'))
         title_label.pack(pady=(0, 20))
         
         # Tool selection frame
@@ -590,7 +590,8 @@ class CombinedApp:
         
         # Progress frame
         self.progress_frame = tb.Frame(action_frame)
-        self.progress_label = tb.Label(self.progress_frame, textvariable=self.progress_message_var, font=("Arial", 10))
+        self.progress_label = tb.Label(self.progress_frame, textvariable=self.progress_message_var, 
+                                      font=("Arial", 10), wraplength=550, justify="left")
         self.progress_label.pack(pady=(8, 0))
         
         self.progress_bar = tb.Progressbar(self.progress_frame, length=600, mode='determinate')
@@ -948,11 +949,15 @@ class CombinedApp:
     
     def update_progress(self, message: str, progress: int):
         """Update progress bar and message - thread-safe"""
-        # Schedule progress update on the main thread
-        self.root.after_idle(self._safe_progress_update, message, progress)
+        try:
+            # Schedule GUI update on main thread
+            self.root.after(0, self._update_progress_safe, message, progress)
+        except tk.TclError:
+            # GUI might have been destroyed
+            pass
     
-    def _safe_progress_update(self, message: str, progress: int):
-        """Internal progress update that runs on main thread"""
+    def _update_progress_safe(self, message: str, progress: int):
+        """Internal method to safely update progress from main thread"""
         try:
             self.progress_message_var.set(message)
             self.progress_bar['value'] = progress
@@ -962,11 +967,15 @@ class CombinedApp:
     
     def update_status(self, message: str):
         """Update status message - thread-safe"""
-        # Schedule status update on the main thread
-        self.root.after_idle(self._safe_status_update, message)
+        try:
+            # Schedule GUI update on main thread
+            self.root.after(0, self._update_status_safe, message)
+        except tk.TclError:
+            # GUI might have been destroyed
+            pass
     
-    def _safe_status_update(self, message: str):
-        """Internal status update that runs on main thread"""
+    def _update_status_safe(self, message: str):
+        """Internal method to safely update status from main thread"""
         try:
             self.status_var.set(message)
         except tk.TclError:
@@ -1016,13 +1025,39 @@ class CombinedApp:
     
     def gui_update(self):
         """Update GUI - thread-safe version"""
-        # Schedule GUI update on the main thread
-        self.root.after_idle(self._safe_gui_update)
+        try:
+            # Schedule GUI update on main thread
+            self.root.after(0, self._gui_update_safe)
+        except tk.TclError:
+            # GUI might have been destroyed
+            pass
     
-    def _safe_gui_update(self):
-        """Internal GUI update that runs on main thread"""
+    def _gui_update_safe(self):
+        """Internal method to safely update GUI from main thread"""
         try:
             self.root.update_idletasks()
+        except tk.TclError:
+            # GUI might have been destroyed
+            pass
+    
+    def clear_progress_text(self):
+        """Clear progress text completely using a more robust method"""
+        try:
+            # Method 1: Set to a unique placeholder then clear
+            placeholder = "█" * 50  # Use a unique string that's unlikely to match existing text
+            self.progress_message_var.set(placeholder)
+            self.progress_label.update()
+            self.progress_message_var.set("")
+            self.progress_label.update()
+            
+            # Method 2: Force widget reconfiguration
+            self.progress_label.config(text="")
+            self.progress_label.update()
+            
+            # Method 3: Temporarily hide and show the label to force refresh
+            self.progress_label.pack_forget()
+            self.progress_label.pack(pady=(8, 0))
+            self.progress_label.update()
         except tk.TclError:
             # GUI might have been destroyed
             pass
@@ -1062,6 +1097,15 @@ class CombinedApp:
         self.progress_bar['value'] = 0
         self.progress_bar['maximum'] = 100
         
+        # Clear any previous progress text completely
+        self.clear_progress_text()
+        
+        # Start processing in background thread
+        self.processing_thread = threading.Thread(target=self.run_processing_workflow, daemon=True)
+        self.processing_thread.start()
+    
+    def run_processing_workflow(self):
+        """Run the actual processing workflow in background thread"""
         gmail_on = self.gmail_enabled.get()
         kb_on = self.kb_enabled.get()
         both_on = gmail_on and kb_on
@@ -1082,6 +1126,9 @@ class CombinedApp:
                     gmail_account=self.gmail_account_var.get()
                 )
                 self.gmail_downloader.set_root(self.root)  # Set root for dialogs
+                
+                # Set cancel event for Gmail downloader
+                self.gmail_downloader.cancel_event = self.cancel_event
                 
                 # Authenticate
                 self.update_progress("Autentiserar Gmail...", 5)
@@ -1113,17 +1160,8 @@ class CombinedApp:
                 logger.info(f"Gmail download completed: {gmail_result}")
 
                 if gmail_result.get('downloaded', 0) == 0:
-                    messagebox.showinfo(
-                        "Inga mejl hittades",
-                        "Inga mejl med bilagor hittades i det angivna tidsspannet."
-                    )
-                    # Hide progress and re-enable controls, then return
-                    self.progress_frame.pack_forget()
-                    self.start_btn.config(state="normal")
-                    self.cancel_btn.config(state="disabled")
-                    self.gmail_running = False
-                    self.kb_running = False
-                    self.update_status("Inga mejl hittades")
+                    # Schedule no emails found handling on main thread
+                    self.root.after(0, self._handle_no_emails_found)
                     return
 
                 if both_on:
@@ -1169,41 +1207,91 @@ class CombinedApp:
                 self.kb_running = False
                 logger.info(f"KB processing completed: {kb_result}")
             
+            # Schedule final GUI updates on main thread
+            self.root.after(0, self._finalize_processing_success, gmail_result, kb_result, both_on)
+            
+        except Exception as e:
+            error_msg = f"Ett fel uppstod: {str(e)}"
+            logger.error(error_msg)
+            # Schedule error handling on main thread
+            self.root.after(0, self._finalize_processing_error, error_msg)
+    
+    def _finalize_processing_success(self, gmail_result, kb_result, both_on):
+        """Finalize successful processing on main thread"""
+        try:
             # Hide progress
+            self.clear_progress_text()
             self.progress_frame.pack_forget()
             
             # Update status to show completion
             self.update_status("Färdig")
             
-            # Show results
-            self.show_results(gmail_result, kb_result, both_on)
-            
-        except Exception as e:
-            self.progress_frame.pack_forget()
-            error_msg = f"Ett fel uppstod: {str(e)}"
-            logger.error(error_msg)
-            messagebox.showerror("Fel", error_msg)
-            self.gmail_running = False
-            self.kb_running = False
-            self.update_status("Fel uppstod")
-        
-        finally:
             # Re-enable controls
             self.start_btn.config(state="normal")
             self.cancel_btn.config(state="disabled")
             self.gmail_running = False
             self.kb_running = False
-            # Don't call update_status_message here to preserve final status
+            
+            # Show results
+            self.show_results(gmail_result, kb_result, both_on)
+        except Exception as e:
+            logger.error(f"Error in finalize_processing_success: {e}")
+    
+    def _finalize_processing_error(self, error_msg):
+        """Finalize error processing on main thread"""
+        try:
+            # Clear progress text before hiding
+            self.clear_progress_text()
+            self.progress_frame.pack_forget()
+            
+            # Show error message
+            messagebox.showerror("Fel", error_msg)
+            
+            # Update status and re-enable controls
+            self.gmail_running = False
+            self.kb_running = False
+            self.update_status("Fel uppstod")
+            self.start_btn.config(state="normal")
+            self.cancel_btn.config(state="disabled")
+        except Exception as e:
+            logger.error(f"Error in finalize_processing_error: {e}")
     
     def cleanup_after_cancel(self):
-        """Clean up after cancellation"""
-        self.progress_frame.pack_forget()
-        self.gmail_running = False
-        self.kb_running = False
-        self.start_btn.config(state="normal")
-        self.cancel_btn.config(state="disabled")
-        self.update_status("Avbruten")
+        """Clean up after cancellation - thread-safe"""
         logger.info("Processing cancelled by user")
+        # Schedule cleanup on main thread
+        self.root.after(0, self._cleanup_after_cancel_safe)
+    
+    def _cleanup_after_cancel_safe(self):
+        """Internal method to safely cleanup after cancellation from main thread"""
+        try:
+            # Clear progress text before hiding
+            self.clear_progress_text()
+            self.progress_frame.pack_forget()
+            self.gmail_running = False
+            self.kb_running = False
+            self.start_btn.config(state="normal")
+            self.cancel_btn.config(state="disabled")
+            self.update_status("Avbruten")
+        except Exception as e:
+            logger.error(f"Error in cleanup_after_cancel_safe: {e}")
+    
+    def _handle_no_emails_found(self):
+        """Handle no emails found scenario on main thread"""
+        try:
+            messagebox.showinfo(
+                "Inga mejl hittades",
+                "Inga mejl med bilagor hittades i det angivna tidsspannet."
+            )
+            # Hide progress and re-enable controls
+            self.progress_frame.pack_forget()
+            self.start_btn.config(state="normal")
+            self.cancel_btn.config(state="disabled")
+            self.gmail_running = False
+            self.kb_running = False
+            self.update_status("Inga mejl hittades")
+        except Exception as e:
+            logger.error(f"Error in handle_no_emails_found: {e}")
     
     def show_results(self, gmail_result, kb_result, both_operations):
         """Show results dialog"""

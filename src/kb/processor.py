@@ -165,7 +165,9 @@ class KBProcessor:
             if not IMAGE_PROCESSING_AVAILABLE:
                 return False, "Pandas inte installerat - KB-funktionalitet inte tillgänglig"
             
-            df = pd.read_excel(file_path, header=None)
+            # Normalize path to handle both forward and backward slashes
+            normalized_path = str(Path(file_path).resolve())
+            df = pd.read_excel(normalized_path, header=None)
             
             if df.shape[1] < 2:
                 return False, "Excel-filen måste ha minst 2 kolumner (bib-kod och tidningsnamn)"
@@ -221,7 +223,9 @@ class KBProcessor:
                 gui_update_callback()
             
             try:
-                bib_df = pd.read_excel(excel_path, header=None)
+                # Normalize path to handle both forward and backward slashes
+                normalized_excel_path = str(Path(excel_path).resolve())
+                bib_df = pd.read_excel(normalized_excel_path, header=None)
                 bib_dict = dict(zip(bib_df[0].astype(str), bib_df[1].astype(str)))
                 logger.info(f"Loaded {len(bib_dict)} bib codes from Excel")
             except Exception as e:
@@ -277,6 +281,10 @@ class KBProcessor:
                     if gui_update_callback:
                         gui_update_callback()
                     
+                    # Check cancellation before validation
+                    if self.is_cancelled():
+                        return {"cancelled": True}
+                    
                     # Validate image file
                     is_valid, validation_message = self.validate_image_file(file)
                     if not is_valid:
@@ -326,6 +334,10 @@ class KBProcessor:
                     dest = temp_path / new_name
                     
                     try:
+                        # Check cancellation before file operation
+                        if self.is_cancelled():
+                            return {"cancelled": True}
+                        
                         if delete_originals:
                             # Move (rename) the file instead of copying
                             shutil.move(str(file), str(dest))
@@ -412,6 +424,10 @@ class KBProcessor:
                 
                     # Handle existing PDF files with dialog
                     if pdf_path.exists():
+                        # Check cancellation before showing dialog
+                        if self.is_cancelled():
+                            return {"cancelled": True}
+                        
                         # Show dialog for PDF file conflict
                         dialog = tk.Toplevel(self.root)
                         dialog.title("PDF-filkonflikt")
@@ -434,6 +450,17 @@ class KBProcessor:
                     
                         # Variables for dialog result
                         dialog_result = {"action": None}
+                        
+                        # Add periodic check for cancellation while dialog is open
+                        def check_cancel_during_dialog():
+                            if self.is_cancelled():
+                                dialog_result["action"] = "cancel"
+                                dialog.destroy()
+                            else:
+                                dialog.after(100, check_cancel_during_dialog)
+                        
+                        # Start the cancellation check
+                        dialog.after(100, check_cancel_during_dialog)
                         
                         def set_overwrite():
                             dialog_result["action"] = "overwrite"
@@ -500,6 +527,10 @@ class KBProcessor:
                     # Validate all images before processing
                     valid_files = []
                     for img_file in sorted_files:
+                        # Check cancellation during image validation
+                        if self.is_cancelled():
+                            return {"cancelled": True}
+                        
                         is_valid, validation_message = self.validate_image_file(img_file)
                         if not is_valid:
                             logger.error(f"Invalid image in PDF group {pdf_name}: {img_file.name} - {validation_message}")
@@ -510,16 +541,35 @@ class KBProcessor:
                     if valid_files:
                         # Create PDF using PIL
                         try:
+                            # Check cancellation before starting PDF creation
+                            if self.is_cancelled():
+                                return {"cancelled": True}
+                            
                             # Load first image safely
                             first_img = self.load_image_safely(valid_files[0])
                         
                             try:
+                                # Check cancellation after first image load
+                                if self.is_cancelled():
+                                    first_img.close()
+                                    return {"cancelled": True}
+                                
                                 # Load additional images safely
                                 additional_images = []
                                 for f in valid_files[1:]:
                                     if self.is_cancelled():
+                                        # Clean up loaded images before breaking
+                                        for img in additional_images:
+                                            img.close()
                                         break
                                     additional_images.append(self.load_image_safely(f))
+                                
+                                # Final cancellation check before PDF save
+                                if self.is_cancelled():
+                                    first_img.close()
+                                    for img in additional_images:
+                                        img.close()
+                                    return {"cancelled": True}
                                 
                                 # Create PDF with proper resource management
                                 first_img.save(

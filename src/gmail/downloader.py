@@ -20,6 +20,7 @@ class DownloadManager:
         self.output_path.mkdir(parents=True, exist_ok=True)
         self.overwrite_all = False
         self.skip_all = False
+        self.cancel_event = None
     
     def handle_filename_conflict(self, original_filename: str, root: tk.Tk) -> Optional[str]:
         file_path = self.output_path / original_filename
@@ -44,6 +45,17 @@ class DownloadManager:
         dialog.focus_force()
         dialog.attributes('-topmost', True)
         dialog.after(100, lambda: dialog.attributes('-topmost', False))
+        
+        # Add periodic check for cancellation while dialog is open
+        def check_cancel_during_dialog():
+            if self.cancel_event and self.cancel_event.is_set():
+                result.set("cancel")
+                dialog.destroy()
+            else:
+                dialog.after(100, check_cancel_during_dialog)
+        
+        # Start the cancellation check
+        dialog.after(100, check_cancel_during_dialog)
         
         # Center the dialog
         dialog.update_idletasks()
@@ -126,7 +138,8 @@ class DownloadManager:
 class GmailDownloader:
     def __init__(self, credentials_file: str = None, gmail_account: str = None):
         self.authenticator = GmailAuthenticator(credentials_file, gmail_account) if credentials_file and gmail_account else None
-        self.cancel_requested = False
+        self.cancel_requested = False  # Keep for backward compatibility
+        self.cancel_event = None  # Will be set by GUI
         self.searcher = None
         self.attachment_processor = None
         self.download_manager = None
@@ -138,12 +151,19 @@ class GmailDownloader:
     
     def cancel_operation(self):
         self.cancel_requested = True
+        if self.cancel_event:
+            self.cancel_event.set()
         logger.info("Download cancellation requested")
     
     def reset_cancel_state(self):
         self.cancel_requested = False
+        if self.cancel_event:
+            self.cancel_event.clear()
     
     def _check_cancellation(self) -> bool:
+        """Check if operation has been cancelled"""
+        if self.cancel_event and self.cancel_event.is_set():
+            return True
         return self.cancel_requested
     
     def authenticate(self, progress_callback=None, gui_update_callback=None):
@@ -166,7 +186,7 @@ class GmailDownloader:
         if gui_update_callback:
             gui_update_callback()
         
-        email_details = self.attachment_processor.get_email_details(message_id)
+        email_details = self.attachment_processor.get_email_details(message_id, cancel_check=lambda: self._check_cancellation())
         if not email_details:
             return downloaded, skipped, total_size
         
@@ -183,6 +203,7 @@ class GmailDownloader:
         
         for att_num, attachment in enumerate(jpg_attachments, 1):
             if self._check_cancellation():
+                logger.info(f"Download cancelled during attachment {att_num} processing")
                 return downloaded, skipped, total_size
             
             if len(jpg_attachments) > 1:
@@ -191,9 +212,23 @@ class GmailDownloader:
                 if gui_update_callback:
                     gui_update_callback()
             
-            file_data = self.attachment_processor.download_attachment(message_id, attachment['attachment_id'])
+            # Check cancellation before download
+            if self._check_cancellation():
+                logger.info(f"Download cancelled before attachment {att_num} download")
+                return downloaded, skipped, total_size
+            
+            file_data = self.attachment_processor.download_attachment(message_id, attachment['attachment_id'], cancel_check=lambda: self._check_cancellation())
             if not file_data:
+                # Check if it's due to cancellation
+                if self._check_cancellation():
+                    logger.info(f"Download cancelled during attachment {att_num} download")
+                    return downloaded, skipped, total_size
                 continue
+            
+            # Check cancellation after download but before file conflict dialog
+            if self._check_cancellation():
+                logger.info(f"Download cancelled after attachment {att_num} download")
+                return downloaded, skipped, total_size
             
             original_filename = attachment['filename']
             final_filename = self.download_manager.handle_filename_conflict(original_filename, self.root)
@@ -205,6 +240,11 @@ class GmailDownloader:
                 skipped += 1
                 logger.info(f"Skipped file: {original_filename}")
                 continue  # Continue with next attachment
+            
+            # Check cancellation before file save
+            if self._check_cancellation():
+                logger.info(f"Download cancelled before saving attachment {att_num}")
+                return downloaded, skipped, total_size
             
             if self.download_manager.save_file(final_filename, file_data):
                 downloaded += 1
@@ -226,6 +266,7 @@ class GmailDownloader:
             logger.info(f"📅 Date range: {start_date} to {end_date if end_date else 'same day'}")
             
             self.download_manager = DownloadManager(output_dir)
+            self.download_manager.cancel_event = self.cancel_event
             
             if progress_callback:
                 progress_callback("Bygger sökfråga...", 5)
@@ -233,7 +274,7 @@ class GmailDownloader:
                 gui_update_callback()
             
             query = self.searcher.build_search_query(sender_email, start_date, end_date)
-            message_ids = self.searcher.search_emails(query, progress_callback, gui_update_callback, self._check_cancellation)
+            message_ids = self.searcher.search_emails(query, progress_callback, gui_update_callback, lambda: self._check_cancellation())
             
             if self._check_cancellation():
                 return {"cancelled": True}
@@ -262,6 +303,11 @@ class GmailDownloader:
                 downloaded, skipped, size = self._process_single_email(
                     message_id, i, len(message_ids), 
                     progress_callback, gui_update_callback)
+                
+                # Check cancellation after processing each email
+                if self._check_cancellation():
+                    logger.info(f"Download cancelled after processing email {i}")
+                    return {"cancelled": True}
                 
                 total_downloaded += downloaded
                 skipped_count += skipped
