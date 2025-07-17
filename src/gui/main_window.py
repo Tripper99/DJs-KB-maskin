@@ -307,7 +307,7 @@ class CombinedApp:
         creds_path_frame.pack(fill="x")
         
         creds_entry = tb.Entry(creds_path_frame, textvariable=self.credentials_file_var, 
-                              font=('Arial', 10), state="readonly")
+                              font=('Arial', 10))
         creds_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
         browse_creds_btn = tb.Button(creds_path_frame, text="Välj fil...", 
@@ -576,7 +576,7 @@ class CombinedApp:
         excel_path_frame.pack(fill="x")
         
         excel_entry = tb.Entry(excel_path_frame, textvariable=self.excel_path_var, 
-                              font=('Arial', 10), state="readonly")
+                              font=('Arial', 10))
         excel_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
         browse_excel_btn = tb.Button(excel_path_frame, text="Välj fil...", 
@@ -640,7 +640,7 @@ class CombinedApp:
                       "slår samma flersidia artiklar till en fil med sidantalet angivet och ger filerna begripliga namn bestående av datum för publicering och tidningsnamn.\n\n"
                       "Om så önskas kan även omdöpta jpg-filer sparas för använding av redigerare som då slipper konvertera tillbaka från pdf till jpg.\n\n"
                       "Prrogrammet är skapat av Dan Josefsson 2025.\n"
-                      "Python-kodningen är gjord med hjälp av ai-motorerna Claude, Cursor och Grok.",
+                      "Python-kodningen är gjord med hjälp av ai-motorerna Cursor och framför allt Claude Code.",
                  font=("Arial", 10), wraplength=550).pack(anchor="w", pady=10)
         
         tb.Button(content_frame, text="Stäng", command=about_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
@@ -649,16 +649,42 @@ class CombinedApp:
         """Show help dialog for keep renamed files option"""
         help_win = tb.Toplevel()
         help_win.title("Hjälp - Spara omdöpta jpg-filer")
-        help_win.geometry("500x300")
+        help_win.geometry("500x485")  # Increased height by 62% total (300 -> 485)
         
         # Center window
         help_win.update_idletasks()
         x = (help_win.winfo_screenwidth() // 2) - (250)
-        y = (help_win.winfo_screenheight() // 2) - (150)
-        help_win.geometry(f"500x300+{x}+{y}")
+        y = (help_win.winfo_screenheight() // 2) - (242)  # Adjusted for new height
+        help_win.geometry(f"500x485+{x}+{y}")
         
-        content_frame = tb.Frame(help_win)
-        content_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        # Create main frame for content
+        main_frame = tb.Frame(help_win)
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Create scrollable frame
+        try:
+            import tkinter.ttk as ttk
+            # Create canvas and scrollbar for scrolling
+            canvas = tk.Canvas(main_frame, highlightthickness=0)
+            scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+            scrollable_frame = tb.Frame(canvas)
+            
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+            
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            # Pack scrollbar and canvas
+            scrollbar.pack(side="right", fill="y")
+            canvas.pack(side="left", fill="both", expand=True)
+            
+            content_frame = scrollable_frame
+        except ImportError:
+            # Fallback if ttk not available
+            content_frame = main_frame
         
         tb.Label(content_frame, 
                  text="Under behandlingen av jpg-filerna skapar programmet tillfälligt omdöpta filer med begripliga namn.\n\n"
@@ -666,7 +692,7 @@ class CombinedApp:
                       "Detta är användbart för redigerare som vill ha tillgång till jpg-filerna med begripliga namn utan att behöva "
                       "konvertera tillbaka från PDF-format.\n\n"
                       "Om rutan inte är ikryssad raderas de omdöpta jpg-filerna efter att PDF-filerna har skapats.",
-                 font=("Arial", 10), wraplength=450, justify="left").pack(anchor="w", pady=10)
+                 font=("Arial", 10), wraplength=430, justify="left").pack(anchor="w", pady=10)
         
         tb.Button(content_frame, text="Stäng", command=help_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
     
@@ -674,16 +700,42 @@ class CombinedApp:
         """Show help dialog for delete original files option"""
         help_win = tb.Toplevel()
         help_win.title("Hjälp - Radera bib-filerna")
-        help_win.geometry("500x250")
+        help_win.geometry("500x405")  # Increased height by 62% total (250 -> 405)
         
         # Center window
         help_win.update_idletasks()
         x = (help_win.winfo_screenwidth() // 2) - (250)
-        y = (help_win.winfo_screenheight() // 2) - (125)
-        help_win.geometry(f"500x250+{x}+{y}")
+        y = (help_win.winfo_screenheight() // 2) - (202)  # Adjusted for new height
+        help_win.geometry(f"500x405+{x}+{y}")
         
-        content_frame = tb.Frame(help_win)
-        content_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        # Create main frame for content
+        main_frame = tb.Frame(help_win)
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Create scrollable frame
+        try:
+            import tkinter.ttk as ttk
+            # Create canvas and scrollbar for scrolling
+            canvas = tk.Canvas(main_frame, highlightthickness=0)
+            scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+            scrollable_frame = tb.Frame(canvas)
+            
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+            
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            # Pack scrollbar and canvas
+            scrollbar.pack(side="right", fill="y")
+            canvas.pack(side="left", fill="both", expand=True)
+            
+            content_frame = scrollable_frame
+        except ImportError:
+            # Fallback if ttk not available
+            content_frame = main_frame
         
         tb.Label(content_frame, 
                  text="Appen kopierar och döper om jpg-filerna från KB, som har obegripliga namn.\n\n"
@@ -691,7 +743,7 @@ class CombinedApp:
                       "Om du av någon anledning vill ha kvar originalfilerna med deras obegripliga namn "
                       "så kan du slå av den här brytaren.\n\n"
                       "Observera att detta kan leda till dubbelt så många filer i mappen.",
-                 font=("Arial", 10), wraplength=450, justify="left").pack(anchor="w", pady=10)
+                 font=("Arial", 10), wraplength=430, justify="left").pack(anchor="w", pady=10)
         
         tb.Button(content_frame, text="Stäng", command=help_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
     
@@ -860,8 +912,8 @@ class CombinedApp:
         # Load use_same_output_dir setting (default True)
         self.use_same_output_dir_var.set(self.config.get("use_same_output_dir", True))
         
-        # Load delete_original_files setting (default True)
-        self.delete_original_files_var.set(self.config.get("delete_original_files", True))
+        # Always start with delete_original_files enabled (don't save this setting)
+        self.delete_original_files_var.set(True)
         
         self.update_ui_state()
     
@@ -880,8 +932,8 @@ class CombinedApp:
             "kb_input_dir": self.kb_input_dir_var.get(),
             "kb_output_dir": self.kb_output_dir_var.get(),
             "keep_renamed": self.keep_renamed_var.get(),
-            "use_same_output_dir": self.use_same_output_dir_var.get(),
-            "delete_original_files": self.delete_original_files_var.get()
+            "use_same_output_dir": self.use_same_output_dir_var.get()
+            # Note: delete_original_files is not saved - always defaults to True at startup
         })
         save_config(self.config)
     
