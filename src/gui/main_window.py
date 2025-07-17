@@ -94,12 +94,29 @@ class CombinedApp:
         except Exception as e:
             logger.warning(f"Could not set window icon: {e}")
         
-        self.root.geometry("1000x1500")  # Increased height from 1400 to 1500
+        # Set a more reasonable window size (reduce width and height significantly)
+        window_width = 800
+        window_height = 1000
+        
+        # Get screen dimensions for proper positioning
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        
+        # Calculate position to center the window, but keep it towards top-left
+        x = min(50, screen_width // 10)  # 50 pixels from left, but not more than 1/10 of screen width
+        y = min(50, screen_height // 10)  # 50 pixels from top, but not more than 1/10 of screen height
+        
+        # Set initial size without position
+        self.root.geometry(f"{window_width}x{window_height}")
         self.root.update_idletasks()
-        # Position window at top-left corner
-        x = 10  # 10 pixels from left edge
-        y = 10  # 10 pixels from top edge
-        self.root.geometry(f"1000x1500+{x}+{y}")
+        
+        # Now set final position
+        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        
+        # Force window to the front and ensure it's visible
+        self.root.lift()
+        self.root.attributes('-topmost', True)
+        self.root.after(100, lambda: self.root.attributes('-topmost', False))
         # Add a canvas+scrollbar for main content
         canvas = tk.Canvas(self.root)
         scrollbar = tb.Scrollbar(self.root, orient="vertical", command=canvas.yview)
@@ -179,18 +196,18 @@ class CombinedApp:
     
     def create_widgets(self):
         """Create all GUI widgets"""
-        # Main container
+        # Main container with reduced padding
         main_frame = tb.Frame(self.main_frame)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
         # Title
         title_label = tb.Label(main_frame, text="DJs app för hantering av filer från 'Svenska Tidningar'", 
                               font=('Arial', 12, 'bold'))
-        title_label.pack(pady=(0, 20))
+        title_label.pack(pady=(0, 10))
         
-        # Tool selection frame
-        selection_frame = tb.LabelFrame(main_frame, text="Välj verktyg", padding=15)
-        selection_frame.pack(fill="x", pady=(0, 20))
+        # Tool selection frame with reduced padding
+        selection_frame = tb.LabelFrame(main_frame, text="Välj verktyg", padding=10)
+        selection_frame.pack(fill="x", pady=(0, 10))
         
         self.gmail_check = tb.Checkbutton(selection_frame, text="Ladda ned jpg-bilagor från Svenska Tidningar via Gmail API", 
                                          variable=self.gmail_enabled, bootstyle="success-round-toggle")
@@ -246,7 +263,7 @@ class CombinedApp:
 
     def create_gmail_section(self, parent):
         """Create Gmail downloader section"""
-        self.gmail_frame = tb.LabelFrame(parent, text="Gmail jpg-nedladdare", padding=20)
+        self.gmail_frame = tb.LabelFrame(parent, text="Gmail jpg-nedladdare", padding=10)
         
         # Gmail account
         gmail_account_frame = tb.Frame(self.gmail_frame)
@@ -458,7 +475,7 @@ class CombinedApp:
     
     def create_kb_section(self, parent):
         """Create KB processor section"""
-        self.kb_frame = tb.LabelFrame(parent, text="Bearbetning av jpg-filer från KB", padding=20)
+        self.kb_frame = tb.LabelFrame(parent, text="Bearbetning av jpg-filer från KB", padding=10)
         
         # Input directory (moved to top)
         kb_input_frame = tb.Frame(self.kb_frame)
@@ -750,11 +767,11 @@ class CombinedApp:
         
         # Show Gmail section first if enabled
         if gmail_on:
-            self.gmail_frame.pack(fill="x", pady=(0, 20))
+            self.gmail_frame.pack(fill="x", pady=(0, 10))
         
         # Show KB section after Gmail if enabled
         if kb_on:
-            self.kb_frame.pack(fill="x", pady=(0, 20))
+            self.kb_frame.pack(fill="x", pady=(0, 10))
         
         # Show auto-link info when both are enabled
         if both_on:
