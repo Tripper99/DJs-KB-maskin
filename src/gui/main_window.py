@@ -97,7 +97,7 @@ class CombinedApp:
         
         # Set a more reasonable window size (reduce width and height significantly)
         window_width = 800
-        window_height = 1000
+        window_height = 1400  # Increased by 40% from 1000 to 1400
         
         # Get screen dimensions for proper positioning
         screen_width = self.root.winfo_screenwidth()
@@ -105,7 +105,7 @@ class CombinedApp:
         
         # Calculate position to center the window, but keep it towards top-left
         x = min(50, screen_width // 10)  # 50 pixels from left, but not more than 1/10 of screen width
-        y = min(50, screen_height // 10)  # 50 pixels from top, but not more than 1/10 of screen height
+        y = min(20, screen_height // 20)  # 20 pixels from top, positioned higher on screen
         
         # Set initial size without position
         self.root.geometry(f"{window_width}x{window_height}")
@@ -479,7 +479,29 @@ class CombinedApp:
         """Create KB processor section"""
         self.kb_frame = tb.LabelFrame(parent, text="Bearbetning av jpg-filer från KB", padding=10)
         
-        # Input directory (moved to top)
+        # Excel file (moved to top for logical workflow)
+        excel_frame = tb.Frame(self.kb_frame)
+        excel_frame.pack(fill="x", pady=(0, 15))
+        
+        tb.Label(excel_frame, text="Excel-fil med bib-koder översatta till tidningsnamn:", font=('Arial', 10)).pack(anchor="w", pady=(0, 5))
+        
+        excel_path_frame = tb.Frame(excel_frame)
+        excel_path_frame.pack(fill="x")
+        
+        excel_entry = tb.Entry(excel_path_frame, textvariable=self.excel_path_var, 
+                              font=('Arial', 10))
+        excel_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        
+        browse_excel_btn = tb.Button(excel_path_frame, text="Välj fil...", 
+                                    command=self.browse_excel_file, 
+                                    bootstyle=INFO, width=12)
+        browse_excel_btn.pack(side="right")
+        
+        # Excel validation label
+        self.excel_validation_label = tb.Label(excel_frame, text="", font=('Arial', 9), foreground="green")
+        self.excel_validation_label.pack(anchor="w", pady=(5, 0))
+        
+        # Input directory
         kb_input_frame = tb.Frame(self.kb_frame)
         kb_input_frame.pack(fill="x", pady=(0, 15))
         
@@ -566,28 +588,6 @@ class CombinedApp:
                             command=self.show_keep_renamed_help,
                             bootstyle="info-outline")
         help_btn.pack(side="left", padx=(10, 0))
-        
-        # Excel file (moved to bottom)
-        excel_frame = tb.Frame(self.kb_frame)
-        excel_frame.pack(fill="x", pady=(15, 0))
-        
-        tb.Label(excel_frame, text="Excel-fil med bib-koder översatta till tidningsnamn:", font=('Arial', 10)).pack(anchor="w", pady=(0, 5))
-        
-        excel_path_frame = tb.Frame(excel_frame)
-        excel_path_frame.pack(fill="x")
-        
-        excel_entry = tb.Entry(excel_path_frame, textvariable=self.excel_path_var, 
-                              font=('Arial', 10))
-        excel_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        
-        browse_excel_btn = tb.Button(excel_path_frame, text="Välj fil...", 
-                                    command=self.browse_excel_file, 
-                                    bootstyle=INFO, width=12)
-        browse_excel_btn.pack(side="right")
-        
-        # Excel validation label
-        self.excel_validation_label = tb.Label(excel_frame, text="", font=('Arial', 9), foreground="green")
-        self.excel_validation_label.pack(anchor="w", pady=(5, 0))
     
     def create_action_section(self, parent):
         """Create action buttons and progress section"""
