@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.3.5"
-__version_info__ = (1, 3, 5)
+__version__ = "1.3.6"
+__version_info__ = (1, 3, 6)
 __release_date__ = "2025-08-22"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.3.6 (2025-08-22): GUI improvements - File dialogs start in app directory, window positioned higher, date placeholders added
 1.3.5 (2025-08-22): Renamed settings file from combined_app_config.json to djs_kb-maskin_settings.json
 1.3.4 (2025-08-22): Updated documentation - DEVELOPMENT_HISTORY.md and CLAUDE.md reflect latest changes
 1.3.3 (2025-08-22): GUI improvements - Increased window height by 40%, positioned higher on screen, reordered KB section elements
