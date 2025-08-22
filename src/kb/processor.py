@@ -21,6 +21,8 @@ try:
 except ImportError:
     IMAGE_PROCESSING_AVAILABLE = False
 
+from ..security import get_secure_ops, get_default_validator
+
 logger = logging.getLogger(__name__)
 
 class KBProcessor:
@@ -28,22 +30,12 @@ class KBProcessor:
         self.cancel_requested = False  # Keep for backward compatibility
         self.cancel_event = None  # Will be set by GUI
         self.root = None  # Reference to root window for dialogs
+        self.secure_ops = get_secure_ops()
+        self.validator = get_default_validator()
     
     def sanitize_filename(self, filename: str) -> str:
-        """Sanitize filename to prevent path traversal and invalid characters"""
-        # Remove or replace dangerous characters
-        # Keep Swedish characters and common punctuation
-        filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
-        filename = re.sub(r'\.\.+', '.', filename)  # Replace multiple dots
-        filename = filename.strip('. ')  # Remove leading/trailing dots and spaces
-        
-        # Ensure filename is not empty and not too long
-        if not filename:
-            filename = "unnamed"
-        if len(filename) > 200:  # Reasonable limit
-            filename = filename[:200]
-        
-        return filename
+        """Sanitize filename using secure validator"""
+        return self.validator.sanitize_filename(filename, preserve_extension=True)
     
     def validate_image_file(self, file_path: Path) -> Tuple[bool, str]:
         """Validate that a file is a valid image"""
@@ -165,9 +157,8 @@ class KBProcessor:
             if not IMAGE_PROCESSING_AVAILABLE:
                 return False, "Pandas inte installerat - KB-funktionalitet inte tillgänglig"
             
-            # Normalize path to handle both forward and backward slashes
-            normalized_path = str(Path(file_path).resolve())
-            df = pd.read_excel(normalized_path, header=None)
+            # Use secure Excel reading
+            df = self.secure_ops.read_excel(file_path, header=None)
             
             if df.shape[1] < 2:
                 return False, "Excel-filen måste ha minst 2 kolumner (bib-kod och tidningsnamn)"
@@ -181,21 +172,28 @@ class KBProcessor:
             return False, f"Fel vid läsning av Excel-fil: {str(e)}"
     
     def validate_directories(self, input_dir: str, output_dir: str) -> Tuple[bool, List[str]]:
-        """Validate input and output directories"""
+        """Validate input and output directories securely"""
         errors = []
         
-        if not input_dir or not os.path.exists(input_dir):
-            errors.append("Input-mappen existerar inte")
+        # Validate input directory
+        if not input_dir:
+            errors.append("Input-mapp måste väljas")
+        else:
+            is_valid, error_msg, _ = self.validator.validate_directory(
+                input_dir, must_exist=True
+            )
+            if not is_valid:
+                errors.append(f"Input-mapp: {error_msg}")
         
+        # Validate output directory
         if not output_dir:
             errors.append("Output-mapp måste väljas")
         else:
-            try:
-                os.makedirs(output_dir, exist_ok=True)
-                if not os.access(output_dir, os.W_OK):
-                    errors.append("Output-mappen kan inte skrivas till")
-            except Exception as e:
-                errors.append(f"Kan inte skapa/komma åt output-mappen: {str(e)}")
+            is_valid, error_msg, _ = self.validator.validate_directory(
+                output_dir, must_exist=False, create_if_missing=True
+            )
+            if not is_valid:
+                errors.append(f"Output-mapp: {error_msg}")
         
         return len(errors) == 0, errors
     
@@ -223,9 +221,8 @@ class KBProcessor:
                 gui_update_callback()
             
             try:
-                # Normalize path to handle both forward and backward slashes
-                normalized_excel_path = str(Path(excel_path).resolve())
-                bib_df = pd.read_excel(normalized_excel_path, header=None)
+                # Use secure Excel reading
+                bib_df = self.secure_ops.read_excel(excel_path, header=None)
                 bib_dict = dict(zip(bib_df[0].astype(str), bib_df[1].astype(str)))
                 logger.info(f"Loaded {len(bib_dict)} bib codes from Excel")
             except Exception as e:

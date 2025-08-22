@@ -11,13 +11,23 @@ from typing import Dict, Optional, Tuple
 from .authenticator import GmailAuthenticator, AuthenticationError
 from .searcher import GmailSearcher
 from .processor import AttachmentProcessor
+from ..security import get_secure_ops, get_default_validator
 
 logger = logging.getLogger(__name__)
 
 class DownloadManager:
     def __init__(self, output_dir: str):
-        self.output_path = Path(output_dir)
-        self.output_path.mkdir(parents=True, exist_ok=True)
+        self.secure_ops = get_secure_ops()
+        self.validator = get_default_validator()
+        
+        # Validate and set up output directory
+        is_valid, error_msg, safe_path = self.validator.validate_directory(
+            output_dir, must_exist=False, create_if_missing=True
+        )
+        if not is_valid:
+            raise ValueError(f"Ogiltig utdata-katalog: {error_msg}")
+            
+        self.output_path = safe_path
         self.overwrite_all = False
         self.skip_all = False
         self.cancel_event = None
@@ -161,14 +171,18 @@ class DownloadManager:
             return None  # None means cancel entire operation
     
     def save_file(self, filename: str, file_data: bytes) -> bool:
-        file_path = self.output_path / filename
         try:
-            with open(file_path, 'wb') as f:
-                f.write(file_data)
+            # Use secure file operations
+            output_path = self.secure_ops.save_file(
+                content=file_data,
+                filename=filename,
+                output_dir=str(self.output_path),
+                binary=True
+            )
             file_size = len(file_data)
-            # Add to session tracking set
-            self.downloaded_in_session.add(filename)
-            logger.info(f"✅ Downloaded: {filename} ({self.format_file_size(file_size)})")
+            # Add to session tracking set (use sanitized filename)
+            self.downloaded_in_session.add(output_path.name)
+            logger.info(f"✅ Downloaded: {output_path.name} ({self.format_file_size(file_size)})")
             return True
         except Exception as e:
             logger.error(f"Failed to save file {filename}: {e}")
@@ -195,6 +209,8 @@ class GmailDownloader:
         self.attachment_processor = None
         self.download_manager = None
         self.root = None  # Reference to root window for dialogs
+        self.secure_ops = get_secure_ops()
+        self.validator = get_default_validator()
     
     def set_root(self, root: tk.Tk):
         """Set the root window for dialog purposes"""

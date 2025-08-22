@@ -27,6 +27,7 @@ from ..config import load_config, save_config
 from ..gmail.downloader import GmailDownloader
 from ..kb.processor import KBProcessor
 from ..version import __version__ as VERSION
+from ..security import get_secure_ops, get_default_validator
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,8 @@ class CombinedApp:
         self.config = load_config()
         self.gmail_downloader = None
         self.kb_processor = KBProcessor()
+        self.secure_ops = get_secure_ops()
+        self.validator = get_default_validator()
         
         # Thread-safe cancellation event
         self.cancel_event = threading.Event()
@@ -292,9 +295,9 @@ class CombinedApp:
                         import os
                         os.startfile(str(manual_path))
                     elif sys.platform.startswith('darwin'):
-                        subprocess.run(['open', str(manual_path)])
+                        self.secure_ops.safe_subprocess_run(['open'], file_arg=str(manual_path))
                     else:
-                        subprocess.run(['xdg-open', str(manual_path)])
+                        self.secure_ops.safe_subprocess_run(['xdg-open'], file_arg=str(manual_path))
                 except Exception as e:
                     messagebox.showerror("Fel", f"Kunde inte öppna Manual.docx: {e}")
             else:
@@ -757,9 +760,9 @@ class CombinedApp:
                 import os
                 os.startfile(str(manual_path))
             elif sys.platform.startswith('darwin'):
-                subprocess.run(['open', str(manual_path)])
+                self.secure_ops.safe_subprocess_run(['open'], file_arg=str(manual_path))
             else:
-                subprocess.run(['xdg-open', str(manual_path)])
+                self.secure_ops.safe_subprocess_run(['xdg-open'], file_arg=str(manual_path))
         except Exception as e:
             messagebox.showerror("Fel", f"Kunde inte öppna Manual.docx: {e}")
     
