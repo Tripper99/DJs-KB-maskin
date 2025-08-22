@@ -30,7 +30,7 @@ python app.py
 
 ### Main Components
 
-1. **Configuration** - JSON-based settings persistence (`combined_app_config.json`)
+1. **Configuration** - JSON-based settings persistence (`djs_kb-maskin_settings.json`)
 2. **Gmail Integration** - OAuth authentication, email search, attachment download with conflict resolution
 3. **KB Processing** - JPG to PDF conversion with bib-code mapping, date grouping, and page counting
 4. **GUI** - ttkbootstrap-based interface with progress tracking and cancellation support

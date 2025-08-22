@@ -9,7 +9,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-CONFIG_FILE = "combined_app_config.json"
+CONFIG_FILE = "djs_kb-maskin_settings.json"
 
 def load_config():
     """Load application configuration"""

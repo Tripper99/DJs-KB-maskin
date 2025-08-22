@@ -3,7 +3,7 @@
 """
 DJs app för hantering av filer från "Svenska Tidningar" - Main Entry Point
 dan@josefsson.net
-Kod skriven med hjälp av Claude ai, Grok och Cursor.
+Kod skriven med hjälp av Claude Code, Grok och Cursor.
 """
 
 import datetime

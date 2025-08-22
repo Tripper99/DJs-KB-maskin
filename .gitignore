@@ -59,7 +59,7 @@ token_*.json
 config.json
 
 # Application-specific
-combined_app_config.json
+djs_kb-maskin_settings.json
 
 # Temporary files
 *.tmp

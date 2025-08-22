@@ -145,7 +145,7 @@ DJs_KB_maskin/
 - **Processing Reports**: Detailed success/failure statistics
 
 ### Configuration Flow:
-- **JSON Persistence**: User preferences saved in `combined_app_config.json`
+- **JSON Persistence**: User preferences saved in `djs_kb-maskin_settings.json`
 - **Default Values**: Intelligent defaults for common use cases
 - **State Management**: GUI state synchronized with configuration
 

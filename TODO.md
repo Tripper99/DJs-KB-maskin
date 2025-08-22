@@ -53,7 +53,7 @@ This document tracks known issues, improvements, and future development tasks.
 - Validate all configuration file paths on load
 - Sanitize configuration values before use
 - Add configuration file integrity checks
-- **Files**: `src/config.py`, `combined_app_config.json`
+- **Files**: `src/config.py`, `djs_kb-maskin_settings.json`
 - **Impact**: Configuration tampering protection
 
 ### Low Priority
