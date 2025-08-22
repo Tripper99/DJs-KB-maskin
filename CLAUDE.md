@@ -98,22 +98,32 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.3.1)
+## Current Status (v1.3.3)
 
 The application is production-ready with:
 - **Enterprise-level security** - Path validation, injection prevention, secure file operations
-- **Responsive GUI** with proper threading
+- **Enhanced GUI** - 40% taller window, optimized screen positioning, logical field ordering
+- **Responsive interface** with proper threading
 - **Comprehensive cancellation** support throughout all operations
 - **KB-specific workflow** optimizations for Swedish newspaper processing
 - **Professional error handling** and logging with Swedish language support
 - **Centralized version management** for easier maintenance
 - **Comprehensive testing** suite for security features
+- **Complete documentation** - Full codebase analysis available in `docs/`
 
 ## Documentation
 
-- **[DEVELOPMENT_HISTORY.md](DEVELOPMENT_HISTORY.md)** - Complete development history and resolved issues
+- **[docs/codebase_analysis.md](docs/codebase_analysis.md)** - Comprehensive architecture analysis and documentation
+- **[DEVELOPMENT_HISTORY.md](DEVELOPMENT_HISTORY.md)** - Complete development history and resolved issues  
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
+
+## GUI Enhancements (v1.3.3)
+
+### Window Improvements
+- **Increased Height** - Main window now 1400px tall (40% increase from 1000px)
+- **Better Positioning** - Window positioned higher on screen (20px from top)
+- **Logical Field Order** - Excel file selection moved to top of KB section for intuitive workflow
 
 ## Security Features (v1.3+)
 
