@@ -1,8 +1,48 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(source:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(ruff:*)",
+      "Bash(touch:*)",
+      "Bash(cat:*)",
+      "Bash(ruff check:*)",
+      "Bash(git push:*)",
+      "Bash(ruff check:*)",
+      "Bash(true)",
+      "Bash(mv:*)",
+      "Bash(grep:*)",
+      "mcp__Ref__ref_search_documentation",
+      "WebFetch(domain:xlsxwriter.readthedocs.io)",
+      "Bash(wc:*)",
+      "WebFetch(domain:ttkbootstrap.readthedocs.io)",
+      "Bash(git checkout:*)",
+      "Bash(rg:*)",
+      "mcp__Ref__ref_read_url",
+      "Bash(timeout:*)",
+      "Bash(del test_ctktextbox.py)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(pip install:*)",
+      "Bash(echo $env:APPDATA)",
+      "WebFetch(domain:customtkinter.tomschimansky.com)",
+      "WebSearch",
+      "WebFetch(domain:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.anthropic.com)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "C:\\Dropbox\\Dokument\\Python\\claude-code-docs-auto"
+    ]
   }
 }

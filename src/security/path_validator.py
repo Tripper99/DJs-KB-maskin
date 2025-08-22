@@ -180,8 +180,9 @@ class PathValidator:
                 ext = '.' + ext
         
         # Remove/replace invalid characters
-        # Keep alphanumeric, spaces, hyphens, underscores, and Swedish characters
-        name = re.sub(r'[^\w\s\-åäöÅÄÖ]', '_', name, flags=re.UNICODE)
+        # Keep safe characters including parentheses, periods, Swedish characters
+        # Block only truly dangerous characters for Windows filesystems
+        name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', name, flags=re.UNICODE)
         
         # Remove multiple underscores
         name = re.sub(r'_+', '_', name)
