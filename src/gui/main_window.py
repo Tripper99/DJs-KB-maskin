@@ -26,11 +26,9 @@ except ImportError:
 from ..config import load_config, save_config
 from ..gmail.downloader import GmailDownloader
 from ..kb.processor import KBProcessor
+from ..version import __version__ as VERSION
 
 logger = logging.getLogger(__name__)
-
-# Global variables
-VERSION = "1.1"
 
 # Check for required dependencies
 try:
