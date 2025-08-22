@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.3.1"
-__version_info__ = (1, 3, 1)
+__version__ = "1.3.2"
+__version_info__ = (1, 3, 2)
 __release_date__ = "2025-08-22"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.3.2 (2025-08-22): Added comprehensive codebase analysis documentation and architecture overview
 1.3.1 (2025-08-22): Fixed filename sanitization bug - Restored parentheses in PDF names
 1.3 (2025-08-22): Comprehensive security implementation - Path validation, secure file ops, and vulnerability fixes
 1.2 (2025-08-22): Security improvements - Added comprehensive path validation
