@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.4.4"
-__version_info__ = (1, 4, 4)
+__version__ = "1.4.5"
+__version_info__ = (1, 4, 5)
 __release_date__ = "2025-08-23"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.4.5 (2025-08-23): Added tooltip to Start button with humorous 'whoopee machine' reference
 1.4.4 (2025-08-23): Added tooltips to main tool selection switches for better user guidance
 1.4.3 (2025-08-23): Changed default setting - 'Spara omdöpta jpg-filer i en underkatalog?' now defaults to OFF
 1.4.1 (2025-08-23): Improved tooltips and user guidance in the GUI

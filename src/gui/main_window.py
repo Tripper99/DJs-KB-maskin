@@ -688,6 +688,7 @@ class CombinedApp:
                                   command=self.start_processing, 
                                   bootstyle=SUCCESS, width=25)
         self.start_btn.pack(side="left", padx=(0, 10))
+        self.add_tooltip(self.start_btn, "Fyll i nödvändiga fält nedan och klicka sedan här för att, så att säga, start the whoopee machine")
         
         self.cancel_btn = tb.Button(button_frame, text="Avbryt", 
                                    command=self.cancel_processing, 
