@@ -237,10 +237,12 @@ class CombinedApp:
         self.gmail_check = tb.Checkbutton(selection_frame, text="Ladda ned jpg-bilagor från Svenska Tidningar via Gmail API", 
                                          variable=self.gmail_enabled, bootstyle="success-round-toggle")
         self.gmail_check.pack(anchor="w", pady=5)
+        self.add_tooltip(self.gmail_check, "Aktivera för att ladda ned jpg-bilagor från KB (kan med fördel kombineras med konvertering av bilagorna till pdf, se nedan)")
         
         self.kb_check = tb.Checkbutton(selection_frame, text="Gör om jpg-filer till pdf-filer, ge begripliga namn och slå ihop flersidiga artiklar", 
                                       variable=self.kb_enabled, bootstyle="success-round-toggle")
         self.kb_check.pack(anchor="w", pady=5)
+        self.add_tooltip(self.kb_check, "Aktivera för att konvertera jpg-filer till pdf. Kan med fördel kombineras med nedladdning av bilagorna, se ovan)")
         
         # Gmail section
         self.create_gmail_section(main_frame)
