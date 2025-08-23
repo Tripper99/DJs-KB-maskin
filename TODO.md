@@ -2,13 +2,35 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (v1.3.6)
+## ✅ Recently Completed (v1.4.6)
 
-### GUI Improvements - COMPLETED 2025-08-23
+### Tooltip System Implementation - COMPLETED 2025-08-23
+- ✅ **Comprehensive Tooltips**: Added tooltips to all major GUI fields (15+ tooltips)
+- ✅ **Main Tool Switches**: Added tooltips to Gmail and KB selection checkboxes
+- ✅ **Start Button**: Added playful tooltip with "whoopee machine" reference
+- ✅ **Swedish Language**: All tooltips in Swedish with proper character support
+
+### UI/UX Improvements - COMPLETED 2025-08-23
+- ✅ **Delete Logic Reversal**: "Bevara bib-filerna" now OFF by default (deletes originals)
+- ✅ **Default Settings**: "Spara omdöpta jpg-filer" now OFF by default
+- ✅ **Layout Optimization**: Moved delete/save option to bottom of KB section
+- ✅ **Dynamic Button Text**: Start button text changes based on selected tools
+- ✅ **Status Messages**: Improved user guidance messages
+
+### Previously Completed (v1.3.6)
 - ✅ **File Dialog Initial Directory**: All file dialogs now start in application directory for .exe compatibility
 - ✅ **Window Positioning**: Window now opens at 5 pixels from top for better screen usage
 - ✅ **Date Field Placeholders**: Added "ÅÅÅÅ-MM-DD" placeholder text with proper focus behavior
 - ✅ **Validation Preservation**: All existing validation and functionality maintained
+
+## 📦 Build & Distribution
+
+### PyInstaller Configuration
+- **Spec File**: `DJs_KB_maskin.spec` configured with version in filename
+- **Current Version**: v1.4.6
+- **Build Command**: `pyinstaller DJs_KB_maskin.spec`
+- **Output**: `dist/DJs_KB_maskin_v1.4.6.exe`
+- **Icon**: Uses `Agg-med-smor-v4-transperent.ico`
 
 ## 🔧 Known Issues & Improvements Needed
 

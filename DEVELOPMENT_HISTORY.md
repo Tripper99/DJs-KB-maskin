@@ -4,6 +4,55 @@ This document contains the historical development notes and issue resolutions fo
 
 ## Latest Development Session (2025-08-23)
 
+### 🎯 Tooltip System & UI Refinements (v1.4.0 - v1.4.6)
+
+**Comprehensive tooltip implementation and user interface refinements:**
+
+#### Version 1.4.6 - Dynamic UI & Build Configuration:
+- **Dynamic Button Text**: Start button text changes based on selected tools
+  - "Kör igång" when both tools selected
+  - "Starta hämtning av jpg-bilagor" for Gmail only
+  - "Starta filkonvertering" for KB only
+- **Build Configuration**: Updated PyInstaller spec file with version in filename
+- **Status Messages**: Improved user guidance messages
+
+#### Version 1.4.5 - Start Button Tooltip:
+- Added playful tooltip: "Fyll i nödvändiga fält nedan och klicka sedan här för att, så att säga, start the whoopee machine"
+
+#### Version 1.4.4 - Main Tool Selection Tooltips:
+- Gmail switch: "Aktivera för att ladda ned jpg-bilagor från KB..."
+- KB switch: "Aktivera för att konvertera jpg-filer till pdf..."
+
+#### Version 1.4.3 - Default Settings Change:
+- Changed "Spara omdöpta jpg-filer i en underkatalog?" default to OFF
+
+#### Version 1.4.2 - Tooltip Text Improvements:
+- Refined and shortened tooltip texts for better clarity
+- Updated KB input folder tooltip for improved guidance
+
+#### Version 1.4.1 - GUI Layout Improvements:
+- Shortened checkbox text to "Bevara bib-filerna från KB efter konvertering? (Rekommenderas ej)"
+- Moved delete/save option to bottom of KB section for logical flow
+
+#### Version 1.4.0 (formerly 1.3.8) - Comprehensive Tooltip System:
+- **Technical Implementation**:
+  - Imported `ToolTip` from `ttkbootstrap.tooltip`
+  - Created `add_tooltip()` helper method for consistent styling
+  - 400ms delay, 400px wrap width for all tooltips
+- **Gmail Section Tooltips** (6 fields):
+  - Gmail account, Credentials file, Sender email
+  - Start date, End date, Download folder
+- **KB Section Tooltips** (6 fields):
+  - Excel file, Input folder, Output folder
+  - Save renamed JPGs checkbox, Preserve bib-files checkbox
+
+#### Version 1.3.7 - Delete Logic Reversal:
+- **Major Logic Change**: Reversed the delete original files logic
+- Switch OFF (default) = Delete original bib-files
+- Switch ON = Keep original bib-files
+- Updated help dialogs to reflect new behavior
+- Renamed internal parameter from `delete_originals` to `keep_originals`
+
 ### 🎨 GUI User Experience Improvements (v1.3.6)
 
 **Major user experience enhancements completed for better .exe compatibility and usability:**

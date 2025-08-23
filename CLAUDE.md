@@ -98,19 +98,21 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.3.6)
+## Current Status (v1.4.6)
 
 The application is production-ready with:
+- **Comprehensive Tooltip System** - 15+ tooltips across all major GUI elements for enhanced user guidance
+- **Dynamic User Interface** - Smart button text and status messages that adapt to user selections
+- **Optimized Default Settings** - Sensible defaults (delete originals, don't save renamed JPGs) 
 - **Enterprise-level security** - Path validation, injection prevention, secure file operations
-- **Enhanced GUI** - 40% taller window, optimized screen positioning at 5px from top, logical field ordering
-- **Improved user experience** - File dialogs start in app directory, date fields show ÅÅÅÅ-MM-DD placeholders
-- **Responsive interface** with proper threading
-- **Comprehensive cancellation** support throughout all operations
+- **Enhanced GUI** - 40% taller window, optimized screen positioning, logical field ordering
+- **Swedish Language Support** - Complete interface localization with proper character handling
+- **Responsive interface** with proper threading and comprehensive cancellation support
 - **KB-specific workflow** optimizations for Swedish newspaper processing
-- **Professional error handling** and logging with Swedish language support
+- **Professional error handling** and logging
 - **Centralized version management** for easier maintenance
-- **Comprehensive testing** suite for security features
-- **Complete documentation** - Full codebase analysis available in `docs/`
+- **PyInstaller Integration** - Ready for .exe distribution with version-numbered builds
+- **Complete documentation** - Full development history and architectural analysis
 
 ## Documentation
 
@@ -119,17 +121,33 @@ The application is production-ready with:
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
 
-## GUI Enhancements (v1.3.6)
+## GUI Enhancements (v1.4.6)
 
-### Window Improvements
+### Tooltip System
+- **Comprehensive Coverage** - 15+ tooltips across all major interface elements
+- **Swedish Language** - All tooltips in Swedish with proper UTF-8 character support
+- **Contextual Help** - Field-specific guidance without cluttering the interface
+- **Technical Implementation** - Uses ttkbootstrap.tooltip.ToolTip with 400ms delay and smart wrapping
+
+### Dynamic Interface (v1.4.6)
+- **Smart Button Text** - Start button adapts based on selected tools:
+  - "Kör igång" (both tools selected)
+  - "Starta hämtning av jpg-bilagor" (Gmail only) 
+  - "Starta filkonvertering" (KB only)
+- **Status Messages** - Contextual guidance messages that update based on form state
+- **Optimized Defaults** - Sensible settings (delete originals, don't save renamed files)
+
+### Window Improvements (v1.3.6)
 - **Increased Height** - Main window now 1400px tall (40% increase from 1000px)
 - **Better Positioning** - Window positioned at 5px from top for optimal screen usage
 - **Logical Field Order** - Excel file selection moved to top of KB section for intuitive workflow
-
-### User Experience Improvements (v1.3.6)
 - **File Dialog Consistency** - All file dialogs start in application directory (.exe compatibility)
 - **Date Field Placeholders** - Shows "ÅÅÅÅ-MM-DD" format hint that disappears on focus
-- **Visual Guidance** - Gray placeholder text provides clear input format expectations
+
+### Build & Distribution
+- **PyInstaller Ready** - Configured spec file with version-numbered output
+- **Icon Integration** - Uses `Agg-med-smor-v4-transperent.ico` for branding
+- **One-File Distribution** - Creates single .exe with all dependencies included
 
 ## Security Features (v1.3+)
 
