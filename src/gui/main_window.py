@@ -105,7 +105,7 @@ class CombinedApp:
         
         # Calculate position to center the window, but keep it towards top-left
         x = min(50, screen_width // 10)  # 50 pixels from left, but not more than 1/10 of screen width
-        y = min(20, screen_height // 20)  # 20 pixels from top, positioned higher on screen
+        y = 5  # 5 pixels from top, positioned very high on screen
         
         # Set initial size without position
         self.root.geometry(f"{window_width}x{window_height}")
@@ -177,6 +177,11 @@ class CombinedApp:
         # Track which operations are running
         self.gmail_running = False
         self.kb_running = False
+        
+        # Placeholder state tracking
+        self.placeholder_text = "ÅÅÅÅ-MM-DD"
+        self.start_date_has_placeholder = False
+        self.end_date_has_placeholder = False
         
         # Bind checkbox events
         self.gmail_enabled.trace('w', self.on_gmail_toggle)
@@ -257,6 +262,10 @@ class CombinedApp:
     def full_date_validation(self, field: str):
         # Get the value
         value = self.start_date_var.get() if field == "start" else self.end_date_var.get()
+        # Skip validation if it's placeholder text
+        if value == self.placeholder_text:
+            self.update_date_validation_label("", field, True)
+            return
         # Only validate if length is 10 (full date)
         if len(value) == 10:
             self.validate_date(value, field)
@@ -345,10 +354,12 @@ class CombinedApp:
                                    validate="key", 
                                    validatecommand=vcmd_start)
         start_date_entry.pack(side="left")
+        self.start_date_entry = start_date_entry  # Store reference for placeholder functionality
         self.start_date_validation_label = tb.Label(start_date_frame, text="", font=('Arial', 10))
         self.start_date_validation_label.pack(side="left", padx=(5, 0))
         start_date_entry.bind('<KeyRelease>', lambda e: self.full_date_validation('start'))
-        start_date_entry.bind('<FocusOut>', lambda e: self.full_date_validation('start'))
+        start_date_entry.bind('<FocusOut>', lambda e: self.on_start_date_focus_out(e))
+        start_date_entry.bind('<FocusIn>', lambda e: self.on_start_date_focus_in(e))
         
         # End date with validation
         end_date_frame = tb.Frame(date_frame)
@@ -360,10 +371,12 @@ class CombinedApp:
                                  validate="key", 
                                  validatecommand=vcmd_end)
         end_date_entry.pack(side="left")
+        self.end_date_entry = end_date_entry  # Store reference for placeholder functionality
         self.end_date_validation_label = tb.Label(end_date_frame, text="", font=('Arial', 10))
         self.end_date_validation_label.pack(side="left", padx=(5, 0))
         end_date_entry.bind('<KeyRelease>', lambda e: self.full_date_validation('end'))
-        end_date_entry.bind('<FocusOut>', lambda e: self.full_date_validation('end'))
+        end_date_entry.bind('<FocusOut>', lambda e: self.on_end_date_focus_out(e))
+        end_date_entry.bind('<FocusIn>', lambda e: self.on_end_date_focus_in(e))
         
         # Date explanation
         date_info_frame = tb.Frame(self.gmail_frame)
@@ -392,8 +405,8 @@ class CombinedApp:
     
     def validate_date(self, input_str: str, field: str) -> bool:
         """Validate date format and trigger cross-field validation"""
-        # Allow empty input
-        if not input_str:
+        # Allow empty input or placeholder text
+        if not input_str or input_str == self.placeholder_text:
             self.update_date_validation_label(input_str, field, True)
             self.cross_validate_dates(field)
             return True
@@ -433,8 +446,8 @@ class CombinedApp:
         end_label = self.end_date_validation_label
         target_label = start_label if field == "start" else end_label
 
-        # Clear if empty
-        if not input_str:
+        # Clear if empty or placeholder
+        if not input_str or input_str == self.placeholder_text:
             target_label.config(text="", foreground="green")
             return
 
@@ -451,8 +464,9 @@ class CombinedApp:
         start_label = self.start_date_validation_label
         end_label = self.end_date_validation_label
 
-        # If either field is empty, just show format validation
-        if not start_date or not end_date:
+        # If either field is empty or contains placeholder text, just show format validation
+        if (not start_date or start_date == self.placeholder_text or 
+            not end_date or end_date == self.placeholder_text):
             return True
 
         # Parse dates
@@ -474,6 +488,46 @@ class CombinedApp:
             invalid_label.config(text="✗", foreground="red")
             valid_label.config(text="✓", foreground="green")
             return False
+    
+    def on_start_date_focus_in(self, event):
+        """Handle start date field focus in - remove placeholder if present"""
+        if self.start_date_has_placeholder:
+            self.start_date_var.set("")
+            self.start_date_entry.config(foreground="white")
+            self.start_date_has_placeholder = False
+    
+    def on_start_date_focus_out(self, event):
+        """Handle start date field focus out - add placeholder if empty, run validation"""
+        current_value = self.start_date_var.get().strip()
+        if not current_value:
+            self.start_date_var.set(self.placeholder_text)
+            self.start_date_entry.config(foreground="gray")
+            self.start_date_has_placeholder = True
+        else:
+            self.start_date_has_placeholder = False
+        
+        # Run the original validation logic
+        self.full_date_validation('start')
+    
+    def on_end_date_focus_in(self, event):
+        """Handle end date field focus in - remove placeholder if present"""
+        if self.end_date_has_placeholder:
+            self.end_date_var.set("")
+            self.end_date_entry.config(foreground="white")
+            self.end_date_has_placeholder = False
+    
+    def on_end_date_focus_out(self, event):
+        """Handle end date field focus out - add placeholder if empty, run validation"""
+        current_value = self.end_date_var.get().strip()
+        if not current_value:
+            self.end_date_var.set(self.placeholder_text)
+            self.end_date_entry.config(foreground="gray")
+            self.end_date_has_placeholder = True
+        else:
+            self.end_date_has_placeholder = False
+        
+        # Run the original validation logic
+        self.full_date_validation('end')
     
     def create_kb_section(self, parent):
         """Create KB processor section"""
@@ -891,8 +945,11 @@ class CombinedApp:
         self.gmail_account_var.set(self.config.get("gmail_account", ""))
         self.credentials_file_var.set(self.config.get("credentials_file", "Ingen fil vald"))
         self.sender_var.set(self.config.get("sender_email", "noreply@kb.se"))
-        self.start_date_var.set("")  # Always empty on start
-        self.end_date_var.set("")    # Always empty on start
+        # Set initial placeholders for date fields
+        self.start_date_var.set(self.placeholder_text)
+        self.end_date_var.set(self.placeholder_text)
+        self.start_date_has_placeholder = True
+        self.end_date_has_placeholder = True
         self.gmail_output_dir_var.set(self.config.get("gmail_output_dir", str(Path.home() / "Downloads" / "Gmail-nedladdningar")))
         self.excel_path_var.set(self.config.get("excel_path", "Ingen fil vald"))
         
@@ -917,6 +974,16 @@ class CombinedApp:
         self.delete_original_files_var.set(True)
         
         self.update_ui_state()
+        
+        # Set initial placeholder appearance after UI is created
+        self.root.after(10, self._apply_initial_placeholder_styling)
+    
+    def _apply_initial_placeholder_styling(self):
+        """Apply initial gray styling to placeholder text"""
+        if self.start_date_has_placeholder:
+            self.start_date_entry.config(foreground="gray")
+        if self.end_date_has_placeholder:
+            self.end_date_entry.config(foreground="gray")
     
     def save_config_from_gui(self):
         """Save current GUI state to configuration"""
@@ -943,7 +1010,7 @@ class CombinedApp:
         file_path = filedialog.askopenfilename(
             title="Välj Gmail API Credentials-fil",
             filetypes=[("JSON-filer", "*.json"), ("Alla filer", "*.*")],
-            initialdir=Path.home() / "Downloads"
+            initialdir=self.get_app_directory()
         )
         if file_path:
             try:
@@ -971,7 +1038,8 @@ class CombinedApp:
         """Browse for Excel file and validate it"""
         file_path = filedialog.askopenfilename(
             title="Välj Excel-fil med bib-kod översättning",
-            filetypes=[("Excel-filer", "*.xlsx"), ("Alla filer", "*.*")]
+            filetypes=[("Excel-filer", "*.xlsx"), ("Alla filer", "*.*")],
+            initialdir=self.get_app_directory()
         )
         if file_path:
             is_valid, message = self.kb_processor.validate_excel_file(file_path)
@@ -985,7 +1053,8 @@ class CombinedApp:
     def browse_kb_input_dir(self):
         """Browse for KB input directory"""
         directory = filedialog.askdirectory(
-            title="Välj mapp med KB JPG-filer"
+            title="Välj mapp med KB JPG-filer",
+            initialdir=self.get_app_directory()
         )
         if directory:
             self.kb_input_dir_var.set(directory)
@@ -993,7 +1062,8 @@ class CombinedApp:
     def browse_kb_output_dir(self):
         """Browse for KB output directory"""
         directory = filedialog.askdirectory(
-            title="Välj mapp för PDF-utdata"
+            title="Välj mapp för PDF-utdata",
+            initialdir=self.get_app_directory()
         )
         if directory:
             self.kb_output_dir_var.set(directory)
@@ -1014,11 +1084,15 @@ class CombinedApp:
                 errors.append("Gmail-konto måste anges")
             if self.credentials_file_var.get() == "Ingen fil vald" or not self.credentials_file_var.get().strip():
                 errors.append("Credentials-fil måste väljas")
-            if not self.start_date_var.get().strip():
+            start_date_value = self.start_date_var.get().strip()
+            if not start_date_value or start_date_value == self.placeholder_text:
                 errors.append("Startdatum måste anges")
-            if self.start_date_var.get().strip() and self.start_date_validation_label.cget("text") != "✓":
+            if (start_date_value and start_date_value != self.placeholder_text and 
+                self.start_date_validation_label.cget("text") != "✓"):
                 errors.append("Startdatum är ogiltigt eller inkonsekvent med slutdatum")
-            if self.end_date_var.get().strip() and self.end_date_validation_label.cget("text") != "✓":
+            end_date_value = self.end_date_var.get().strip()
+            if (end_date_value and end_date_value != self.placeholder_text and 
+                self.end_date_validation_label.cget("text") != "✓"):
                 errors.append("Slutdatum är ogiltigt eller inkonsekvent med startdatum")
             if not self.gmail_output_dir_var.get().strip():
                 errors.append("Gmail nedladdningsmapp måste anges")
@@ -1091,9 +1165,10 @@ class CombinedApp:
         fields_complete = True
         
         if gmail_on:
+            start_date_value = self.start_date_var.get().strip()
             if (not self.gmail_account_var.get().strip() or 
                 self.credentials_file_var.get() in ["Ingen fil vald", ""] or
-                not self.start_date_var.get().strip() or
+                not start_date_value or start_date_value == self.placeholder_text or
                 not self.gmail_output_dir_var.get().strip()):
                 fields_complete = False
         
@@ -1236,10 +1311,18 @@ class CombinedApp:
                 
                 # Download attachments
                 self.update_progress("Laddar ner bilagor...", 20)
+                # Convert placeholder text to empty string for processing
+                start_date = self.start_date_var.get()
+                end_date = self.end_date_var.get()
+                if start_date == self.placeholder_text:
+                    start_date = ""
+                if end_date == self.placeholder_text:
+                    end_date = ""
+                    
                 gmail_result = self.gmail_downloader.download_attachments(
                     sender_email=self.sender_var.get(),
-                    start_date=self.start_date_var.get(),
-                    end_date=self.end_date_var.get(),
+                    start_date=start_date,
+                    end_date=end_date,
                     output_dir=self.gmail_output_dir_var.get(),
                     progress_callback=self.update_progress,
                     gui_update_callback=self.gui_update
