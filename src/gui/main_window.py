@@ -19,6 +19,13 @@ try:
     from ttkbootstrap.constants import *
     import tkinter as tk
     from tkinter import scrolledtext
+    try:
+        from ttkbootstrap.tooltip import ToolTip
+        TOOLTIP_AVAILABLE = True
+    except ImportError:
+        # Fallback for older ttkbootstrap versions
+        TOOLTIP_AVAILABLE = False
+        ToolTip = None
 except ImportError:
     print("Error: ttkbootstrap not installed. Install with: pip install ttkbootstrap")
     exit(1)
@@ -79,6 +86,17 @@ class CombinedApp:
         else:
             # Running as Python script
             return Path(__file__).parent.parent.parent
+    
+    def add_tooltip(self, widget, text, delay=400):
+        """Add a tooltip to a widget with consistent styling"""
+        if TOOLTIP_AVAILABLE and ToolTip:
+            try:
+                ToolTip(widget, text=text, delay=delay, wraplength=400)
+            except Exception as e:
+                logger.warning(f"Failed to add tooltip: {e}")
+        else:
+            # Fallback: Could implement a simple custom tooltip here if needed
+            pass
     
     def setup_gui(self):
         """Setup the main GUI window"""
@@ -284,6 +302,7 @@ class CombinedApp:
         gmail_entry = tb.Entry(gmail_account_frame, textvariable=self.gmail_account_var, 
                               width=40, font=('Arial', 10))
         gmail_entry.pack(side="left", padx=(15, 0), fill="x", expand=True)
+        self.add_tooltip(gmail_entry, "Till vilket gmail-konto skickas filerna från KB?")
         
         # Credentials file
         creds_frame = tb.Frame(self.gmail_frame)
@@ -319,6 +338,7 @@ class CombinedApp:
         creds_entry = tb.Entry(creds_path_frame, textvariable=self.credentials_file_var, 
                               font=('Arial', 10))
         creds_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.add_tooltip(creds_entry, "För att appen ska kunna hämta bilagor från gmail-kontot behöver du en OAuth JSON-fil. Det är en konfigurationsfil som innehåller autentiseringsuppgifter för att få säker åtkomst till Gmail API. Se Hjälp för info om hur du skaffar en sådan fil.")
         
         browse_creds_btn = tb.Button(creds_path_frame, text="Välj fil...", 
                                     command=self.browse_credentials_file, 
@@ -336,6 +356,7 @@ class CombinedApp:
         sender_entry = tb.Entry(sender_entry_frame, textvariable=self.sender_var, 
                                width=40, font=('Arial', 10))
         sender_entry.pack(side="left", padx=(0, 0), fill="x", expand=True)
+        self.add_tooltip(sender_entry, "Från vilken avsändare kommer mejlen med bilagorna som ska hämtas? Svenska tidningars avsändaradress noreply@kb.se är automatiskt vald.")
         
         tb.Label(sender_frame, text="Lämna tomt för noreply@kb.se", 
                  font=('Arial', 9), foreground="lightblue").pack(anchor="w", pady=(5, 0))
@@ -360,6 +381,7 @@ class CombinedApp:
         start_date_entry.bind('<KeyRelease>', lambda e: self.full_date_validation('start'))
         start_date_entry.bind('<FocusOut>', lambda e: self.on_start_date_focus_out(e))
         start_date_entry.bind('<FocusIn>', lambda e: self.on_start_date_focus_in(e))
+        self.add_tooltip(start_date_entry, "Första datum för avsökning av mejl.")
         
         # End date with validation
         end_date_frame = tb.Frame(date_frame)
@@ -377,6 +399,7 @@ class CombinedApp:
         end_date_entry.bind('<KeyRelease>', lambda e: self.full_date_validation('end'))
         end_date_entry.bind('<FocusOut>', lambda e: self.on_end_date_focus_out(e))
         end_date_entry.bind('<FocusIn>', lambda e: self.on_end_date_focus_in(e))
+        self.add_tooltip(end_date_entry, "Sista datum för avsökning av mejl. Om du bara är intresserad av en dag så lämna Slutdatum tomt.")
         
         # Date explanation
         date_info_frame = tb.Frame(self.gmail_frame)
@@ -397,6 +420,7 @@ class CombinedApp:
         gmail_output_entry = tb.Entry(gmail_output_path_frame, textvariable=self.gmail_output_dir_var, 
                                      font=('Arial', 10))
         gmail_output_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.add_tooltip(gmail_output_entry, "Var ska bilagorna som laddas ned hamna?")
         
         browse_gmail_output_btn = tb.Button(gmail_output_path_frame, text="Bläddra...", 
                                            command=self.browse_gmail_output_dir, 
@@ -545,6 +569,7 @@ class CombinedApp:
         excel_entry = tb.Entry(excel_path_frame, textvariable=self.excel_path_var, 
                               font=('Arial', 10))
         excel_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.add_tooltip(excel_entry, "Ett exceldokument som översätter KB:s bib-koder till tidningsnamn. Du fick sannolikt denna fil tillsammans med appen.")
         
         browse_excel_btn = tb.Button(excel_path_frame, text="Välj fil...", 
                                     command=self.browse_excel_file, 
@@ -567,6 +592,7 @@ class CombinedApp:
         self.kb_input_entry = tb.Entry(kb_input_path_frame, textvariable=self.kb_input_dir_var, 
                                       font=('Arial', 10))
         self.kb_input_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.add_tooltip(self.kb_input_entry, "Om du både laddar ned bilagor och konverterar dem till pdf så är denna mapp automatiskt nedladdningsmappen. Om du bara vill konvertera bib-filer som du redan har laddat ned så stäng av nedladdningsfunktionen överst i appfönstret. Då kan du själv tala om var dina bib-jpg:er finns någonstans.")
         
         self.browse_kb_input_btn = tb.Button(kb_input_path_frame, text="Bläddra...", 
                                             command=self.browse_kb_input_dir, 
@@ -599,6 +625,7 @@ class CombinedApp:
         self.kb_output_entry = tb.Entry(kb_output_path_frame, textvariable=self.kb_output_dir_var, 
                                        font=('Arial', 10))
         self.kb_output_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.add_tooltip(self.kb_output_entry, "Här kan du välja var pdf:er som appen skapar ska sparas.")
         
         self.browse_kb_output_btn = tb.Button(kb_output_path_frame, text="Bläddra...", 
                                              command=self.browse_kb_output_dir, 
@@ -614,9 +641,11 @@ class CombinedApp:
         checkbox_frame.pack(anchor="w")
         
         # Create the checkbox with text
-        tb.Checkbutton(checkbox_frame, text="Spara omdöpta jpg-filer i en underkatalog?", 
+        keep_renamed_checkbox = tb.Checkbutton(checkbox_frame, text="Spara omdöpta jpg-filer i en underkatalog?", 
                       variable=self.keep_renamed_var, 
-                      bootstyle="info-round-toggle").pack(side="left")
+                      bootstyle="info-round-toggle")
+        keep_renamed_checkbox.pack(side="left")
+        self.add_tooltip(keep_renamed_checkbox, "När appen körs byts namnen på jpg-filerna till begripliga namn. Därefter konverteras de till pdf:er och flersidiga artiklar slås samman. Om du kryssar i den här rutan sparas de omdöpta jpg-filerna i mappen 'Jpg-filer med fina namn'. Den skapas automatiskt i samma mapp där pdf:erna sparas. Detta är bara användbart om du vill ha tillgång till jpg-bilder av enskilda sidor, för att t ex ge dem till en redigerare.")
         
         # Create help button with question mark
         help_btn = tb.Button(checkbox_frame, text="?", width=3, 
@@ -633,9 +662,11 @@ class CombinedApp:
         delete_checkbox_frame.pack(anchor="w")
         
         # Create the checkbox with text
-        tb.Checkbutton(delete_checkbox_frame, text="Bevara bib-filerna från KB efter konvertering? (Rekommenderas ej)", 
+        delete_checkbox = tb.Checkbutton(delete_checkbox_frame, text="Bevara bib-filerna från KB efter konvertering? (Rekommenderas ej)", 
                       variable=self.delete_original_files_var, 
-                      bootstyle="info-round-toggle").pack(side="left")
+                      bootstyle="info-round-toggle")
+        delete_checkbox.pack(side="left")
+        self.add_tooltip(delete_checkbox, "Du kan spara originalfilerna som appen laddar ned från KB. Det är jpg-filer namngivna med bib-koder. Svårt att förstå varför någon skulle vilja göra det.")
         
         # Create help button with question mark
         delete_help_btn = tb.Button(delete_checkbox_frame, text="?", width=3, 
