@@ -592,7 +592,7 @@ class CombinedApp:
         self.kb_input_entry = tb.Entry(kb_input_path_frame, textvariable=self.kb_input_dir_var, 
                                       font=('Arial', 10))
         self.kb_input_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        self.add_tooltip(self.kb_input_entry, "Om du både laddar ned bilagor och konverterar dem till pdf så är denna mapp automatiskt nedladdningsmappen. Om du bara vill konvertera bib-filer som du redan har laddat ned så stäng av nedladdningsfunktionen överst i appfönstret. Då kan du själv tala om var dina bib-jpg:er finns någonstans.")
+        self.add_tooltip(self.kb_input_entry, "Om du både laddar ned bilagor och konverterar dem till pdf så är denna mapp samma som Nedladdningsmappen. Om du däremot vill konvertera bib-filer som du redan har laddat ned så stäng av nedladdningsfunktionen överst i appfönstret. Då kan du här själv tala om i vilken mapp dina bib-jpg:er ligger.")
         
         self.browse_kb_input_btn = tb.Button(kb_input_path_frame, text="Bläddra...", 
                                             command=self.browse_kb_input_dir, 

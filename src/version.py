@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.3.8"
-__version_info__ = (1, 3, 8)
+__version__ = "1.4.0"
+__version_info__ = (1, 4, 0)
 __release_date__ = "2025-08-23"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.4.0 (2025-08-23): Improved tooltips and user guidance in the GUI
 1.3.8 (2025-08-23): Added comprehensive tooltips to all major GUI fields for improved user experience
 1.3.7 (2025-08-23): Reversed delete logic - Original files now deleted by default (switch OFF), can be preserved by turning switch ON
 1.3.6 (2025-08-22): GUI improvements - File dialogs start in app directory, window positioned higher, date placeholders added
