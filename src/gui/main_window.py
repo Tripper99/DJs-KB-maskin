@@ -578,25 +578,6 @@ class CombinedApp:
                                     text="📁 Om båda verktygen körs så används automatiskt nedladdningsmappen.",
                                     font=('Arial', 9), foreground="lightgreen")
         
-        # Delete original files option
-        delete_files_frame = tb.Frame(self.kb_frame)
-        delete_files_frame.pack(fill="x", pady=(10, 15))
-        
-        # Create a frame for the checkbox, text and help button
-        delete_checkbox_frame = tb.Frame(delete_files_frame)
-        delete_checkbox_frame.pack(anchor="w")
-        
-        # Create the checkbox with text
-        tb.Checkbutton(delete_checkbox_frame, text="Bevara originalfilerna från KB efter konvertering och omdöpning? (Rekommenderas inte)", 
-                      variable=self.delete_original_files_var, 
-                      bootstyle="info-round-toggle").pack(side="left")
-        
-        # Create help button with question mark
-        delete_help_btn = tb.Button(delete_checkbox_frame, text="?", width=3, 
-                                   command=self.show_delete_files_help,
-                                   bootstyle="info-outline")
-        delete_help_btn.pack(side="left", padx=(10, 0))
-        
         # Output directory
         kb_output_frame = tb.Frame(self.kb_frame)
         kb_output_frame.pack(fill="x", pady=(0, 15))
@@ -642,6 +623,25 @@ class CombinedApp:
                             command=self.show_keep_renamed_help,
                             bootstyle="info-outline")
         help_btn.pack(side="left", padx=(10, 0))
+        
+        # Delete original files option (moved to last position)
+        delete_files_frame = tb.Frame(self.kb_frame)
+        delete_files_frame.pack(fill="x", pady=(10, 15))
+        
+        # Create a frame for the checkbox, text and help button
+        delete_checkbox_frame = tb.Frame(delete_files_frame)
+        delete_checkbox_frame.pack(anchor="w")
+        
+        # Create the checkbox with text
+        tb.Checkbutton(delete_checkbox_frame, text="Bevara bib-filerna från KB efter konvertering? (Rekommenderas ej)", 
+                      variable=self.delete_original_files_var, 
+                      bootstyle="info-round-toggle").pack(side="left")
+        
+        # Create help button with question mark
+        delete_help_btn = tb.Button(delete_checkbox_frame, text="?", width=3, 
+                                   command=self.show_delete_files_help,
+                                   bootstyle="info-outline")
+        delete_help_btn.pack(side="left", padx=(10, 0))
     
     def create_action_section(self, parent):
         """Create action buttons and progress section"""
