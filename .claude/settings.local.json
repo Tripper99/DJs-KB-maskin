@@ -39,7 +39,9 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.anthropic.com)",
       "Bash(git log:*)",
-      "Read(/C:\\Users\\dan\\.claude/**)"
+      "Read(/C:\\Users\\dan\\.claude/**)",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:gnikit.github.io)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
