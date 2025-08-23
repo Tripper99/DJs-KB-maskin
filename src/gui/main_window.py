@@ -166,7 +166,7 @@ class CombinedApp:
         self.kb_output_dir_var = tk.StringVar()
         self.keep_renamed_var = tk.BooleanVar()
         self.use_same_output_dir_var = tk.BooleanVar(value=True)  # Default to True
-        self.delete_original_files_var = tk.BooleanVar(value=True)  # Default to True (delete)
+        self.delete_original_files_var = tk.BooleanVar(value=False)  # Default to False (delete originals when OFF)
         
         # Status
         self.status_var = tk.StringVar(value="Fyll i fälten nedan")
@@ -587,7 +587,7 @@ class CombinedApp:
         delete_checkbox_frame.pack(anchor="w")
         
         # Create the checkbox with text
-        tb.Checkbutton(delete_checkbox_frame, text="Radera bib-filerna efter omdöpning?", 
+        tb.Checkbutton(delete_checkbox_frame, text="Bevara originalfilerna från KB efter konvertering och omdöpning? (Rekommenderas inte)", 
                       variable=self.delete_original_files_var, 
                       bootstyle="info-round-toggle").pack(side="left")
         
@@ -754,7 +754,7 @@ class CombinedApp:
     def show_delete_files_help(self):
         """Show help dialog for delete original files option"""
         help_win = tb.Toplevel()
-        help_win.title("Hjälp - Radera bib-filerna")
+        help_win.title("Hjälp - Bevara originalfiler")
         help_win.geometry("500x405")  # Increased height by 62% total (250 -> 405)
         
         # Center window
@@ -794,10 +794,10 @@ class CombinedApp:
         
         tb.Label(content_frame, 
                  text="Appen kopierar och döper om jpg-filerna från KB, som har obegripliga namn.\n\n"
-                      "Originalfilerna raderas som standard för att spara diskutrymme och undvika förvirring.\n\n"
-                      "Om du av någon anledning vill ha kvar originalfilerna med deras obegripliga namn "
-                      "så kan du slå av den här brytaren.\n\n"
-                      "Observera att detta kan leda till dubbelt så många filer i mappen.",
+                      "Som standard raderas originalfilerna automatiskt för att spara diskutrymme och undvika förvirring.\n\n"
+                      "Om du av någon anledning vill behålla originalfilerna med deras obegripliga namn "
+                      "kan du slå PÅ den här brytaren. Detta rekommenderas inte.\n\n"
+                      "Observera att detta kommer leda till dubbelt så många filer i mappen.",
                  font=("Arial", 10), wraplength=430, justify="left").pack(anchor="w", pady=10)
         
         tb.Button(content_frame, text="Stäng", command=help_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
@@ -970,8 +970,8 @@ class CombinedApp:
         # Load use_same_output_dir setting (default True)
         self.use_same_output_dir_var.set(self.config.get("use_same_output_dir", True))
         
-        # Always start with delete_original_files enabled (don't save this setting)
-        self.delete_original_files_var.set(True)
+        # Always start with delete_original_files disabled (don't save this setting)
+        self.delete_original_files_var.set(False)
         
         self.update_ui_state()
         
@@ -1371,7 +1371,7 @@ class CombinedApp:
                     input_dir=self.kb_input_dir_var.get(),
                     output_dir=output_dir,
                     keep_renamed=self.keep_renamed_var.get(),
-                    delete_originals=self.delete_original_files_var.get(),
+                    keep_originals=self.delete_original_files_var.get(),
                     progress_callback=kb_progress_callback,
                     gui_update_callback=self.gui_update
                 )
