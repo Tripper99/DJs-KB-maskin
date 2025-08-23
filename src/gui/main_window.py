@@ -182,7 +182,7 @@ class CombinedApp:
         self.excel_path_var = tk.StringVar()
         self.kb_input_dir_var = tk.StringVar()
         self.kb_output_dir_var = tk.StringVar()
-        self.keep_renamed_var = tk.BooleanVar()
+        self.keep_renamed_var = tk.BooleanVar(value=False)  # Default OFF - don't save renamed JPGs
         self.use_same_output_dir_var = tk.BooleanVar(value=True)  # Default to True
         self.delete_original_files_var = tk.BooleanVar(value=False)  # Default to False (delete originals when OFF)
         
@@ -995,8 +995,8 @@ class CombinedApp:
         if not default_kb_output:
             default_kb_output = self.config.get("gmail_output_dir", str(Path.home() / "Downloads" / "Gmail-nedladdningar"))
         self.kb_output_dir_var.set(default_kb_output)
-        # Always start with keep_renamed enabled, regardless of saved config
-        self.keep_renamed_var.set(True)
+        # Always start with keep_renamed disabled (default OFF)
+        self.keep_renamed_var.set(False)
         
         # Load use_same_output_dir setting (default True)
         self.use_same_output_dir_var.set(self.config.get("use_same_output_dir", True))
