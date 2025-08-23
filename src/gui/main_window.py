@@ -958,7 +958,7 @@ class CombinedApp:
         elif gmail_on:
             self.start_btn.config(text="Starta hämtning av jpg-bilagor")
         elif kb_on:
-            self.start_btn.config(text="Starta filkonvertering och omdöpning")
+            self.start_btn.config(text="Starta filkonvertering")
         else:
             self.start_btn.config(text="Välj minst ett verktyg")
             
@@ -1192,7 +1192,7 @@ class CombinedApp:
         kb_on = self.kb_enabled.get()
         
         if not gmail_on and not kb_on:
-            self.status_var.set("Välj minst ett verktyg")
+            self.status_var.set("Välj minst ett verktyg för annars blir inte mycket gjort.")
             return
         
         # Check if required fields are filled
