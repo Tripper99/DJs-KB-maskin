@@ -2,7 +2,55 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-08-22)
+## Latest Development Session (2025-08-23)
+
+### 🎨 GUI User Experience Improvements (v1.3.6)
+
+**Major user experience enhancements completed for better .exe compatibility and usability:**
+
+#### Version 1.3.6 - GUI Improvements:
+- **File Dialog Initial Directory Fix**:
+  - All file dialogs now start in application directory instead of random locations
+  - Critical for .exe distribution - users browse from executable's location
+  - Updated methods: `browse_credentials_file()`, `browse_excel_file()`, `browse_kb_input_dir()`, `browse_kb_output_dir()`
+  - Leverages existing `get_app_directory()` method for .py/.exe compatibility
+
+- **Window Positioning Enhancement**:
+  - Window now opens at 5 pixels from top (previously 20 pixels)
+  - Better screen real estate usage, especially for tall window (1400px)
+  - More accessible position for users
+
+- **Date Field Placeholders**:
+  - Added "ÅÅÅÅ-MM-DD" placeholder text to both date fields
+  - Placeholder appears in gray when field is empty
+  - Disappears immediately when user clicks in field (focus)
+  - Reappears if field loses focus while empty
+  - Never interferes with validation or form submission
+  - Implemented with state tracking to ensure placeholder text is never submitted
+
+**Technical Implementation**:
+- Used specialized subagents for safe implementation:
+  - `code-reviewer-refactorer`: Updated file dialog initial directories
+  - `python-gui-builder`: Implemented placeholder functionality
+  - `bug-finder-debugger`: Comprehensive testing of all changes
+- Preserved all existing validation logic and event bindings
+- Added focus event handlers: `on_start_date_focus_in/out()`, `on_end_date_focus_in/out()`
+- Placeholder state tracking with `start_date_has_placeholder` and `end_date_has_placeholder` flags
+
+**Files Modified**:
+- `src/gui/main_window.py`: File dialogs, window positioning, date placeholders
+- `src/version.py`: Version 1.3.6 and history update
+
+**Testing Completed**:
+- ✅ All file dialogs open in correct directory
+- ✅ Window positioning works as expected
+- ✅ Date placeholders function properly without breaking validation
+- ✅ Form submission treats placeholder values as empty
+- ✅ Ruff syntax check passed (minor warnings only)
+
+---
+
+## Previous Development Session (2025-08-22)
 
 ### 📊 Codebase Analysis and GUI Improvements (v1.3.2-1.3.3)
 

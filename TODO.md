@@ -2,6 +2,14 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
+## ✅ Recently Completed (v1.3.6)
+
+### GUI Improvements - COMPLETED 2025-08-23
+- ✅ **File Dialog Initial Directory**: All file dialogs now start in application directory for .exe compatibility
+- ✅ **Window Positioning**: Window now opens at 5 pixels from top for better screen usage
+- ✅ **Date Field Placeholders**: Added "ÅÅÅÅ-MM-DD" placeholder text with proper focus behavior
+- ✅ **Validation Preservation**: All existing validation and functionality maintained
+
 ## 🔧 Known Issues & Improvements Needed
 
 ### High Priority

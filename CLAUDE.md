@@ -98,11 +98,12 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.3.3)
+## Current Status (v1.3.6)
 
 The application is production-ready with:
 - **Enterprise-level security** - Path validation, injection prevention, secure file operations
-- **Enhanced GUI** - 40% taller window, optimized screen positioning, logical field ordering
+- **Enhanced GUI** - 40% taller window, optimized screen positioning at 5px from top, logical field ordering
+- **Improved user experience** - File dialogs start in app directory, date fields show ÅÅÅÅ-MM-DD placeholders
 - **Responsive interface** with proper threading
 - **Comprehensive cancellation** support throughout all operations
 - **KB-specific workflow** optimizations for Swedish newspaper processing
@@ -118,12 +119,17 @@ The application is production-ready with:
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
 
-## GUI Enhancements (v1.3.3)
+## GUI Enhancements (v1.3.6)
 
 ### Window Improvements
 - **Increased Height** - Main window now 1400px tall (40% increase from 1000px)
-- **Better Positioning** - Window positioned higher on screen (20px from top)
+- **Better Positioning** - Window positioned at 5px from top for optimal screen usage
 - **Logical Field Order** - Excel file selection moved to top of KB section for intuitive workflow
+
+### User Experience Improvements (v1.3.6)
+- **File Dialog Consistency** - All file dialogs start in application directory (.exe compatibility)
+- **Date Field Placeholders** - Shows "ÅÅÅÅ-MM-DD" format hint that disappears on focus
+- **Visual Guidance** - Gray placeholder text provides clear input format expectations
 
 ## Security Features (v1.3+)
 
