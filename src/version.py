@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.4.1"
-__version_info__ = (1, 4, 1)
+__version__ = "1.4.2"
+__version_info__ = (1, 4, 2)
 __release_date__ = "2025-08-23"
 
 def get_version():

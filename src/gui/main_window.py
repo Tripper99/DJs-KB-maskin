@@ -645,7 +645,7 @@ class CombinedApp:
                       variable=self.keep_renamed_var, 
                       bootstyle="info-round-toggle")
         keep_renamed_checkbox.pack(side="left")
-        self.add_tooltip(keep_renamed_checkbox, "När appen körs byts namnen på jpg-filerna till begripliga namn. Därefter konverteras de till pdf:er och flersidiga artiklar slås samman. Om du kryssar i den här rutan sparas de omdöpta jpg-filerna i mappen 'Jpg-filer med fina namn'. Den skapas automatiskt i samma mapp där pdf:erna sparas. Detta är bara användbart om du vill ha tillgång till jpg-bilder av enskilda sidor, för att t ex ge dem till en redigerare.")
+        self.add_tooltip(keep_renamed_checkbox, "Om du kryssar i den här rutan så sparas alla omdöpta jpg-filer i underkatalogen 'Jpg-filer med fina namn'. Som standard raderas jpg-filerna.")
         
         # Create help button with question mark
         help_btn = tb.Button(checkbox_frame, text="?", width=3, 
