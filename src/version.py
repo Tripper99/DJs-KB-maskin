@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.5.0"
-__version_info__ = (1, 5, 0)
+__version__ = "1.5.1"
+__version_info__ = (1, 5, 1)
 __release_date__ = "2025-08-25"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.5.1 (2025-08-25): Changed button text from 'Bläddra...' to 'Välj mapp...' for better user clarity
 1.5.0 (2025-08-25): Added clickable 'Öppna mapp' link to open download folder in Windows Explorer
 1.4.9 (2025-08-25): Fixed placeholder text being saved to config file - prevents date validation errors
 1.4.8 (2025-08-25): Fixed window icon display in PyInstaller executable
