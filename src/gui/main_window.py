@@ -453,6 +453,14 @@ class CombinedApp:
                                            command=self.browse_gmail_output_dir, 
                                            bootstyle=INFO, width=12)
         browse_gmail_output_btn.pack(side="right")
+        
+        # Add clickable link to open download folder
+        self.open_folder_link = tb.Label(gmail_output_frame, text="📂 Öppna mapp", 
+                                        font=('Arial', 9), foreground="green", 
+                                        cursor="hand2")
+        self.open_folder_link.pack(anchor="w", pady=(2, 0))
+        self.open_folder_link.bind("<Button-1>", self.open_download_folder_event)
+        self.add_tooltip(self.open_folder_link, "Klicka för att öppna nedladdningsmappen i Utforskaren")
     
     def validate_date(self, input_str: str, field: str) -> bool:
         """Validate date format and trigger cross-field validation"""
@@ -1124,6 +1132,37 @@ class CombinedApp:
         )
         if directory:
             self.gmail_output_dir_var.set(directory)
+    
+    def open_download_folder_event(self, event=None):
+        """Event handler for opening download folder link"""
+        self.open_download_folder()
+    
+    def open_download_folder(self):
+        """Open the selected download folder in Windows Explorer"""
+        folder_path = self.gmail_output_dir_var.get().strip()
+        
+        if not folder_path:
+            messagebox.showwarning("Ingen mapp vald", "Välj först en nedladdningsmapp.")
+            return
+            
+        # Validate the path exists
+        if not os.path.exists(folder_path):
+            messagebox.showerror("Mappen finns inte", 
+                               f"Den valda mappen finns inte:\n{folder_path}")
+            return
+            
+        try:
+            # Use Windows Explorer to open the folder
+            subprocess.run(['explorer', os.path.normpath(folder_path)], check=True)
+            logger.info(f"Opened download folder: {folder_path}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to open folder {folder_path}: {e}")
+            messagebox.showerror("Kunde inte öppna mappen", 
+                               f"Det gick inte att öppna mappen i Utforskaren.\n\nFel: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error opening folder {folder_path}: {e}")
+            messagebox.showerror("Oväntat fel", 
+                               f"Ett oväntat fel inträffade när mappen skulle öppnas.\n\nFel: {str(e)}")
     
     def browse_excel_file(self):
         """Browse for Excel file and validate it"""
