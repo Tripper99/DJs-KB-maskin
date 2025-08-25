@@ -1153,12 +1153,10 @@ class CombinedApp:
             
         try:
             # Use Windows Explorer to open the folder
-            subprocess.run(['explorer', os.path.normpath(folder_path)], check=True)
-            logger.info(f"Opened download folder: {folder_path}")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to open folder {folder_path}: {e}")
-            messagebox.showerror("Kunde inte öppna mappen", 
-                               f"Det gick inte att öppna mappen i Utforskaren.\n\nFel: {str(e)}")
+            # Note: Don't use check=True as Explorer may return non-zero exit codes even on success
+            result = subprocess.run(['explorer', os.path.normpath(folder_path)], 
+                                   capture_output=True, text=True)
+            logger.info(f"Opened download folder: {folder_path} (exit code: {result.returncode})")
         except Exception as e:
             logger.error(f"Unexpected error opening folder {folder_path}: {e}")
             messagebox.showerror("Oväntat fel", 
