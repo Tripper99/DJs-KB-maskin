@@ -123,7 +123,14 @@ class CombinedApp:
         
         # Set window icon
         try:
-            icon_path = self.get_app_directory() / "Agg-med-smor-v4-transperent.ico"
+            # Check if running as PyInstaller bundle
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                # Running as PyInstaller bundle - icon is in temp extraction folder
+                icon_path = Path(sys._MEIPASS) / "Agg-med-smor-v4-transperent.ico"
+            else:
+                # Running as script - icon is in app directory
+                icon_path = self.get_app_directory() / "Agg-med-smor-v4-transperent.ico"
+            
             if icon_path.exists():
                 self.root.iconbitmap(str(icon_path))
             else:
@@ -997,11 +1004,32 @@ class CombinedApp:
         self.gmail_account_var.set(self.config.get("gmail_account", ""))
         self.credentials_file_var.set(self.config.get("credentials_file", "Ingen fil vald"))
         self.sender_var.set(self.config.get("sender_email", "noreply@kb.se"))
-        # Set initial placeholders for date fields
-        self.start_date_var.set(self.placeholder_text)
-        self.end_date_var.set(self.placeholder_text)
-        self.start_date_has_placeholder = True
-        self.end_date_has_placeholder = True
+        
+        # Load date fields - filter out placeholder text from config
+        loaded_start_date = self.config.get("start_date", "")
+        loaded_end_date = self.config.get("end_date", "")
+        
+        # Clean any placeholder text that might be in the config
+        if loaded_start_date == self.placeholder_text:
+            loaded_start_date = ""
+        if loaded_end_date == self.placeholder_text:
+            loaded_end_date = ""
+        
+        # Set start date
+        if loaded_start_date:
+            self.start_date_var.set(loaded_start_date)
+            self.start_date_has_placeholder = False
+        else:
+            self.start_date_var.set(self.placeholder_text)
+            self.start_date_has_placeholder = True
+        
+        # Set end date
+        if loaded_end_date:
+            self.end_date_var.set(loaded_end_date)
+            self.end_date_has_placeholder = False
+        else:
+            self.end_date_var.set(self.placeholder_text)
+            self.end_date_has_placeholder = True
         # Use app directory for default
         app_dir = self.get_app_directory()
         default_download_path = str(app_dir / "Nedladdningar")
@@ -1042,14 +1070,22 @@ class CombinedApp:
     
     def save_config_from_gui(self):
         """Save current GUI state to configuration"""
+        # Clean date values - don't save placeholder text
+        start_date = self.start_date_var.get()
+        end_date = self.end_date_var.get()
+        if start_date == self.placeholder_text:
+            start_date = ""
+        if end_date == self.placeholder_text:
+            end_date = ""
+        
         self.config.update({
             "gmail_enabled": self.gmail_enabled.get(),
             "kb_enabled": self.kb_enabled.get(),
             "gmail_account": self.gmail_account_var.get(),
             "credentials_file": self.credentials_file_var.get(),
             "sender_email": self.sender_var.get(),
-            "start_date": self.start_date_var.get(),
-            "end_date": self.end_date_var.get(),
+            "start_date": start_date,
+            "end_date": end_date,
             "gmail_output_dir": self.gmail_output_dir_var.get(),
             "excel_path": self.excel_path_var.get(),
             "kb_input_dir": self.kb_input_dir_var.get(),

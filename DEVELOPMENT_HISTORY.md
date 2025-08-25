@@ -2,7 +2,50 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-08-23)
+## Latest Development Session (2025-08-25)
+
+### 🔧 Default Download Folder & Bug Fixes (v1.4.7 - v1.4.9)
+
+**Major improvements to default folder handling and critical bug fixes:**
+
+#### Version 1.4.9 - Placeholder Text Configuration Bug Fix:
+- **Critical Issue Resolved**: Fixed placeholder text "ÅÅÅÅ-MM-DD" being saved to configuration file
+- **Root Cause**: Date fields with placeholder text were being saved directly to config
+- **Solution**: Added filtering in `save_config_from_gui()` and `load_config_to_gui()`
+- **Impact**: Prevents date validation errors and Gmail search failures
+- **Backwards Compatibility**: Handles existing corrupted config files gracefully
+
+#### Version 1.4.8 - PyInstaller Icon Fix:
+- **Issue**: Application window icon not showing when running as compiled .exe file
+- **Root Cause**: PyInstaller bundles resources to temporary directory, not app directory
+- **Solution**: Added detection for PyInstaller bundle (`sys._MEIPASS`) in icon loading
+- **Technical Details**: Uses `sys.frozen` check and `sys._MEIPASS` path for bundled resources
+- **Build Command**: `pyinstaller --onefile --windowed --icon="..." --add-data="..." --name="..."`
+
+#### Version 1.4.7 - Default Download Folder Location Change:
+- **Major Change**: Default download folder changed from user's Downloads to app subdirectory
+- **New Location**: `<application_directory>/Nedladdningar/`
+- **Automatic Creation**: Folder is created automatically if it doesn't exist
+- **Cross-Platform**: Works for both .py script and .exe execution
+- **Benefits**: 
+  - Keeps files organized with the application
+  - Works consistently across different user environments
+  - Easier file management for users
+
+#### Technical Implementation Details:
+- **Config Module Updates**: Added `get_app_directory()` function to determine app location
+- **GUI Module Updates**: Added `ensure_default_folders()` method for automatic folder creation
+- **Security**: Uses existing secure file operations from security modules
+- **PyInstaller Compatibility**: Handles both script and executable execution contexts
+
+#### Testing & Validation:
+- **Ruff Syntax Checking**: All changes pass syntax validation
+- **User Testing**: Confirmed working in real-world usage scenarios
+- **Config Migration**: Existing users' settings preserved with new defaults
+
+---
+
+## Previous Development Session (2025-08-23)
 
 ### 🎯 Tooltip System & UI Refinements (v1.4.0 - v1.4.6)
 

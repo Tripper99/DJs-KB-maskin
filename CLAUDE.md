@@ -98,9 +98,12 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.4.6)
+## Current Status (v1.4.9)
 
 The application is production-ready with:
+- **Critical Bug Fixes** - Resolved placeholder text configuration issue preventing Gmail search failures
+- **PyInstaller Icon Support** - Application icon displays correctly in compiled .exe files
+- **Improved Default Folder Handling** - Downloads default to app subdirectory with automatic creation
 - **Comprehensive Tooltip System** - 15+ tooltips across all major GUI elements for enhanced user guidance
 - **Dynamic User Interface** - Smart button text and status messages that adapt to user selections
 - **Optimized Default Settings** - Sensible defaults (delete originals, don't save renamed JPGs) 
@@ -111,7 +114,7 @@ The application is production-ready with:
 - **KB-specific workflow** optimizations for Swedish newspaper processing
 - **Professional error handling** and logging
 - **Centralized version management** for easier maintenance
-- **PyInstaller Integration** - Ready for .exe distribution with version-numbered builds
+- **PyInstaller Integration** - Ready for .exe distribution with version-numbered builds and icon support
 - **Complete documentation** - Full development history and architectural analysis
 
 ## Documentation
@@ -120,6 +123,25 @@ The application is production-ready with:
 - **[DEVELOPMENT_HISTORY.md](DEVELOPMENT_HISTORY.md)** - Complete development history and resolved issues  
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
+
+## Recent Improvements (v1.4.7 - v1.4.9)
+
+### Default Folder Management (v1.4.7)
+- **New Default Location** - Downloads now default to `Nedladdningar` subfolder within application directory
+- **Automatic Creation** - Folder is created automatically if it doesn't exist
+- **Cross-Platform** - Works consistently whether running as Python script or compiled executable
+- **Benefits** - Keeps files organized with the application, easier file management
+
+### PyInstaller Integration (v1.4.8)
+- **Icon Display Fix** - Application icon now shows correctly in compiled .exe window title bar
+- **Resource Bundling** - Proper handling of bundled resources using `sys._MEIPASS`
+- **Build Command** - Updated with `--add-data` parameter for icon inclusion
+
+### Configuration Stability (v1.4.9)
+- **Critical Bug Fix** - Resolved placeholder text being saved to configuration file
+- **Prevents Failures** - Eliminates date validation errors and Gmail search failures
+- **Backwards Compatibility** - Handles existing corrupted configuration files gracefully
+- **Robust Handling** - Added filtering in both save and load configuration methods
 
 ## GUI Enhancements (v1.4.6)
 
