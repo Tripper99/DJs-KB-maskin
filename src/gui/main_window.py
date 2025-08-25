@@ -449,7 +449,7 @@ class CombinedApp:
         gmail_output_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         self.add_tooltip(gmail_output_entry, "Var ska bilagorna som laddas ned hamna?")
         
-        browse_gmail_output_btn = tb.Button(gmail_output_path_frame, text="Bläddra...", 
+        browse_gmail_output_btn = tb.Button(gmail_output_path_frame, text="Välj mapp...", 
                                            command=self.browse_gmail_output_dir, 
                                            bootstyle=INFO, width=12)
         browse_gmail_output_btn.pack(side="right")
