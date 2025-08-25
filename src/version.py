@@ -4,9 +4,9 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.4.6"
-__version_info__ = (1, 4, 6)
-__release_date__ = "2025-08-23"
+__version__ = "1.4.7"
+__version_info__ = (1, 4, 7)
+__release_date__ = "2025-08-25"
 
 def get_version():
     """Return the current version string"""
@@ -22,6 +22,8 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.4.7 (2025-08-25): Changed default download folder to 'Nedladdningar' subfolder in application directory
+1.4.6 (2025-08-23): Updated documentation for recent changes
 1.4.5 (2025-08-23): Added tooltip to Start button with humorous 'whoopee machine' reference
 1.4.4 (2025-08-23): Added tooltips to main tool selection switches for better user guidance
 1.4.3 (2025-08-23): Changed default setting - 'Spara omdöpta jpg-filer i en underkatalog?' now defaults to OFF

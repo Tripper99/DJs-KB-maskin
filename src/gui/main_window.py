@@ -76,6 +76,9 @@ class CombinedApp:
         # Set cancel event for processors
         self.kb_processor.cancel_event = self.cancel_event
         
+        # Ensure default download folder exists
+        self.ensure_default_folders()
+        
         self.load_config_to_gui()
     
     def get_app_directory(self):
@@ -86,6 +89,21 @@ class CombinedApp:
         else:
             # Running as Python script
             return Path(__file__).parent.parent.parent
+    
+    def ensure_default_folders(self):
+        """Ensure default download folder exists"""
+        try:
+            app_dir = self.get_app_directory()
+            default_download_dir = app_dir / "Nedladdningar"
+            
+            # Create the folder if it doesn't exist
+            if not default_download_dir.exists():
+                default_download_dir.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Created default download folder: {default_download_dir}")
+            else:
+                logger.info(f"Default download folder exists: {default_download_dir}")
+        except Exception as e:
+            logger.warning(f"Could not create default download folder: {e}")
     
     def add_tooltip(self, widget, text, delay=400):
         """Add a tooltip to a widget with consistent styling"""
@@ -984,7 +1002,10 @@ class CombinedApp:
         self.end_date_var.set(self.placeholder_text)
         self.start_date_has_placeholder = True
         self.end_date_has_placeholder = True
-        self.gmail_output_dir_var.set(self.config.get("gmail_output_dir", str(Path.home() / "Downloads" / "Gmail-nedladdningar")))
+        # Use app directory for default
+        app_dir = self.get_app_directory()
+        default_download_path = str(app_dir / "Nedladdningar")
+        self.gmail_output_dir_var.set(self.config.get("gmail_output_dir", default_download_path))
         self.excel_path_var.set(self.config.get("excel_path", "Ingen fil vald"))
         
         # Only load KB input dir if not both tools are enabled
@@ -996,7 +1017,7 @@ class CombinedApp:
         # Set KB output dir to same as Gmail output dir by default
         default_kb_output = self.config.get("kb_output_dir", "")
         if not default_kb_output:
-            default_kb_output = self.config.get("gmail_output_dir", str(Path.home() / "Downloads" / "Gmail-nedladdningar"))
+            default_kb_output = self.config.get("gmail_output_dir", default_download_path)
         self.kb_output_dir_var.set(default_kb_output)
         # Always start with keep_renamed disabled (default OFF)
         self.keep_renamed_var.set(False)
