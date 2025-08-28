@@ -25,7 +25,7 @@ class GmailSearcher:
             query_parts.append(f"from:{sender_email}")
         if start_date:
             query_parts.append(f"after:{start_date}")
-            logger.info(f"📅 Start date: Including from {start_date} using after:{start_date}")
+            logger.info(f"Start date: Including from {start_date} using after:{start_date}")
         
         # Only add end date if it's different from start date
         if end_date and end_date != start_date:
@@ -34,7 +34,7 @@ class GmailSearcher:
                 next_day = end_dt + datetime.timedelta(days=1)
                 next_day_str = next_day.strftime("%Y-%m-%d")
                 query_parts.append(f"before:{next_day_str}")
-                logger.info(f"📅 End date: Including {end_date} by using before:{next_day_str}")
+                logger.info(f"End date: Including {end_date} by using before:{next_day_str}")
             except ValueError as e:
                 logger.error(f"Invalid end date format: {end_date}")
                 raise ValueError(f"Invalid end date format: {end_date}")
@@ -44,7 +44,7 @@ class GmailSearcher:
                 next_day = start_dt + datetime.timedelta(days=1)
                 next_day_str = next_day.strftime("%Y-%m-%d")
                 query_parts.append(f"before:{next_day_str}")
-                logger.info(f"📅 Single day: Searching {start_date} using before:{next_day_str}")
+                logger.info(f"Single day: Searching {start_date} using before:{next_day_str}")
             except ValueError as e:
                 logger.error(f"Invalid date format: {start_date}")
                 raise ValueError(f"Invalid date format: {start_date}")
@@ -94,7 +94,7 @@ class GmailSearcher:
                 if not page_token:
                     break
             
-            logger.info(f"🎯 FINAL RESULT: Found {len(all_messages)} emails matching query '{query}'")
+            logger.info(f"FINAL RESULT: Found {len(all_messages)} emails matching query '{query}'")
             return [msg['id'] for msg in all_messages]
             
         except HttpError as error:

@@ -336,9 +336,9 @@ class GmailDownloader:
         sender_email = sender_email or "noreply@kb.se"
         
         try:
-            logger.info(f"🚀 Starting download process")
-            logger.info(f"📧 Sender: {sender_email}")
-            logger.info(f"📅 Date range: {start_date} to {end_date if end_date else 'same day'}")
+            logger.info(f"Starting download process")
+            logger.info(f"Sender: {sender_email}")
+            logger.info(f"Date range: {start_date} to {end_date if end_date else 'same day'}")
             
             self.download_manager = DownloadManager(output_dir)
             self.download_manager.cancel_event = self.cancel_event
@@ -355,7 +355,7 @@ class GmailDownloader:
                 return {"cancelled": True}
             
             if not message_ids:
-                logger.warning(f"❌ No emails found with query: '{query}'")
+                logger.warning(f"No emails found with query: '{query}'")
                 return {
                     "total_emails": 0, 
                     "downloaded": 0, 
@@ -367,7 +367,7 @@ class GmailDownloader:
             
             # Show confirmation dialog if callback provided
             if confirmation_callback:
-                logger.info(f"📋 Found {len(message_ids)} emails, asking for user confirmation")
+                logger.info(f"Found {len(message_ids)} emails, asking for user confirmation")
                 if progress_callback:
                     progress_callback(f"Hittade {len(message_ids)} meddelanden med bilagor", 50)
                 
@@ -420,7 +420,7 @@ class GmailDownloader:
                 "search_query": query
             }
             
-            logger.info(f"🎯 Download completed: {result}")
+            logger.info(f"Download completed: {result}")
             return result
             
         except Exception as e:
