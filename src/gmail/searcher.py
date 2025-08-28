@@ -35,7 +35,7 @@ class GmailSearcher:
                 next_day_str = next_day.strftime("%Y-%m-%d")
                 query_parts.append(f"before:{next_day_str}")
                 logger.info(f"End date: Including {end_date} by using before:{next_day_str}")
-            except ValueError as e:
+            except ValueError:
                 logger.error(f"Invalid end date format: {end_date}")
                 raise ValueError(f"Invalid end date format: {end_date}")
         elif start_date and not end_date:
@@ -45,7 +45,7 @@ class GmailSearcher:
                 next_day_str = next_day.strftime("%Y-%m-%d")
                 query_parts.append(f"before:{next_day_str}")
                 logger.info(f"Single day: Searching {start_date} using before:{next_day_str}")
-            except ValueError as e:
+            except ValueError:
                 logger.error(f"Invalid date format: {start_date}")
                 raise ValueError(f"Invalid date format: {start_date}")
         

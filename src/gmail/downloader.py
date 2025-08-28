@@ -5,7 +5,6 @@ Gmail download manager and orchestrator
 
 import logging
 import tkinter as tk
-from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 from .authenticator import GmailAuthenticator, AuthenticationError
@@ -272,7 +271,7 @@ class GmailDownloader:
         jpg_attachments = [att for att in attachments if att['filename'].lower().endswith(('.jpg', '.jpeg'))]
         
         if not jpg_attachments:
-            logger.info(f"   No JPG attachments found in this email")
+            logger.info("   No JPG attachments found in this email")
             return downloaded, skipped, total_size
         
         logger.info(f"   Found {len(jpg_attachments)} JPG attachment(s)")
@@ -345,7 +344,7 @@ class GmailDownloader:
         sender_email = sender_email or "noreply@kb.se"
         
         try:
-            logger.info(f"Starting download process")
+            logger.info("Starting download process")
             logger.info(f"Sender: {sender_email}")
             logger.info(f"Date range: {start_date} to {end_date if end_date else 'same day'}")
             

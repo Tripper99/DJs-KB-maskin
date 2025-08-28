@@ -6,7 +6,6 @@ Comprehensive tests for security modules
 
 import unittest
 import tempfile
-import os
 from pathlib import Path
 import pandas as pd
 

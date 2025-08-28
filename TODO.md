@@ -2,7 +2,14 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (v1.4.6)
+## ✅ Recently Completed (v1.5.7)
+
+### Session Improvements - COMPLETED 2025-08-28
+- ✅ **Date Field Persistence Fix**: Date fields no longer remember values between sessions (v1.5.2)
+- ✅ **Email Confirmation Dialog**: Added dialog showing email count before download (v1.5.3)
+- ✅ **Unicode Compatibility**: Removed emoji characters causing Windows encoding errors (v1.5.4)
+- ✅ **Icon Consistency**: Added application icon to all 7 custom dialog windows (v1.5.5-v1.5.7)
+- ✅ **Dialog Sizing**: Fixed confirmation dialog size to show all buttons properly (v1.5.6)
 
 ### Tooltip System Implementation - COMPLETED 2025-08-23
 - ✅ **Comprehensive Tooltips**: Added tooltips to all major GUI fields (15+ tooltips)
@@ -27,7 +34,7 @@ This document tracks known issues, improvements, and future development tasks.
 
 ### PyInstaller Configuration
 - **Spec File**: `DJs_KB_maskin.spec` configured with version in filename
-- **Current Version**: v1.4.6
+- **Current Version**: v1.5.7
 - **Build Command**: `pyinstaller DJs_KB_maskin.spec`
 - **Output**: `dist/DJs_KB_maskin_v1.4.6.exe`
 - **Icon**: Uses `Agg-med-smor-v4-transperent.ico`

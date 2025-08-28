@@ -4,8 +4,6 @@ KB file processing functionality
 """
 
 import logging
-import os
-import re
 import shutil
 import tempfile
 import tkinter as tk
@@ -212,7 +210,7 @@ class KBProcessor:
             if not IMAGE_PROCESSING_AVAILABLE:
                 raise Exception("PIL/Pandas inte installerat - KB-funktionalitet inte tillgänglig")
             
-            logger.info(f"=== Starting KB processing ===")
+            logger.info("=== Starting KB processing ===")
             logger.info(f"Excel file: {excel_path}")
             logger.info(f"Input dir: {input_dir}")
             logger.info(f"Output dir: {output_dir}")
@@ -560,7 +558,7 @@ class KBProcessor:
                             for remaining_pdf in grouped.items():
                                 if remaining_pdf[0] != (date, newspaper):
                                     skipped_count += 1
-                            logger.info(f"Skipping all remaining PDFs")
+                            logger.info("Skipping all remaining PDFs")
                             break
                         elif dialog_result["action"] == "overwrite_all":
                             # Overwrite all remaining PDFs

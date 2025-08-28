@@ -98,9 +98,14 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.4.9)
+## Current Status (v1.5.7)
 
 The application is production-ready with:
+- **Session Management Enhancement** - Date fields no longer persist between sessions, always start fresh
+- **Email Confirmation Dialog** - Added confirmation dialog showing email count before download begins
+- **Unicode Compatibility** - Resolved Windows encoding issues by removing emoji characters from logs
+- **Complete Icon Consistency** - Application icon now displays on all 7 custom dialog windows
+- **Dialog UX Improvements** - Proper sizing and button visibility for all confirmation dialogs
 - **Critical Bug Fixes** - Resolved placeholder text configuration issue preventing Gmail search failures
 - **PyInstaller Icon Support** - Application icon displays correctly in compiled .exe files
 - **Improved Default Folder Handling** - Downloads default to app subdirectory with automatic creation
@@ -124,7 +129,21 @@ The application is production-ready with:
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
 
-## Recent Improvements (v1.4.7 - v1.4.9)
+## Recent Improvements (v1.5.2 - v1.5.7)
+
+### Session & Dialog Improvements (v1.5.2 - v1.5.7)
+- **Date Field Reset** - Date fields now start fresh each session with placeholder text only
+- **Download Confirmation** - Added Swedish confirmation dialog before email attachment download
+- **Icon Integration** - Consistent application icon across all custom dialog windows:
+  - Email confirmation dialog
+  - File conflict dialogs (Gmail JPG and KB PDF)
+  - Password input dialog
+  - Error message dialogs
+- **Dialog Sizing** - Fixed confirmation dialog dimensions for proper button visibility
+- **Encoding Fixes** - Removed Unicode emojis causing Windows cp1252 encoding errors
+- **Thread-Safe Callbacks** - Proper threading.Event implementation for GUI dialog callbacks
+
+## Previous Improvements (v1.4.7 - v1.4.9)
 
 ### Default Folder Management (v1.4.7)
 - **New Default Location** - Downloads now default to `Nedladdningar` subfolder within application directory
@@ -186,4 +205,4 @@ The application is production-ready with:
 - Subprocess protection (prevents shell injection)
 - Secure Excel file reading with validation
 - Automatic directory validation and creation
-- Always save ny version before coding. Commitb it with info on what changes is attempted. After successful testing commit again with new info on succesful implementation.
+- Always save new version before coding. Commit it with info on what changes are attempted. After successful testing commit again with new info on successful implementation.
