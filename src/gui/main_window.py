@@ -1013,31 +1013,13 @@ class CombinedApp:
         self.credentials_file_var.set(self.config.get("credentials_file", "Ingen fil vald"))
         self.sender_var.set(self.config.get("sender_email", "noreply@kb.se"))
         
-        # Load date fields - filter out placeholder text from config
-        loaded_start_date = self.config.get("start_date", "")
-        loaded_end_date = self.config.get("end_date", "")
+        # Always start with empty date fields (dates should not persist between sessions)
+        # This ensures users start fresh each time
+        self.start_date_var.set(self.placeholder_text)
+        self.start_date_has_placeholder = True
         
-        # Clean any placeholder text that might be in the config
-        if loaded_start_date == self.placeholder_text:
-            loaded_start_date = ""
-        if loaded_end_date == self.placeholder_text:
-            loaded_end_date = ""
-        
-        # Set start date
-        if loaded_start_date:
-            self.start_date_var.set(loaded_start_date)
-            self.start_date_has_placeholder = False
-        else:
-            self.start_date_var.set(self.placeholder_text)
-            self.start_date_has_placeholder = True
-        
-        # Set end date
-        if loaded_end_date:
-            self.end_date_var.set(loaded_end_date)
-            self.end_date_has_placeholder = False
-        else:
-            self.end_date_var.set(self.placeholder_text)
-            self.end_date_has_placeholder = True
+        self.end_date_var.set(self.placeholder_text)
+        self.end_date_has_placeholder = True
         # Use app directory for default
         app_dir = self.get_app_directory()
         default_download_path = str(app_dir / "Nedladdningar")
