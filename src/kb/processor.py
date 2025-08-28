@@ -30,6 +30,7 @@ class KBProcessor:
         self.cancel_requested = False  # Keep for backward compatibility
         self.cancel_event = None  # Will be set by GUI
         self.root = None  # Reference to root window for dialogs
+        self.icon_callback = None  # Callback to set window icon
         self.secure_ops = get_secure_ops()
         self.validator = get_default_validator()
     
@@ -134,6 +135,10 @@ class KBProcessor:
     def set_root(self, root: tk.Tk):
         """Set the root window for dialog purposes"""
         self.root = root
+        
+    def set_icon_callback(self, callback):
+        """Set callback function to apply icon to dialog windows"""
+        self.icon_callback = callback
     
     def cancel_operation(self):
         self.cancel_requested = True
@@ -435,6 +440,10 @@ class KBProcessor:
                         dialog.focus_force()
                         dialog.attributes('-topmost', True)
                         dialog.after(100, lambda: dialog.attributes('-topmost', False))
+                        
+                        # Set icon if callback available
+                        if self.icon_callback:
+                            self.icon_callback(dialog)
                         
                         # Center the dialog over the parent window (app window)
                         dialog.update_idletasks()

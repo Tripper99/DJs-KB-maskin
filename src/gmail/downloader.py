@@ -62,6 +62,10 @@ class DownloadManager:
         dialog.attributes('-topmost', True)
         dialog.after(100, lambda: dialog.attributes('-topmost', False))
         
+        # Set icon if callback available
+        if self.icon_callback:
+            self.icon_callback(dialog)
+        
         # Add periodic check for cancellation while dialog is open
         def check_cancel_during_dialog():
             if self.cancel_event and self.cancel_event.is_set():
@@ -209,12 +213,17 @@ class GmailDownloader:
         self.attachment_processor = None
         self.download_manager = None
         self.root = None  # Reference to root window for dialogs
+        self.icon_callback = None  # Callback to set window icon
         self.secure_ops = get_secure_ops()
         self.validator = get_default_validator()
     
     def set_root(self, root: tk.Tk):
         """Set the root window for dialog purposes"""
         self.root = root
+        
+    def set_icon_callback(self, callback):
+        """Set callback function to apply icon to dialog windows"""
+        self.icon_callback = callback
     
     def cancel_operation(self):
         self.cancel_requested = True

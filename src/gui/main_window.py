@@ -1424,6 +1424,7 @@ class CombinedApp:
                     gmail_account=self.gmail_account_var.get()
                 )
                 self.gmail_downloader.set_root(self.root)  # Set root for dialogs
+                self.gmail_downloader.set_icon_callback(self.set_window_icon)  # Set icon callback for dialogs
                 
                 # Set cancel event for Gmail downloader
                 self.gmail_downloader.cancel_event = self.cancel_event
@@ -1514,6 +1515,7 @@ class CombinedApp:
                 
                 # Set root for KB processor dialogs
                 self.kb_processor.set_root(self.root)
+                self.kb_processor.set_icon_callback(self.set_window_icon)  # Set icon callback for dialogs
                 
                 # Determine progress offset (50% if Gmail ran, 0% if KB only)
                 progress_offset = 50 if gmail_on else 0
