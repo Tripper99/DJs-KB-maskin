@@ -105,6 +105,23 @@ class CombinedApp:
         except Exception as e:
             logger.warning(f"Could not create default download folder: {e}")
     
+    def set_window_icon(self, window):
+        """Set application icon on a window"""
+        try:
+            if getattr(sys, 'frozen', False):
+                # Running as PyInstaller executable
+                icon_path = Path(sys._MEIPASS) / "Agg-med-smor-v4-transperent.ico"
+            else:
+                # Running as Python script - icon is in app directory
+                icon_path = self.get_app_directory() / "Agg-med-smor-v4-transperent.ico"
+            
+            if icon_path.exists():
+                window.iconbitmap(str(icon_path))
+            else:
+                logger.warning(f"Icon file not found: {icon_path}")
+        except Exception as e:
+            logger.warning(f"Could not set window icon: {e}")
+    
     def add_tooltip(self, widget, text, delay=400):
         """Add a tooltip to a widget with consistent styling"""
         if TOOLTIP_AVAILABLE and ToolTip:
@@ -747,6 +764,7 @@ class CombinedApp:
         about_win = tb.Toplevel()
         about_win.title("Om appen")
         about_win.geometry("600x500")
+        self.set_window_icon(about_win)
         
         # Center window
         about_win.update_idletasks()
@@ -772,6 +790,7 @@ class CombinedApp:
         help_win = tb.Toplevel()
         help_win.title("Hjälp - Spara omdöpta jpg-filer")
         help_win.geometry("500x485")  # Increased height by 62% total (300 -> 485)
+        self.set_window_icon(help_win)
         
         # Center window
         help_win.update_idletasks()
@@ -823,6 +842,7 @@ class CombinedApp:
         help_win = tb.Toplevel()
         help_win.title("Hjälp - Bevara originalfiler")
         help_win.geometry("500x405")  # Increased height by 62% total (250 -> 405)
+        self.set_window_icon(help_win)
         
         # Center window
         help_win.update_idletasks()
@@ -1611,16 +1631,70 @@ class CombinedApp:
             logger.error(f"Error in handle_no_emails_found: {e}")
     
     def _show_download_confirmation_dialog(self, email_count, sender_email):
-        """Show confirmation dialog for email downloads (thread-safe)"""
+        """Show confirmation dialog for email downloads with custom icon (thread-safe)"""
         try:
             # Must be called from main thread
-            response = messagebox.askyesno(
-                "Bekräfta nedladdning",
-                f"{email_count} meddelande hittade från {sender_email} som innehåller bilagor.\n\n"
-                f"Vill du ladda ned och processa dessa bilagor?",
-                parent=self.root  # Ensures dialog appears over main window
-            )
-            return response
+            result = [False]  # Default to False if something goes wrong
+            
+            # Create custom dialog window
+            dialog = tb.Toplevel(self.root)
+            dialog.title("Bekräfta nedladdning")
+            dialog.geometry("500x200")
+            dialog.resizable(False, False)
+            
+            # Set icon on dialog
+            self.set_window_icon(dialog)
+            
+            # Center dialog relative to main window
+            dialog.transient(self.root)
+            dialog.grab_set()  # Make dialog modal
+            
+            # Create content frame
+            content_frame = tb.Frame(dialog)
+            content_frame.pack(fill="both", expand=True, padx=20, pady=20)
+            
+            # Message text
+            message_text = f"{email_count} meddelande hittade från {sender_email} som innehåller bilagor.\n\nVill du ladda ned och processa dessa bilagor?"
+            message_label = tb.Label(content_frame, text=message_text, font=('Arial', 11), wraplength=450, justify="center")
+            message_label.pack(pady=(10, 30))
+            
+            # Button frame
+            button_frame = tb.Frame(content_frame)
+            button_frame.pack(pady=(0, 10))
+            
+            def on_yes():
+                result[0] = True
+                dialog.destroy()
+            
+            def on_cancel():
+                result[0] = False
+                dialog.destroy()
+            
+            # Buttons with proper Swedish text
+            yes_btn = tb.Button(button_frame, text="Ja", command=on_yes, bootstyle="success", width=10)
+            yes_btn.pack(side="left", padx=(0, 10))
+            
+            cancel_btn = tb.Button(button_frame, text="Avbryt", command=on_cancel, bootstyle="secondary", width=10)
+            cancel_btn.pack(side="left")
+            
+            # Set focus to Yes button
+            yes_btn.focus_set()
+            
+            # Bind Enter and Escape keys
+            dialog.bind('<Return>', lambda e: on_yes())
+            dialog.bind('<Escape>', lambda e: on_cancel())
+            
+            # Position dialog over parent window
+            dialog.update_idletasks()
+            x = self.root.winfo_rootx() + (self.root.winfo_width() // 2) - (dialog.winfo_width() // 2)
+            y = self.root.winfo_rooty() + (self.root.winfo_height() // 2) - (dialog.winfo_height() // 2)
+            dialog.geometry(f"+{x}+{y}")
+            
+            # Wait for dialog to close
+            dialog.wait_window()
+            
+            return result[0]
+            
         except Exception as e:
             logger.error(f"Error showing download confirmation dialog: {e}")
             return False
@@ -1630,6 +1704,7 @@ class CombinedApp:
         result_win = tb.Toplevel()
         result_win.title("Bearbetning slutförd")
         result_win.geometry("600x700")
+        self.set_window_icon(result_win)
         result_win.lift()
         result_win.focus_force()
         result_win.attributes('-topmost', True)
