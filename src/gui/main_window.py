@@ -1639,8 +1639,9 @@ class CombinedApp:
             # Create custom dialog window
             dialog = tb.Toplevel(self.root)
             dialog.title("Bekräfta nedladdning")
-            dialog.geometry("500x200")
-            dialog.resizable(False, False)
+            dialog.geometry("520x250")
+            dialog.resizable(True, True)
+            dialog.minsize(450, 200)
             
             # Set icon on dialog
             self.set_window_icon(dialog)

@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.5.5"
-__version_info__ = (1, 5, 5)
+__version__ = "1.5.6"
+__version_info__ = (1, 5, 6)
 __release_date__ = "2025-08-28"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.5.6 (2025-08-28): Fixed confirmation dialog size - made it larger and resizable so buttons are visible
 1.5.5 (2025-08-28): Added application icon to all custom dialog windows including confirmation dialog
 1.5.4 (2025-08-28): Fixed Unicode encoding issues - replaced emoji characters with ASCII for Windows compatibility
 1.5.3 (2025-08-28): Added confirmation dialog before downloading email attachments
