@@ -1429,17 +1429,48 @@ class CombinedApp:
                 if end_date == self.placeholder_text:
                     end_date = ""
                     
+                # Create thread-safe confirmation callback
+                def confirmation_callback(email_count, sender_email):
+                    result = [None]  # Using list to capture result in closure
+                    event = threading.Event()
+                    
+                    def show_dialog():
+                        try:
+                            result[0] = self._show_download_confirmation_dialog(email_count, sender_email)
+                        except Exception as e:
+                            logger.error(f"Error in confirmation dialog: {e}")
+                            result[0] = False
+                        finally:
+                            event.set()
+                    
+                    # Schedule on main thread and wait for result
+                    self.root.after(0, show_dialog)
+                    event.wait()  # Block until dialog is closed
+                    return result[0]
+                
                 gmail_result = self.gmail_downloader.download_attachments(
                     sender_email=self.sender_var.get(),
                     start_date=start_date,
                     end_date=end_date,
                     output_dir=self.gmail_output_dir_var.get(),
                     progress_callback=self.update_progress,
-                    gui_update_callback=self.gui_update
+                    gui_update_callback=self.gui_update,
+                    confirmation_callback=confirmation_callback
                 )
                 
                 if gmail_result.get("cancelled"):
                     self.cleanup_after_cancel()
+                    return
+                
+                if gmail_result.get("user_cancelled"):
+                    logger.info("User cancelled download via confirmation dialog")
+                    # Clean up and reset UI 
+                    self.progress_frame.pack_forget()
+                    self.start_btn.config(state="normal")
+                    self.cancel_btn.config(state="disabled")
+                    self.gmail_running = False
+                    self.kb_running = False
+                    self.update_status("Avbruten av användare")
                     return
                 
                 self.gmail_running = False
@@ -1578,6 +1609,21 @@ class CombinedApp:
             self.update_status("Inga mejl hittades")
         except Exception as e:
             logger.error(f"Error in handle_no_emails_found: {e}")
+    
+    def _show_download_confirmation_dialog(self, email_count, sender_email):
+        """Show confirmation dialog for email downloads (thread-safe)"""
+        try:
+            # Must be called from main thread
+            response = messagebox.askyesno(
+                "Bekräfta nedladdning",
+                f"{email_count} meddelande hittade från {sender_email} som innehåller bilagor.\n\n"
+                f"Vill du ladda ned och processa dessa bilagor?",
+                parent=self.root  # Ensures dialog appears over main window
+            )
+            return response
+        except Exception as e:
+            logger.error(f"Error showing download confirmation dialog: {e}")
+            return False
     
     def show_results(self, gmail_result, kb_result, both_operations):
         """Show results dialog"""

@@ -327,7 +327,8 @@ class GmailDownloader:
         return downloaded, skipped, total_size
     
     def download_attachments(self, sender_email: str, start_date: str, end_date: str, 
-                           output_dir: str, progress_callback=None, gui_update_callback=None) -> Dict:
+                           output_dir: str, progress_callback=None, gui_update_callback=None, 
+                           confirmation_callback=None) -> Dict:
         """Download JPG attachments from Gmail"""
         self.reset_cancel_state()
         
@@ -363,6 +364,26 @@ class GmailDownloader:
                     "search_query": query,
                     "output_path": output_dir
                 }
+            
+            # Show confirmation dialog if callback provided
+            if confirmation_callback:
+                logger.info(f"📋 Found {len(message_ids)} emails, asking for user confirmation")
+                if progress_callback:
+                    progress_callback(f"Hittade {len(message_ids)} meddelanden med bilagor", 50)
+                
+                # Ask for confirmation - this will be handled by the main thread
+                user_confirmed = confirmation_callback(len(message_ids), sender_email)
+                if not user_confirmed:
+                    logger.info("User cancelled download")
+                    return {
+                        "total_emails": len(message_ids),
+                        "downloaded": 0,
+                        "skipped": 0,
+                        "total_size": 0,
+                        "search_query": query,
+                        "output_path": output_dir,
+                        "user_cancelled": True
+                    }
             
             total_downloaded = 0
             total_size = 0
