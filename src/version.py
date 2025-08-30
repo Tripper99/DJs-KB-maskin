@@ -4,9 +4,9 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.5.7"
-__version_info__ = (1, 5, 7)
-__release_date__ = "2025-08-28"
+__version__ = "1.5.9"
+__version_info__ = (1, 5, 9)
+__release_date__ = "2025-08-30"
 
 def get_version():
     """Return the current version string"""
@@ -22,6 +22,8 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.5.9 (2025-08-30): Fixed update dialog height - doubled to 900px to show all content properly
+1.5.8 (2025-08-29): Added comprehensive update checking system with GitHub Releases API integration
 1.5.7 (2025-08-28): Added application icon to file conflict dialogs (both Gmail JPG and KB PDF conflicts)
 1.5.6 (2025-08-28): Fixed confirmation dialog size - made it larger and resizable so buttons are visible
 1.5.5 (2025-08-28): Added application icon to all custom dialog windows including confirmation dialog

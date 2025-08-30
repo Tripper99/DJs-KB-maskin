@@ -15,6 +15,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from src.security.path_validator import PathValidator
 from src.security.secure_file_ops import SecureFileOps
+from src.security.network_validator import (
+    NetworkValidator, NetworkSecurityError, URLValidationError, ResponseValidationError
+)
 
 
 class TestPathValidator(unittest.TestCase):
@@ -287,6 +290,250 @@ class TestSecureFileOps(unittest.TestCase):
         
         with self.assertRaises(ValueError):
             self.secure_ops.copy_file(str(source), "../../../tmp")
+
+
+class TestNetworkValidator(unittest.TestCase):
+    """Test network security validation functionality"""
+    
+    def setUp(self):
+        self.validator = NetworkValidator("testuser", "testrepo")
+        
+    def test_repository_validation(self):
+        """Test repository owner and name validation"""
+        # Test valid repository info
+        validator = NetworkValidator("valid-user", "valid-repo")
+        self.assertEqual(validator.repo_owner, "valid-user")
+        self.assertEqual(validator.repo_name, "valid-repo")
+        
+        # Test invalid repository owner
+        with self.assertRaises(URLValidationError):
+            NetworkValidator("", "testrepo")
+            
+        with self.assertRaises(URLValidationError):
+            NetworkValidator(".invalid", "testrepo")
+            
+        with self.assertRaises(URLValidationError):
+            NetworkValidator("invalid.", "testrepo")
+            
+        with self.assertRaises(URLValidationError):
+            NetworkValidator("a" * 40, "testrepo")  # Too long
+            
+        with self.assertRaises(URLValidationError):
+            NetworkValidator("invalid/chars", "testrepo")
+            
+    def test_api_url_validation(self):
+        """Test GitHub API URL validation"""
+        # Valid URLs
+        valid_urls = [
+            "https://api.github.com/repos/testuser/testrepo/releases/latest",
+            "https://api.github.com/repos/testuser/testrepo/releases",
+            "https://api.github.com/repos/testuser/testrepo/releases/123"
+        ]
+        
+        for url in valid_urls:
+            with self.subTest(url=url):
+                self.assertTrue(self.validator.validate_api_url(url))
+                
+        # Invalid URLs
+        invalid_urls = [
+            "http://api.github.com/repos/testuser/testrepo/releases/latest",  # HTTP
+            "https://evil.com/repos/testuser/testrepo/releases/latest",  # Wrong domain
+            "https://api.github.com/repos/otheruser/testrepo/releases/latest",  # Wrong user
+            "https://api.github.com/repos/testuser/otherrepo/releases/latest",  # Wrong repo
+            "https://api.github.com/repos/testuser/testrepo/issues",  # Wrong endpoint
+            "",  # Empty
+            "not-a-url",  # Not a URL
+            "ftp://api.github.com/repos/testuser/testrepo/releases/latest"  # Wrong scheme
+        ]
+        
+        for url in invalid_urls:
+            with self.subTest(url=url):
+                with self.assertRaises(URLValidationError):
+                    self.validator.validate_api_url(url)
+                    
+    def test_release_url_validation(self):
+        """Test GitHub release page URL validation"""
+        # Valid URLs
+        valid_urls = [
+            "https://github.com/testuser/testrepo/releases/tag/v1.0.0",
+            "https://github.com/testuser/testrepo/releases",
+            "https://github.com/testuser/testrepo/releases/latest"
+        ]
+        
+        for url in valid_urls:
+            with self.subTest(url=url):
+                self.assertTrue(self.validator.validate_release_url(url))
+                
+        # Invalid URLs
+        invalid_urls = [
+            "http://github.com/testuser/testrepo/releases/tag/v1.0.0",  # HTTP
+            "https://evil.com/testuser/testrepo/releases/tag/v1.0.0",  # Wrong domain
+            "https://github.com/otheruser/testrepo/releases/tag/v1.0.0",  # Wrong user
+            "https://github.com/testuser/otherrepo/releases/tag/v1.0.0",  # Wrong repo
+            "",  # Empty
+            "not-a-url"  # Not a URL
+        ]
+        
+        for url in invalid_urls:
+            with self.subTest(url=url):
+                with self.assertRaises(URLValidationError):
+                    self.validator.validate_release_url(url)
+                    
+    def test_secure_request_config(self):
+        """Test secure request configuration"""
+        config = self.validator.get_secure_request_config()
+        
+        self.assertIsInstance(config, dict)
+        self.assertEqual(config['timeout'], 10)
+        self.assertTrue(config['verify'])
+        self.assertFalse(config['allow_redirects'])
+        self.assertIn('User-Agent', config['headers'])
+        self.assertIn('Accept', config['headers'])
+        
+    def test_json_response_validation(self):
+        """Test JSON response validation"""
+        # Valid JSON
+        valid_json = '{"key": "value", "number": 123}'
+        result = self.validator.validate_json_response(valid_json)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result["key"], "value")
+        self.assertEqual(result["number"], 123)
+        
+        # Invalid JSON
+        invalid_json = '{"key": "value", "invalid": '
+        with self.assertRaises(ResponseValidationError):
+            self.validator.validate_json_response(invalid_json)
+            
+        # Too large response
+        large_json = '{"data": "' + "x" * 2000000 + '"}'
+        with self.assertRaises(ResponseValidationError):
+            self.validator.validate_json_response(large_json, max_size=1000)
+            
+        # Non-object JSON
+        array_json = '["not", "an", "object"]'
+        with self.assertRaises(ResponseValidationError):
+            self.validator.validate_json_response(array_json)
+            
+    def test_release_data_validation(self):
+        """Test GitHub release data validation"""
+        # Valid release data
+        valid_release = {
+            "tag_name": "v1.0.0",
+            "name": "Version 1.0.0",
+            "html_url": "https://github.com/testuser/testrepo/releases/tag/v1.0.0",
+            "published_at": "2023-01-01T00:00:00Z",
+            "body": "Release notes",
+            "assets": [
+                {
+                    "name": "app.exe",
+                    "browser_download_url": "https://github.com/testuser/testrepo/releases/download/v1.0.0/app.exe",
+                    "size": 1024
+                }
+            ]
+        }
+        
+        result = self.validator.validate_release_data(valid_release)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result["tag_name"], "v1.0.0")
+        self.assertEqual(len(result["assets"]), 1)
+        
+        # Missing required fields
+        incomplete_release = {"tag_name": "v1.0.0"}
+        with self.assertRaises(ResponseValidationError):
+            self.validator.validate_release_data(incomplete_release)
+            
+        # Invalid version format
+        invalid_version_release = valid_release.copy()
+        invalid_version_release["tag_name"] = "invalid-version"
+        with self.assertRaises(ResponseValidationError):
+            self.validator.validate_release_data(invalid_version_release)
+            
+        # Invalid HTML URL
+        invalid_url_release = valid_release.copy()
+        invalid_url_release["html_url"] = "https://evil.com/malicious"
+        with self.assertRaises(ResponseValidationError):
+            self.validator.validate_release_data(invalid_url_release)
+            
+    def test_asset_data_validation(self):
+        """Test individual asset data validation"""
+        # Valid asset
+        valid_asset = {
+            "name": "app.exe",
+            "browser_download_url": "https://github.com/testuser/testrepo/releases/download/v1.0.0/app.exe",
+            "size": 1024
+        }
+        
+        result = self.validator._validate_asset_data(valid_asset)
+        self.assertIsNotNone(result)
+        self.assertEqual(result["name"], "app.exe")
+        
+        # Missing required fields
+        incomplete_asset = {"name": "app.exe"}
+        result = self.validator._validate_asset_data(incomplete_asset)
+        self.assertIsNone(result)
+        
+        # Invalid download URL
+        invalid_url_asset = valid_asset.copy()
+        invalid_url_asset["browser_download_url"] = "http://evil.com/malware"
+        result = self.validator._validate_asset_data(invalid_url_asset)
+        self.assertIsNone(result)
+        
+        # Invalid size
+        invalid_size_asset = valid_asset.copy()
+        invalid_size_asset["size"] = -1
+        result = self.validator._validate_asset_data(invalid_size_asset)
+        self.assertIsNone(result)
+        
+    def test_text_sanitization(self):
+        """Test text sanitization for GUI display"""
+        # Normal text
+        normal_text = "Normal release notes"
+        sanitized = self.validator.sanitize_display_text(normal_text)
+        self.assertEqual(sanitized, normal_text)
+        
+        # Text with control characters
+        control_text = "Text\x00with\x01control\x02chars"
+        sanitized = self.validator.sanitize_display_text(control_text)
+        self.assertNotIn('\x00', sanitized)
+        self.assertNotIn('\x01', sanitized)
+        self.assertNotIn('\x02', sanitized)
+        
+        # Text too long
+        long_text = "x" * 2000
+        sanitized = self.validator.sanitize_display_text(long_text, max_length=100)
+        self.assertEqual(len(sanitized), 100)
+        
+        # Non-string input
+        non_string = 12345
+        sanitized = self.validator.sanitize_display_text(non_string, max_length=10)
+        self.assertEqual(sanitized, "12345")
+        
+        # Text with allowed special characters
+        special_text = "Text with\nnewlines\tand\rreturns"
+        sanitized = self.validator.sanitize_display_text(special_text)
+        self.assertIn('\n', sanitized)
+        self.assertIn('\t', sanitized)
+        self.assertIn('\r', sanitized)
+        
+    def test_version_pattern_matching(self):
+        """Test version number pattern validation"""
+        import re
+        from src.security.network_validator import VERSION_PATTERN
+        
+        # Valid versions
+        valid_versions = ["1.0.0", "v1.0.0", "2.15.7", "v10.0.1"]
+        for version in valid_versions:
+            with self.subTest(version=version):
+                self.assertTrue(VERSION_PATTERN.match(version))
+                
+        # Invalid versions
+        invalid_versions = [
+            "1.0", "v1", "1.0.0-beta", "1.0.0.0", "v1.0.0-rc1", 
+            "1.x.0", "a.b.c", "", "1.0.0-alpha"
+        ]
+        for version in invalid_versions:
+            with self.subTest(version=version):
+                self.assertIsNone(VERSION_PATTERN.match(version))
 
 
 if __name__ == '__main__':

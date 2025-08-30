@@ -39,13 +39,14 @@ python app.py
 
 ### Key Features
 
+- **Update System** - GitHub Releases API integration for version checking
 - **Threading** - Background processing keeps GUI responsive
 - **Cancellation** - All operations support immediate cancellation
 - **Memory Efficient** - Streams images to PDFs to handle large batches
 - **Auto-linking** - Gmail output directory auto-populates KB input directory
 - **Duplicate Detection** - Prevents re-downloading files in same session
 - **Conflict Resolution** - Interactive dialogs for handling existing files
-- **Security** - Path validation, injection prevention, filename sanitization
+- **Security** - Path validation, injection prevention, filename sanitization, network validation
 - **Version Control** - Centralized version management with history tracking
 
 ### File Naming Conventions
@@ -64,7 +65,14 @@ python app.py
 ### Security Modules
 - `src/security/path_validator.py` - Path validation and sanitization
 - `src/security/secure_file_ops.py` - Secure file operation wrappers
+- `src/security/network_validator.py` - Network security for update system
 - `src/security/__init__.py` - Security module exports
+
+### Update System Modules
+- `src/update/version_checker.py` - GitHub API integration for version checking
+- `src/update/update_dialog.py` - Swedish language update notifications
+- `src/update/models.py` - Data models for update information
+- `src/update/__init__.py` - Update module exports
 
 ### Functional Modules  
 - `src/gmail/` - Gmail API integration
@@ -98,9 +106,10 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.5.7)
+## Current Status (v1.5.8)
 
 The application is production-ready with:
+- **Update System** - GitHub Releases API integration for version checking and update notifications
 - **Session Management Enhancement** - Date fields no longer persist between sessions, always start fresh
 - **Email Confirmation Dialog** - Added confirmation dialog showing email count before download begins
 - **Unicode Compatibility** - Resolved Windows encoding issues by removing emoji characters from logs
@@ -112,8 +121,8 @@ The application is production-ready with:
 - **Comprehensive Tooltip System** - 15+ tooltips across all major GUI elements for enhanced user guidance
 - **Dynamic User Interface** - Smart button text and status messages that adapt to user selections
 - **Optimized Default Settings** - Sensible defaults (delete originals, don't save renamed JPGs) 
-- **Enterprise-level security** - Path validation, injection prevention, secure file operations
-- **Enhanced GUI** - 40% taller window, optimized screen positioning, logical field ordering
+- **Enterprise-level security** - Path validation, injection prevention, secure file operations, network validation
+- **Enhanced GUI** - 40% taller window, optimized screen positioning, logical field ordering, Help menu
 - **Swedish Language Support** - Complete interface localization with proper character handling
 - **Responsive interface** with proper threading and comprehensive cancellation support
 - **KB-specific workflow** optimizations for Swedish newspaper processing
@@ -129,7 +138,17 @@ The application is production-ready with:
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
 
-## Recent Improvements (v1.5.2 - v1.5.7)
+## Recent Improvements (v1.5.8)
+
+### Update System (v1.5.8)
+- **GitHub Integration** - Version checking via GitHub Releases API with secure network validation
+- **Swedish Update Notifications** - Displays new version info and available downloads in Swedish
+- **Multi-file Support** - Shows all release assets (exe files, manual, Excel templates)
+- **Browser Launch** - Opens GitHub release page for manual download
+- **No Authentication** - End users can check for updates without GitHub accounts
+- **Repository Configuration** - Pre-configured for Tripper99/DJs-KB-maskin repository
+
+## Previous Improvements (v1.5.2 - v1.5.7)
 
 ### Session & Dialog Improvements (v1.5.2 - v1.5.7)
 - **Date Field Reset** - Date fields now start fresh each session with placeholder text only

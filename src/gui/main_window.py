@@ -30,11 +30,15 @@ except ImportError:
     print("Error: ttkbootstrap not installed. Install with: pip install ttkbootstrap")
     exit(1)
 
-from ..config import load_config, save_config
+from ..config import (
+    load_config, save_config, get_update_settings, 
+    set_skip_version, update_last_check_date
+)
 from ..gmail.downloader import GmailDownloader
 from ..kb.processor import KBProcessor
 from ..version import __version__ as VERSION
 from ..security import get_secure_ops, get_default_validator
+from ..update import create_version_checker, show_update_check_result
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +204,8 @@ class CombinedApp:
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Hjälp", menu=help_menu)
+        help_menu.add_command(label="Sök efter uppdateringar...", command=self.check_for_updates)
+        help_menu.add_separator()
         help_menu.add_command(label="Manual", command=self.open_manual)
         help_menu.add_command(label="Om appen", command=self.show_about)
         
@@ -776,11 +782,11 @@ class CombinedApp:
         content_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
         tb.Label(content_frame, 
-                 text="Detta program ladda automatiskt ned alla jpg-bilagor som kommit från KB:s Svenska Tidningar, konverterar dem till pdf:er, "
-                      "slår samma flersidia artiklar till en fil med sidantalet angivet och ger filerna begripliga namn bestående av datum för publicering och tidningsnamn.\n\n"
+                 text="Detta program laddar automatiskt ned alla jpg-bilagor du skickat till dig själv via ditt konto hos KB:s Svenska Tidningar, konverterar dem till pdf:er, "
+                      "slår samma flersidiga artiklar till en fil med sidantalet angivet och ger filerna begripliga namn bestående av datum för publicering, tidningsnamn och sidantal\n\n"
                       "Om så önskas kan även omdöpta jpg-filer sparas för använding av redigerare som då slipper konvertera tillbaka från pdf till jpg.\n\n"
-                      "Prrogrammet är skapat av Dan Josefsson 2025.\n"
-                      "Python-kodningen är gjord med hjälp av ai-motorerna Cursor och framför allt Claude Code.",
+                      "Programmet är skapat av Dan Josefsson 2025.\n"
+                      "Python-kodningen är gjord med hjälp av Claude Code.",
                  font=("Arial", 10), wraplength=550).pack(anchor="w", pady=10)
         
         tb.Button(content_frame, text="Stäng", command=about_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
@@ -906,6 +912,88 @@ class CombinedApp:
                 self.secure_ops.safe_subprocess_run(['xdg-open'], file_arg=str(manual_path))
         except Exception as e:
             messagebox.showerror("Fel", f"Kunde inte öppna Manual.docx: {e}")
+    
+    def check_for_updates(self):
+        """Check for application updates from GitHub"""
+        def update_check_worker():
+            """Background thread for update checking"""
+            try:
+                # Update status in main thread
+                self.root.after(0, lambda: self.update_status("Söker efter uppdateringar..."))
+                
+                # Get repository configuration from settings
+                update_settings = self.config.get("update_settings", {})
+                repo_owner = update_settings.get("github_repo_owner", "")
+                repo_name = update_settings.get("github_repo_name", "DJs_KB_maskin")
+                
+                # Check if repository is configured
+                if not repo_owner:
+                    self.root.after(0, lambda: messagebox.showwarning(
+                        "Konfiguration saknas",
+                        "GitHub repository är inte konfigurerat.\n" +
+                        "Kontakta utvecklaren för konfigurationsinställningar."
+                    ))
+                    self.root.after(0, lambda: self.update_status(""))
+                    return
+                
+                # Create version checker and perform check
+                checker = create_version_checker(repo_owner, repo_name)
+                result = checker.check_for_updates()
+                
+                # Show result in main thread
+                def show_result():
+                    try:
+                        # Update last check date
+                        update_last_check_date(self.config)
+                        save_config(self.config)
+                        
+                        # Check if this version should be skipped
+                        update_settings = get_update_settings(self.config)
+                        skip_version = update_settings.get("skip_version")
+                        
+                        if (result.has_update and 
+                            skip_version and 
+                            result.update_info.latest_version == skip_version):
+                            # Version is skipped, don't show dialog
+                            logger.info(f"Skipping version {skip_version} as requested")
+                            return
+                            
+                        # Show update dialog and handle result
+                        user_action = show_update_check_result(self.root, result)
+                        
+                        # Handle skip version action
+                        if user_action == 'skip' and result.has_update:
+                            set_skip_version(self.config, result.update_info.latest_version)
+                            save_config(self.config)
+                            
+                    except Exception as e:
+                        logger.error(f"Error showing update result: {e}")
+                        messagebox.showerror(
+                            "Fel",
+                            f"Ett fel uppstod vid visning av uppdateringsresultat:\n{str(e)}"
+                        )
+                    finally:
+                        # Clear status message
+                        self.update_status("")
+                
+                self.root.after(0, show_result)
+                
+            except Exception as e:
+                logger.error(f"Error checking for updates: {e}")
+                
+                def show_error():
+                    messagebox.showerror(
+                        "Uppdateringsfel",
+                        f"Ett fel uppstod vid kontroll av uppdateringar:\n\n{str(e)}\n\n" +
+                        "Kontrollera din internetanslutning och försök igen."
+                    )
+                    self.update_status("")
+                
+                self.root.after(0, show_error)
+        
+        # Start update check in background thread
+        update_thread = threading.Thread(target=update_check_worker, daemon=True)
+        update_thread.start()
     
     def on_gmail_toggle(self, *args):
         """Handle Gmail checkbox toggle"""

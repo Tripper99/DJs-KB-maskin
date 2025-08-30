@@ -2,7 +2,15 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (v1.5.7)
+## ✅ Recently Completed (v1.5.8)
+
+### Update System Implementation - COMPLETED 2025-08-29
+- ✅ **GitHub Integration**: Added version checking via GitHub Releases API (v1.5.8)
+- ✅ **Swedish Update Dialog**: Shows new version info and downloadable files in Swedish
+- ✅ **Security Validation**: Comprehensive network security for API calls and URL validation
+- ✅ **No Authentication Required**: End users can check updates without GitHub accounts
+- ✅ **Multi-file Support**: Displays all release assets (exe, manual, Excel files)
+- ✅ **Browser Launch**: Opens GitHub release page for manual download
 
 ### Session Improvements - COMPLETED 2025-08-28
 - ✅ **Date Field Persistence Fix**: Date fields no longer remember values between sessions (v1.5.2)
@@ -33,10 +41,10 @@ This document tracks known issues, improvements, and future development tasks.
 ## 📦 Build & Distribution
 
 ### PyInstaller Configuration
-- **Spec File**: `DJs_KB_maskin.spec` configured with version in filename
-- **Current Version**: v1.5.7
-- **Build Command**: `pyinstaller DJs_KB_maskin.spec`
-- **Output**: `dist/DJs_KB_maskin_v1.4.6.exe`
+- **Spec File**: `DJs_KB_maskin_v1.5.8.spec` configured with version in filename
+- **Current Version**: v1.5.8
+- **Build Command**: `pyinstaller DJs_KB_maskin_v1.5.8.spec`
+- **Output**: `dist/DJs_KB_maskin_v1.5.8.exe`
 - **Icon**: Uses `Agg-med-smor-v4-transperent.ico`
 
 ## 🔧 Known Issues & Improvements Needed

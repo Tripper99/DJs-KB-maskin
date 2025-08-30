@@ -2,7 +2,60 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-08-28)
+## Latest Development Session (2025-08-29)
+
+### 🚀 GitHub Update System Implementation (v1.5.8)
+
+**Comprehensive update checking system with GitHub Releases API integration:**
+
+#### Problem Solved:
+Users needed a way to check for new versions without manual GitHub navigation. The application should notify users of updates and allow them to download new releases.
+
+#### Root Cause Analysis:
+- No automated version checking mechanism
+- Users had to manually check GitHub for updates
+- No clear way to know when new versions were available
+
+#### Solution Implemented:
+1. **GitHub API Integration** (`src/update/version_checker.py`):
+   - Secure API calls to GitHub Releases endpoint
+   - Version comparison using semantic versioning
+   - Caching mechanism to prevent excessive API calls
+   - Swedish error messages for network failures
+
+2. **Security Layer** (`src/security/network_validator.py`):
+   - URL validation and sanitization
+   - JSON response validation
+   - Certificate verification enforcement
+   - Protection against malicious redirects
+   - Rate limiting and size constraints
+
+3. **Update Dialog** (`src/update/update_dialog.py`):
+   - Swedish language interface
+   - Displays version information and release notes
+   - Lists all downloadable assets (exe, manual, Excel)
+   - Security warning about manual verification
+   - Options to download, skip version, or cancel
+
+4. **Configuration Issues Fixed**:
+   - Repository name mismatch: `DJs_KB_maskin` → `DJs-KB-maskin`
+   - Deep merge configuration function for nested settings
+   - Proper handling of existing configuration files
+
+#### Technical Implementation Details:
+- **Architecture**: Used multiple specialized subagents (architecture-planner, security-auditor)
+- **Security Focus**: Network validation, input sanitization, secure defaults
+- **User Experience**: No authentication required, Swedish localization throughout
+- **Repository**: Pre-configured for `Tripper99/DJs-KB-maskin`
+- **Threading**: Background checking without blocking UI
+
+#### Development Process:
+- Used architecture-planner agent for system design
+- Security-auditor agent reviewed implementation
+- Discovered and fixed configuration merging bug
+- Resolved repository naming mismatch issue
+
+## Previous Development Session (2025-08-28)
 
 ### 🎨 Complete Icon Integration & UI Improvements (v1.5.2 - v1.5.7)
 

@@ -41,7 +41,16 @@
       "Bash(git log:*)",
       "Read(/C:\\Users\\dan\\.claude/**)",
       "WebFetch(domain:stackoverflow.com)",
-      "WebFetch(domain:gnikit.github.io)"
+      "WebFetch(domain:gnikit.github.io)",
+      "Read(C:\\Dropbox\\Dokument/**)",
+      "Read(C:\\Dropbox\\Dokument\\Programmering\\Python\\claude-code-docs-auto/**)",
+      "Read(C:\\Dropbox\\Dokument\\Programmering\\Python/**)",
+      "Read(C:\\Dropbox\\Dokument\\Programmering\\Python\\claude-code-docs-auto/**)",
+      "Read(C:\\Dropbox\\Dokument\\Programmering\\Python\\claude-code-docs-auto/**)",
+      "Bash(del test_config_merge.py)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(del \"C:\\Dropbox\\Dokument\\Programmering\\Python\\App DJs KB-maskin\\DJs_KB_maskin (project)\\djs_kb-maskin_settings.json\")",
+      "Read(C:\\Users\\dan\\.claude/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

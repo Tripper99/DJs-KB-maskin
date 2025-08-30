@@ -1,5 +1,10 @@
 # Prime Context for Claude Code
 
+# Run this:
+cd C:\Dropbox\Dokument\Programmering\Python\claude-code-docs-auto
+  python scripts/update_claude_md.py --verbose
+
+# Then do this:
 Use the command 'tree' to get understanding of project structure
 
 Start with reading the CLAUDE.md if it exists to get an understanding of the project.
