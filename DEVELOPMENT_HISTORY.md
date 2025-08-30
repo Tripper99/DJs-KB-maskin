@@ -2,7 +2,33 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-08-29)
+## Latest Development Session (2025-08-30)
+
+### 🔧 Update Dialog Height Fix (v1.5.9)
+
+**Problem Identified:**
+- Update dialog window height (500px) was insufficient to display all content
+- Users reported that release notes, file lists, and buttons were being cut off
+- The dialog needed approximately twice the vertical space for proper visibility
+
+**Solution Implemented:**
+- Increased dialog window height from 500px to 900px in `src/update/update_dialog.py`
+- Adjusted minimum window height from 450px to 850px
+- Dialog remains resizable for user preference
+
+**Technical Details:**
+- Modified `_create_update_dialog()` method line 127
+- Changed geometry from "600x500" to "600x900"
+- Updated minsize from (550, 450) to (550, 850)
+- Maintained window width at 600px for consistency
+
+**Development Process:**
+- Quick fix requiring only two line changes
+- No architectural changes needed
+- Preserves all existing functionality and centering logic
+- Created PyInstaller spec file `DJs_KB_maskin_v1.5.9.spec` for exe distribution
+
+## Previous Development Session (2025-08-29)
 
 ### 🚀 GitHub Update System Implementation (v1.5.8)
 

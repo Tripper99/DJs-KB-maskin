@@ -106,7 +106,7 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.5.8)
+## Current Status (v1.5.9)
 
 The application is production-ready with:
 - **Update System** - GitHub Releases API integration for version checking and update notifications
@@ -138,7 +138,14 @@ The application is production-ready with:
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
 
-## Recent Improvements (v1.5.8)
+## Recent Improvements (v1.5.9)
+
+### Update Dialog Enhancement (v1.5.9)
+- **Improved Dialog Height** - Doubled update dialog window height to 900px for full content visibility
+- **Better UX** - All release notes, file lists, and buttons now fully accessible without scrolling issues
+- **Maintained Responsiveness** - Dialog remains resizable with appropriate minimum constraints
+
+## Previous Improvements (v1.5.8)
 
 ### Update System (v1.5.8)
 - **GitHub Integration** - Version checking via GitHub Releases API with secure network validation

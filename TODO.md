@@ -2,7 +2,14 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (v1.5.8)
+## ✅ Recently Completed (v1.5.9)
+
+### Update Dialog UI Fix - COMPLETED 2025-08-30
+- ✅ **Dialog Height**: Doubled update dialog height from 500px to 900px (v1.5.9)
+- ✅ **Content Visibility**: All release notes, file lists, and buttons now fully visible
+- ✅ **Minimum Size**: Adjusted minimum height to 850px to prevent content cutoff
+
+## ✅ Previously Completed (v1.5.8)
 
 ### Update System Implementation - COMPLETED 2025-08-29
 - ✅ **GitHub Integration**: Added version checking via GitHub Releases API (v1.5.8)
@@ -41,10 +48,10 @@ This document tracks known issues, improvements, and future development tasks.
 ## 📦 Build & Distribution
 
 ### PyInstaller Configuration
-- **Spec File**: `DJs_KB_maskin_v1.5.8.spec` configured with version in filename
-- **Current Version**: v1.5.8
-- **Build Command**: `pyinstaller DJs_KB_maskin_v1.5.8.spec`
-- **Output**: `dist/DJs_KB_maskin_v1.5.8.exe`
+- **Spec File**: `DJs_KB_maskin_v1.5.9.spec` configured with version in filename
+- **Current Version**: v1.5.9
+- **Build Command**: `pyinstaller DJs_KB_maskin_v1.5.9.spec`
+- **Output**: `dist/DJs_KB_maskin_v1.5.9.exe`
 - **Icon**: Uses `Agg-med-smor-v4-transperent.ico`
 
 ## 🔧 Known Issues & Improvements Needed
