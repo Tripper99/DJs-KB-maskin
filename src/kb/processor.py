@@ -14,7 +14,6 @@ from typing import Dict, List, Tuple
 
 try:
     from PIL import Image
-    import pandas as pd
     IMAGE_PROCESSING_AVAILABLE = True
 except ImportError:
     IMAGE_PROCESSING_AVAILABLE = False
@@ -107,7 +106,7 @@ class KBProcessor:
                 for img in images:
                     try:
                         img.close()
-                    except:
+                    except Exception:
                         pass
     
     @contextmanager
@@ -312,7 +311,7 @@ class KBProcessor:
                     # Format date
                     try:
                         date = f"{date_raw[:4]}-{date_raw[4:6]}-{date_raw[6:]}"
-                    except:
+                    except (IndexError, ValueError):
                         date = "0000-00-00"
                         logger.warning(f"Could not parse date from: {date_raw}")
                     

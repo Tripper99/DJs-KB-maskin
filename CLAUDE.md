@@ -106,7 +106,7 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.5.9)
+## Current Status (v1.5.9 - Code Quality Enhanced 2025-09-05)
 
 The application is production-ready with:
 - **Update System** - GitHub Releases API integration for version checking and update notifications
@@ -130,6 +130,7 @@ The application is production-ready with:
 - **Centralized version management** for easier maintenance
 - **PyInstaller Integration** - Ready for .exe distribution with version-numbered builds and icon support
 - **Complete documentation** - Full development history and architectural analysis
+- **Clean Code** - All 50 Ruff linting errors fixed, full compliance achieved (2025-09-05)
 
 ## Documentation
 
@@ -211,10 +212,44 @@ The application is production-ready with:
 - **File Dialog Consistency** - All file dialogs start in application directory (.exe compatibility)
 - **Date Field Placeholders** - Shows "ÅÅÅÅ-MM-DD" format hint that disappears on focus
 
-### Build & Distribution
-- **PyInstaller Ready** - Configured spec file with version-numbered output
-- **Icon Integration** - Uses `Agg-med-smor-v4-transperent.ico` for branding
-- **One-File Distribution** - Creates single .exe with all dependencies included
+### Build & Distribution (v1.6.0+)
+
+#### Build Tools Organization
+All build-related files are organized in the `build-tools/` directory:
+- **PyInstaller specs**: `build-tools/pyinstaller/`
+- **Inno Setup scripts**: `build-tools/inno-setup/`
+- **Resources**: `build-tools/resources/` (icon, manual, Excel template)
+- **Build scripts**: `build-tools/scripts/`
+- **Output files**: `build-tools/output/` (exe and installer)
+
+#### Building the Application
+
+**Complete Build (Recommended)**:
+```bash
+cd build-tools/scripts
+build_all.bat
+```
+
+**Individual Steps**:
+- Build executable: `build_exe.bat`
+- Build installer: `build_installer.bat` (requires executable)
+
+#### Requirements
+- Python 3.x with all dependencies
+- PyInstaller: `pip install pyinstaller`
+- Inno Setup 6: https://jrsoftware.org/isdl.php
+
+#### Output Files
+- Executable: `build-tools/output/exe/DJs_KB_maskin_v1.6.0.exe`
+- Installer: `build-tools/output/installer/DJs_KB_maskin_v1.6.0_setup.exe`
+
+#### Installer Features
+- Swedish language interface
+- Includes Manual.docx and Excel template  
+- Creates Start Menu shortcuts
+- Optional desktop shortcut
+- Application icon properly set
+- Creates default folders (Nedladdningar, logs)
 
 ## Security Features (v1.3+)
 

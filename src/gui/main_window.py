@@ -16,9 +16,10 @@ from tkinter import filedialog, messagebox
 
 try:
     import ttkbootstrap as tb
-    from ttkbootstrap.constants import *
+    from ttkbootstrap.constants import (
+        INFO, SUCCESS, DANGER, PRIMARY
+    )
     import tkinter as tk
-    from tkinter import scrolledtext
     try:
         from ttkbootstrap.tooltip import ToolTip
         TOOLTIP_AVAILABLE = True
@@ -44,12 +45,10 @@ logger = logging.getLogger(__name__)
 
 # Check for required dependencies
 try:
-    from google.auth.transport.requests import Request
-    from google.oauth2.credentials import Credentials
-    from google_auth_oauthlib.flow import InstalledAppFlow
-    from googleapiclient.discovery import build
-    from googleapiclient.errors import HttpError
-    from google.auth.exceptions import RefreshError
+    # Just check for import availability without actually importing
+    import google.auth.transport.requests  # noqa: F401
+    import google.oauth2.credentials  # noqa: F401
+    import googleapiclient.discovery  # noqa: F401
     GMAIL_AVAILABLE = True
 except ImportError:
     print("Warning: Google API libraries not installed. Gmail functionality will be disabled.")
@@ -57,8 +56,8 @@ except ImportError:
     GMAIL_AVAILABLE = False
 
 try:
-    from PIL import Image, ImageTk
-    import pandas as pd
+    # Just check for import availability without actually importing
+    import PIL.Image  # noqa: F401
     IMAGE_PROCESSING_AVAILABLE = True
 except ImportError:
     print("Warning: PIL or pandas not installed. KB processing functionality will be disabled.")
@@ -165,7 +164,7 @@ class CombinedApp:
         
         # Get screen dimensions for proper positioning
         screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
+        # screen_height not used - removed to fix linting
         
         # Calculate position to center the window, but keep it towards top-left
         x = min(50, screen_width // 10)  # 50 pixels from left, but not more than 1/10 of screen width
@@ -981,10 +980,10 @@ class CombinedApp:
             except Exception as e:
                 logger.error(f"Error checking for updates: {e}")
                 
-                def show_error():
+                def show_error(error=e):
                     messagebox.showerror(
                         "Uppdateringsfel",
-                        f"Ett fel uppstod vid kontroll av uppdateringar:\n\n{str(e)}\n\n" +
+                        f"Ett fel uppstod vid kontroll av uppdateringar:\n\n{str(error)}\n\n" +
                         "Kontrollera din internetanslutning och försök igen."
                     )
                     self.update_status("")

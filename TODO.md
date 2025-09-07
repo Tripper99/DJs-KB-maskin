@@ -2,7 +2,16 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (v1.5.9)
+## ✅ Recently Completed (2025-09-05)
+
+### Code Quality - Linting Compliance 
+- ✅ **Ruff Linting**: Fixed all 50 linting errors for clean codebase
+- ✅ **Import Cleanup**: Replaced import star usage with explicit imports
+- ✅ **Exception Handling**: Fixed bare except clauses with specific exceptions
+- ✅ **Variable Fixes**: Resolved undefined and unused variable issues
+- ✅ **CLAUDE.md**: Added to .gitignore to keep project instructions private
+
+## ✅ Previously Completed (v1.5.9)
 
 ### Update Dialog UI Fix - COMPLETED 2025-08-30
 - ✅ **Dialog Height**: Doubled update dialog height from 500px to 900px (v1.5.9)

@@ -50,7 +50,11 @@
       "Bash(del test_config_merge.py)",
       "WebFetch(domain:api.github.com)",
       "Bash(del \"C:\\Dropbox\\Dokument\\Programmering\\Python\\App DJs KB-maskin\\DJs_KB_maskin (project)\\djs_kb-maskin_settings.json\")",
-      "Read(C:\\Users\\dan\\.claude/**)"
+      "Read(C:\\Users\\dan\\.claude/**)",
+      "Read(//c/Dropbox/Dokument/Programmering/Python/claude-code-docs-auto/**)",
+      "Bash(sed:*)",
+      "Read(//c/Dropbox/Dokument/Programmering/Python/App DJs KB-maskin/Bibkoder - tidningsnamn lista (excel)/**)",
+      "Bash(pyinstaller:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

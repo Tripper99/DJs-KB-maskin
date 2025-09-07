@@ -25,6 +25,9 @@ MANIFEST
 *.manifest
 *.spec
 
+# Build outputs
+build-tools/output/
+
 # Virtual environments
 venv/
 ENV/
@@ -88,3 +91,4 @@ tmp/
 
 # Development documentation (not for public repository)
 Code_how_to_do/
+CLAUDE.md

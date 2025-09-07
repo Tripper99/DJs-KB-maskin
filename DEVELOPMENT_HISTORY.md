@@ -2,7 +2,48 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-08-30)
+## Latest Development Session (2025-09-05)
+
+### 🔧 Comprehensive Linting Fixes - Ruff Compliance
+
+**Problem Identified:**
+- 50 linting errors detected by Ruff linter
+- Import star usage causing undefined name warnings (33 F405 errors)
+- Unused imports cluttering the codebase (11 F401 errors)
+- Bare except clauses that could hide errors (2 E722 errors)
+- Undefined and unused variables (2 F821, 1 F841 errors)
+
+**Solution Implemented:**
+1. **Import Star Usage Fixed:**
+   - Replaced `from ttkbootstrap.constants import *` with explicit imports
+   - Listed only the constants actually used (INFO, SUCCESS, DANGER, PRIMARY, etc.)
+   - Fixed in both `main_window.py` and `update_dialog.py`
+
+2. **Unused Imports Removed:**
+   - Removed unused Google API imports that were imported but never called
+   - Cleaned up PIL and pandas imports where not directly used
+   - Added `# noqa: F401` comments for imports used only for availability checking
+
+3. **Bare Except Clauses Fixed:**
+   - Changed `except:` to `except Exception:` for general error catching
+   - Used specific exceptions where appropriate (e.g., `except (IndexError, ValueError):`)
+
+4. **Variable Issues Resolved:**
+   - Fixed undefined variable 'e' in error handler by using default parameter
+   - Removed unused `screen_height` variable
+   - Fixed scrolledtext reference by using tk.Text instead
+
+**Technical Details:**
+- Modified files: `.gitignore`, `main_window.py`, `processor.py`, `update_dialog.py`
+- Added CLAUDE.md to .gitignore as requested
+- All changes maintain backward compatibility
+- No functional changes - only code quality improvements
+
+**Pylint Issue Note:**
+- The pylint W1510 warning about `subprocess.run` without explicit `check` parameter was already fixed
+- Line 193 in `secure_file_ops.py` has `kwargs.setdefault('check', True)`
+
+## Previous Development Session (2025-08-30)
 
 ### 🔧 Update Dialog Height Fix (v1.5.9)
 

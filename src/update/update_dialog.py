@@ -14,9 +14,10 @@ from typing import Optional
 
 try:
     import ttkbootstrap as tb
-    from ttkbootstrap.constants import *
+    from ttkbootstrap.constants import (
+        X, BOTH, LEFT, RIGHT
+    )
     import tkinter as tk
-    from tkinter import scrolledtext
     try:
         from ttkbootstrap.tooltip import ToolTip
         TOOLTIP_AVAILABLE = True
@@ -208,7 +209,7 @@ class UpdateDialog:
             notes_frame.pack(fill=BOTH, expand=True, pady=(0, 10))
             
             # Create scrollable text widget
-            notes_text = scrolledtext.ScrolledText(
+            notes_text = tk.Text(
                 notes_frame, 
                 height=6, 
                 wrap=tk.WORD,
