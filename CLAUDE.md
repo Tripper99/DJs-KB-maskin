@@ -106,9 +106,11 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.5.9 - Code Quality Enhanced 2025-09-05)
+## Current Status (v1.6.0 - Inno Setup Installer 2025-09-07)
 
 The application is production-ready with:
+- **Professional Installer** - Inno Setup installer with Swedish interface, Start Menu shortcuts, and proper upgrade behavior
+- **Organized Build Tools** - Complete build-tools directory structure with automated scripts
 - **Update System** - GitHub Releases API integration for version checking and update notifications
 - **Session Management Enhancement** - Date fields no longer persist between sessions, always start fresh
 - **Email Confirmation Dialog** - Added confirmation dialog showing email count before download begins

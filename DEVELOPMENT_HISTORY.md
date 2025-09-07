@@ -2,7 +2,66 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-09-05)
+## Latest Development Session (2025-09-07)
+
+### 🚀 Inno Setup Installer Implementation (v1.6.0)
+
+**Major Enhancement:**
+- Successfully implemented professional Windows installer using Inno Setup
+- Created organized build-tools directory structure for maintainable builds
+- Added Swedish language support throughout installer interface
+
+**Technical Implementation:**
+
+1. **Build Tools Organization:**
+   - Created `build-tools/` directory structure:
+     - `inno-setup/` - Installer script and configuration
+     - `pyinstaller/` - Updated PyInstaller spec file
+     - `resources/` - Application icon, Manual.docx, Excel template
+     - `scripts/` - Automated build batch files
+     - `output/` - Executable and installer output directories
+
+2. **Inno Setup Configuration (`DJs_KB_maskin_setup.iss`):**
+   - Swedish language interface using `Swedish.isl`
+   - Proper application versioning and metadata
+   - Includes all required files (exe, manual, Excel template)
+   - Creates Start Menu shortcuts and optional desktop shortcut
+   - Default installation to `C:\Program Files\DJs KB-maskin`
+   - Automatic creation of default folders (Nedladdningar, logs)
+   - Proper uninstall cleanup with file and directory removal
+
+3. **Build Automation:**
+   - `build_exe.bat` - Builds PyInstaller executable
+   - `build_installer.bat` - Compiles Inno Setup installer
+   - `build_all.bat` - Complete build pipeline
+   - Error checking and user feedback throughout process
+
+4. **Architecture Considerations:**
+   - Used `x64compatible` instead of deprecated `x64` architecture identifier
+   - Maintained proper upgrade behavior - new versions replace old installations
+   - Single application entry in Add/Remove Programs (no version conflicts)
+   - Consistent AppId GUID ensures proper upgrade path
+
+**Files Created/Modified:**
+- `build-tools/inno-setup/DJs_KB_maskin_setup.iss` - Main installer script
+- `build-tools/pyinstaller/DJs_KB_maskin_v1.6.0.spec` - Updated PyInstaller spec
+- `build-tools/scripts/*.bat` - Automated build scripts
+- `src/version.py` - Updated to v1.6.0 with history entry
+- `CLAUDE.md` - Added comprehensive build documentation
+- `.gitignore` - Excluded build outputs
+
+**Successful Build Results:**
+- Executable: `DJs_KB_maskin_v1.6.0.exe` (61.4 MB)
+- Installer: `DJs_KB_maskin_v1.6.0_setup.exe` (62.4 MB)
+- Clean compilation with only minor architecture deprecation warning (resolved)
+
+**Development Insights:**
+- Organized build structure significantly improves maintainability
+- Swedish localization in installer enhances user experience
+- Automated scripts reduce build complexity and errors
+- Proper upgrade behavior prevents version conflicts on user systems
+
+## Previous Development Session (2025-09-05)
 
 ### 🔧 Comprehensive Linting Fixes - Ruff Compliance
 

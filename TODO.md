@@ -2,9 +2,20 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (2025-09-05)
+## ✅ Recently Completed (2025-09-07)
 
-### Code Quality - Linting Compliance 
+### Inno Setup Installer Implementation (v1.6.0) - COMPLETED 2025-09-07
+- ✅ **Build Tools Organization**: Created organized `build-tools/` directory structure
+- ✅ **Inno Setup Script**: Complete Swedish language installer configuration  
+- ✅ **PyInstaller Integration**: Updated spec file with proper resource handling
+- ✅ **Build Automation**: Created `build_exe.bat`, `build_installer.bat`, `build_all.bat`
+- ✅ **Resource Management**: Icon, Manual.docx, and Excel template properly included
+- ✅ **Documentation**: Updated CLAUDE.md with comprehensive build instructions
+- ✅ **Architecture Fix**: Resolved x64 deprecation warning (x64compatible)
+- ✅ **Successful Compilation**: Created 62.4MB installer with Swedish interface
+- ✅ **Upgrade Behavior**: Confirmed proper version replacement (no duplicates)
+
+### Code Quality - Linting Compliance (2025-09-05)
 - ✅ **Ruff Linting**: Fixed all 50 linting errors for clean codebase
 - ✅ **Import Cleanup**: Replaced import star usage with explicit imports
 - ✅ **Exception Handling**: Fixed bare except clauses with specific exceptions
@@ -54,14 +65,14 @@ This document tracks known issues, improvements, and future development tasks.
 - ✅ **Date Field Placeholders**: Added "ÅÅÅÅ-MM-DD" placeholder text with proper focus behavior
 - ✅ **Validation Preservation**: All existing validation and functionality maintained
 
-## 📦 Build & Distribution
+## 📦 Build & Distribution (v1.6.0+)
 
-### PyInstaller Configuration
-- **Spec File**: `DJs_KB_maskin_v1.5.9.spec` configured with version in filename
-- **Current Version**: v1.5.9
-- **Build Command**: `pyinstaller DJs_KB_maskin_v1.5.9.spec`
-- **Output**: `dist/DJs_KB_maskin_v1.5.9.exe`
-- **Icon**: Uses `Agg-med-smor-v4-transperent.ico`
+### Inno Setup Installer - COMPLETED ✅
+- **Current Version**: v1.6.0 with professional installer
+- **Installer**: `build-tools/output/installer/DJs_KB_maskin_v1.6.0_setup.exe` (62.4MB)
+- **Executable**: `build-tools/output/exe/DJs_KB_maskin_v1.6.0.exe` (61.4MB)
+- **Build Command**: `cd build-tools/scripts && build_all.bat`
+- **Features**: Swedish interface, Start Menu shortcuts, proper uninstall, upgrade behavior
 
 ## 🔧 Known Issues & Improvements Needed
 
