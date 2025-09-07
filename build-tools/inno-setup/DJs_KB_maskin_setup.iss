@@ -41,7 +41,7 @@ CompressionThreads=auto
 
 ; Windows version requirements
 MinVersion=10.0
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesInstallIn64BitMode=x64compatible
 
 ; UI settings
 WizardStyle=modern
