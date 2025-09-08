@@ -396,9 +396,6 @@ class KBProcessor:
                     if gui_update_callback:
                         gui_update_callback()
                     
-                    if not files:
-                        continue
-                    
                     # Sort files for consistent ordering
                     sorted_files = sorted(files)
                     
