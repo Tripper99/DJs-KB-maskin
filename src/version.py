@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.6.2"
-__version_info__ = (1, 6, 2)
+__version__ = "1.6.3"
+__version_info__ = (1, 6, 3)
 __release_date__ = "2025-09-08"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.6.3 (2025-09-08): Code cleanup - removed redundant if-else statement in KB processor filename construction
 1.6.2 (2025-09-08): Added requirements.txt file with all dependencies and version numbers
 1.6.1 (2025-09-08): Code cleanup - removed unnecessary if statement in KB processor
 1.6.0 (2025-09-07): Added Inno Setup installer with organized build tools and documentation

@@ -322,11 +322,8 @@ class KBProcessor:
                     if tidning == "OKÄND":
                         unknown_bib_codes.add(bib)
                     
-                    # Create new filename with bib code included - for OKÄND files, include the bib code
-                    if tidning == "OKÄND":
-                        new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
-                    else:
-                        new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
+                    # Create new filename with bib code included
+                    new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
                     
                     # Sanitize filename for security
                     new_name = self.sanitize_filename(new_name)
