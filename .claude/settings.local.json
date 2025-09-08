@@ -54,7 +54,8 @@
       "Read(//c/Dropbox/Dokument/Programmering/Python/claude-code-docs-auto/**)",
       "Bash(sed:*)",
       "Read(//c/Dropbox/Dokument/Programmering/Python/App DJs KB-maskin/Bibkoder - tidningsnamn lista (excel)/**)",
-      "Bash(pyinstaller:*)"
+      "Bash(pyinstaller:*)",
+      "Read(//c/Users/dan/.claude/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

@@ -4,9 +4,9 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.6.0"
-__version_info__ = (1, 6, 0)
-__release_date__ = "2025-09-07"
+__version__ = "1.6.1"
+__version_info__ = (1, 6, 1)
+__release_date__ = "2025-09-08"
 
 def get_version():
     """Return the current version string"""
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.6.1 (2025-09-08): Code cleanup - removed unnecessary if statement in KB processor
 1.6.0 (2025-09-07): Added Inno Setup installer with organized build tools and documentation
 1.5.9 (2025-08-30): Fixed update dialog height - doubled to 900px to show all content properly
 1.5.8 (2025-08-29): Added comprehensive update checking system with GitHub Releases API integration
