@@ -55,7 +55,9 @@
       "Bash(sed:*)",
       "Read(//c/Dropbox/Dokument/Programmering/Python/App DJs KB-maskin/Bibkoder - tidningsnamn lista (excel)/**)",
       "Bash(pyinstaller:*)",
-      "Read(//c/Users/dan/.claude/**)"
+      "Read(//c/Users/dan/.claude/**)",
+      "Bash(pip freeze)",
+      "Bash(pip show:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

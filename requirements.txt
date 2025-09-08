@@ -1,0 +1,26 @@
+# DJs KB-maskin Application Requirements
+# Python 3.13.5 or higher recommended
+# Generated 2025-09-08
+
+# Core GUI Framework
+ttkbootstrap==1.14.0
+
+# Google API Integration
+google-api-python-client==2.176.0
+google-auth==2.40.3
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.2
+
+# Image Processing
+Pillow==10.4.0
+
+# Data Processing
+pandas==2.3.1
+openpyxl==3.1.5
+
+# Development Tools (optional)
+ruff==0.12.4
+
+# Build Tools (optional)
+# PyInstaller is not included in pip freeze but needed for building exe:
+# pyinstaller==6.9.0
