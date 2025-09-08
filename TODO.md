@@ -2,7 +2,16 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (2025-09-07)
+## ✅ Recently Completed (2025-09-08)
+
+### Code Cleanup & Documentation (v1.6.1 - v1.6.2) - COMPLETED 2025-09-08
+- ✅ **Code Optimization**: Removed unnecessary if statement from KB processor (v1.6.1)
+- ✅ **Requirements File**: Created requirements.txt with all dependencies and versions (v1.6.2)
+- ✅ **Python Version**: Documented Python 3.13.5 requirement
+- ✅ **Dependency Versions**: Listed exact versions for all packages
+- ✅ **Installation Guide**: Added pip install command for easy setup
+
+## ✅ Previously Completed (2025-09-07)
 
 ### Inno Setup Installer Implementation (v1.6.0) - COMPLETED 2025-09-07
 - ✅ **Build Tools Organization**: Created organized `build-tools/` directory structure

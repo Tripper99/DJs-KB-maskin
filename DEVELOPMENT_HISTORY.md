@@ -2,7 +2,34 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-09-07)
+## Latest Development Session (2025-09-08)
+
+### 🔧 Code Cleanup & Requirements File (v1.6.1 - v1.6.2)
+
+**Version 1.6.1 - Code Optimization:**
+- Removed unnecessary if statement in `src/kb/processor.py` (lines 398-400)
+- The check `if not files: continue` was redundant since the `grouped` dictionary only contains entries with files
+- Improves code readability and marginally increases performance
+- All Ruff syntax checks passed after modification
+
+**Version 1.6.2 - Dependency Documentation:**
+- Created comprehensive `requirements.txt` file with all project dependencies
+- Documented exact version numbers for reproducible environments:
+  - Python 3.13.5 or higher
+  - ttkbootstrap 1.14.0
+  - Google API libraries (google-api-python-client 2.176.0, etc.)
+  - Pillow 10.4.0 for image processing
+  - pandas 2.3.1 and openpyxl 3.1.5 for Excel handling
+- Included optional development tools (Ruff, PyInstaller) with comments
+- Enables easy dependency installation with `pip install -r requirements.txt`
+
+**Development Process:**
+- Used systematic approach with TodoWrite tool for task tracking
+- Performed Ruff syntax checking after each code change
+- Committed version updates before making modifications (defensive coding)
+- Successfully tested all changes before final commits
+
+## Previous Development Session (2025-09-07)
 
 ### 🚀 Inno Setup Installer Implementation (v1.6.0)
 

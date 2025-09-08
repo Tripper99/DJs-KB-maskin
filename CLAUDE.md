@@ -13,11 +13,17 @@ A Python GUI application for handling newspaper files from "Svenska Tidningar" (
 
 ### Dependencies
 ```bash
+pip install -r requirements.txt
+```
+
+Or manually install:
+```bash
 pip install ttkbootstrap google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client Pillow pandas openpyxl
 ```
 
 ### Required Files
 - `credentials.json` - Google API credentials (not in repository)
+- `requirements.txt` - Python package dependencies with versions
 - `Agg-med-smor-v4-transperent.ico` - Application icon
 - `Manual.docx` - User manual
 
@@ -106,9 +112,10 @@ python app.py
 7. **Security validation** - Run `python -m pytest tests/test_security.py`
 8. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.6.0 - Inno Setup Installer 2025-09-07)
+## Current Status (v1.6.2 - Requirements File Added 2025-09-08)
 
 The application is production-ready with:
+- **Requirements.txt** - Complete dependency list with exact version numbers for reproducible environments
 - **Professional Installer** - Inno Setup installer with Swedish interface, Start Menu shortcuts, and proper upgrade behavior
 - **Organized Build Tools** - Complete build-tools directory structure with automated scripts
 - **Update System** - GitHub Releases API integration for version checking and update notifications
