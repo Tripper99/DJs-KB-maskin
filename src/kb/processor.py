@@ -32,6 +32,14 @@ class KBProcessor:
         self.secure_ops = get_secure_ops()
         self.validator = get_default_validator()
         self.csv_handler = CSVHandler()
+        # Persistent conflict resolution flags
+        self.overwrite_all = False
+        self.skip_all = False
+    
+    def reset_conflict_state(self):
+        """Reset conflict resolution flags at start of processing"""
+        self.overwrite_all = False
+        self.skip_all = False
     
     def sanitize_filename(self, filename: str) -> str:
         """Sanitize filename using secure validator"""
@@ -194,6 +202,7 @@ class KBProcessor:
                      progress_callback=None, gui_update_callback=None) -> Dict:
         """Process KB files - real implementation"""
         self.reset_cancel_state()
+        self.reset_conflict_state()  # Reset conflict resolution flags
         
         try:
             if not IMAGE_PROCESSING_AVAILABLE:
@@ -427,145 +436,157 @@ class KBProcessor:
                         if self.is_cancelled():
                             return {"cancelled": True}
                         
-                        # Show dialog for PDF file conflict
-                        dialog = tk.Toplevel(self.root)
-                        dialog.title("PDF-filkonflikt")
-                        dialog.geometry("600x500")
-                        dialog.transient(self.root)
-                        dialog.grab_set()
-                        dialog.lift()
-                        dialog.focus_force()
-                        dialog.attributes('-topmost', True)
-                        dialog.after(100, lambda: dialog.attributes('-topmost', False))
+                        # Check persistent conflict resolution flags first
+                        if self.skip_all:
+                            skipped_count += 1
+                            logger.info(f"Skipping PDF (Skip All selected): {pdf_name}")
+                            continue
                         
-                        # Set icon if callback available
-                        if self.icon_callback:
-                            self.icon_callback(dialog)
-                        
-                        # Center the dialog over the parent window (app window)
-                        dialog.update_idletasks()
-                        self.root.update_idletasks()
-                        
-                        # Get parent window position and size
-                        parent_x = self.root.winfo_x()
-                        parent_y = self.root.winfo_y()
-                        parent_width = self.root.winfo_width()
-                        parent_height = self.root.winfo_height()
-                        
-                        # Calculate position to center dialog over parent window
-                        dialog_width = 600
-                        dialog_height = 500
-                        x = parent_x + (parent_width // 2) - (dialog_width // 2)
-                        y = parent_y + (parent_height // 2) - (dialog_height // 2)
-                        
-                        dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
-                        
-                        # Create main frame for content
-                        main_frame = tk.Frame(dialog)
-                        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
-                        
-                        # Create scrollable frame
-                        try:
-                            import tkinter.ttk as ttk
-                            # Create canvas and scrollbar for scrolling
-                            canvas = tk.Canvas(main_frame, highlightthickness=0)
-                            scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-                            scrollable_frame = tk.Frame(canvas)
+                        if self.overwrite_all:
+                            overwritten_count += 1
+                            logger.info(f"Overwriting PDF (Overwrite All selected): {pdf_name}")
+                        else:
+                            # Show dialog for PDF file conflict
+                            dialog = tk.Toplevel(self.root)
+                            dialog.title("PDF-filkonflikt")
+                            dialog.geometry("600x500")
+                            dialog.transient(self.root)
+                            dialog.grab_set()
+                            dialog.lift()
+                            dialog.focus_force()
+                            dialog.attributes('-topmost', True)
+                            dialog.after(100, lambda: dialog.attributes('-topmost', False))
                             
-                            scrollable_frame.bind(
-                                "<Configure>",
-                                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-                            )
+                            # Set icon if callback available
+                            if self.icon_callback:
+                                self.icon_callback(dialog)
                             
-                            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-                            canvas.configure(yscrollcommand=scrollbar.set)
+                            # Center the dialog over the parent window (app window)
+                            dialog.update_idletasks()
+                            self.root.update_idletasks()
                             
-                            # Pack scrollbar and canvas
-                            scrollbar.pack(side="right", fill="y")
-                            canvas.pack(side="left", fill="both", expand=True)
+                            # Get parent window position and size
+                            parent_x = self.root.winfo_x()
+                            parent_y = self.root.winfo_y()
+                            parent_width = self.root.winfo_width()
+                            parent_height = self.root.winfo_height()
                             
-                            content_frame = scrollable_frame
-                        except ImportError:
-                            # Fallback if ttk not available
-                            content_frame = main_frame
+                            # Calculate position to center dialog over parent window
+                            dialog_width = 600
+                            dialog_height = 500
+                            x = parent_x + (parent_width // 2) - (dialog_width // 2)
+                            y = parent_y + (parent_height // 2) - (dialog_height // 2)
+                            
+                            dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
+                            
+                            # Create main frame for content
+                            main_frame = tk.Frame(dialog)
+                            main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+                            
+                            # Create scrollable frame
+                            try:
+                                import tkinter.ttk as ttk
+                                # Create canvas and scrollbar for scrolling
+                                canvas = tk.Canvas(main_frame, highlightthickness=0)
+                                scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+                                scrollable_frame = tk.Frame(canvas)
+                                
+                                scrollable_frame.bind(
+                                    "<Configure>",
+                                    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+                                )
+                                
+                                canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+                                canvas.configure(yscrollcommand=scrollbar.set)
+                                
+                                # Pack scrollbar and canvas
+                                scrollbar.pack(side="right", fill="y")
+                                canvas.pack(side="left", fill="both", expand=True)
+                                
+                                content_frame = scrollable_frame
+                            except ImportError:
+                                # Fallback if ttk not available
+                                content_frame = main_frame
+                            
+                            # Message label
+                            tk.Label(content_frame, text=f"PDF-filen {pdf_name} finns redan.\n\nVad vill du göra?", 
+                                    font=("Arial", 11), wraplength=550, justify="center").pack(pady=20)
                         
-                        # Message label
-                        tk.Label(content_frame, text=f"PDF-filen {pdf_name} finns redan.\n\nVad vill du göra?", 
-                                font=("Arial", 11), wraplength=550, justify="center").pack(pady=20)
-                    
-                        # Variables for dialog result
-                        dialog_result = {"action": None}
-                        
-                        # Add periodic check for cancellation while dialog is open
-                        def check_cancel_during_dialog():
-                            if self.is_cancelled():
+                            # Variables for dialog result
+                            dialog_result = {"action": None}
+                            
+                            # Add periodic check for cancellation while dialog is open
+                            def check_cancel_during_dialog():
+                                if self.is_cancelled():
+                                    dialog_result["action"] = "cancel"
+                                    dialog.destroy()
+                                else:
+                                    dialog.after(100, check_cancel_during_dialog)
+                            
+                            # Start the cancellation check
+                            dialog.after(100, check_cancel_during_dialog)
+                            
+                            def set_overwrite():
+                                dialog_result["action"] = "overwrite"
+                                dialog.destroy()
+                            
+                            def set_overwrite_all():
+                                self.overwrite_all = True  # Set persistent flag
+                                dialog_result["action"] = "overwrite_all"
+                                dialog.destroy()
+                            
+                            def set_skip():
+                                dialog_result["action"] = "skip"
+                                dialog.destroy()
+                            
+                            def set_skip_all():
+                                self.skip_all = True  # Set persistent flag
+                                dialog_result["action"] = "skip_all"
+                                dialog.destroy()
+                            
+                            def set_cancel():
                                 dialog_result["action"] = "cancel"
                                 dialog.destroy()
-                            else:
-                                dialog.after(100, check_cancel_during_dialog)
+                            
+                            # Button frame for better layout
+                            button_frame = tk.Frame(content_frame)
+                            button_frame.pack(pady=20)
+                            
+                            tk.Button(button_frame, text="Skriv över", command=set_overwrite, 
+                                     width=15, font=("Arial", 10)).pack(pady=3)
+                            tk.Button(button_frame, text="Skriv över alla", command=set_overwrite_all, 
+                                     width=15, font=("Arial", 10)).pack(pady=3)
+                            tk.Button(button_frame, text="Hoppa över", command=set_skip, 
+                                     width=15, font=("Arial", 10)).pack(pady=3)
+                            tk.Button(button_frame, text="Hoppa över alla", command=set_skip_all, 
+                                     width=15, font=("Arial", 10)).pack(pady=3)
+                            tk.Button(button_frame, text="Avbryt", command=set_cancel, 
+                                     width=15, font=("Arial", 10)).pack(pady=3)
+                            
+                            # Wait for dialog result
+                            dialog.wait_window()
                         
-                        # Start the cancellation check
-                        dialog.after(100, check_cancel_during_dialog)
-                        
-                        def set_overwrite():
-                            dialog_result["action"] = "overwrite"
-                            dialog.destroy()
-                        
-                        def set_overwrite_all():
-                            dialog_result["action"] = "overwrite_all"
-                            dialog.destroy()
-                        
-                        def set_skip():
-                            dialog_result["action"] = "skip"
-                            dialog.destroy()
-                        
-                        def set_skip_all():
-                            dialog_result["action"] = "skip_all"
-                            dialog.destroy()
-                        
-                        def set_cancel():
-                            dialog_result["action"] = "cancel"
-                            dialog.destroy()
-                        
-                        # Button frame for better layout
-                        button_frame = tk.Frame(content_frame)
-                        button_frame.pack(pady=20)
-                        
-                        tk.Button(button_frame, text="Skriv över", command=set_overwrite, 
-                                 width=15, font=("Arial", 10)).pack(pady=3)
-                        tk.Button(button_frame, text="Skriv över alla", command=set_overwrite_all, 
-                                 width=15, font=("Arial", 10)).pack(pady=3)
-                        tk.Button(button_frame, text="Hoppa över", command=set_skip, 
-                                 width=15, font=("Arial", 10)).pack(pady=3)
-                        tk.Button(button_frame, text="Hoppa över alla", command=set_skip_all, 
-                                 width=15, font=("Arial", 10)).pack(pady=3)
-                        tk.Button(button_frame, text="Avbryt", command=set_cancel, 
-                                 width=15, font=("Arial", 10)).pack(pady=3)
-                        
-                        # Wait for dialog result
-                        dialog.wait_window()
-                    
-                        # Handle dialog result
-                        if dialog_result["action"] == "cancel":
-                            return {"cancelled": True}
-                        elif dialog_result["action"] == "skip":
-                            skipped_count += 1
-                            logger.info(f"Skipped existing PDF: {pdf_name}")
-                            continue
-                        elif dialog_result["action"] == "skip_all":
-                            # Skip all remaining PDFs
-                            for remaining_pdf in grouped.items():
-                                if remaining_pdf[0] != (date, newspaper):
-                                    skipped_count += 1
-                            logger.info("Skipping all remaining PDFs")
-                            break
-                        elif dialog_result["action"] == "overwrite_all":
-                            # Overwrite all remaining PDFs
-                            overwritten_count += 1
-                            logger.info(f"Overwriting existing PDF: {pdf_name}")
-                        else:  # overwrite
-                            overwritten_count += 1
-                            logger.info(f"Overwriting existing PDF: {pdf_name}")
+                            # Handle dialog result
+                            if dialog_result["action"] == "cancel":
+                                return {"cancelled": True}
+                            elif dialog_result["action"] == "skip":
+                                skipped_count += 1
+                                logger.info(f"Skipped existing PDF: {pdf_name}")
+                                continue
+                            elif dialog_result["action"] == "skip_all":
+                                # Skip all remaining PDFs
+                                for remaining_pdf in grouped.items():
+                                    if remaining_pdf[0] != (date, newspaper):
+                                        skipped_count += 1
+                                logger.info("Skipping all remaining PDFs")
+                                break
+                            elif dialog_result["action"] == "overwrite_all":
+                                # Overwrite all remaining PDFs
+                                overwritten_count += 1
+                                logger.info(f"Overwriting existing PDF: {pdf_name}")
+                            else:  # overwrite
+                                overwritten_count += 1
+                                logger.info(f"Overwriting existing PDF: {pdf_name}")
                     else:
                         created_count += 1
                 
