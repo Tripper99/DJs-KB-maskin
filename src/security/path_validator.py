@@ -206,41 +206,6 @@ class PathValidator:
             
         return name + ext
     
-    def validate_excel_path(self, excel_path: str) -> Tuple[bool, Optional[str], Optional[Path]]:
-        """
-        Special validation for Excel file paths
-        
-        Args:
-            excel_path: Path to Excel file
-            
-        Returns:
-            Tuple of (is_valid, error_message, safe_path)
-        """
-        # Basic path validation
-        is_valid, error_msg, safe_path = self.is_safe_path(
-            excel_path, 
-            must_exist=True,
-            allow_relative=False
-        )
-        
-        if not is_valid:
-            return False, error_msg, None
-            
-        # Check file extension
-        if safe_path.suffix.lower() not in ['.xlsx', '.xls', '.xlsm']:
-            return False, "Filen måste vara en Excel-fil (.xlsx, .xls, .xlsm)", None
-            
-        # Check file size (prevent huge files)
-        try:
-            file_size = safe_path.stat().st_size
-            max_size = 100 * 1024 * 1024  # 100 MB
-            if file_size > max_size:
-                return False, f"Excel-fil för stor (max {max_size // (1024*1024)} MB)", None
-        except Exception as e:
-            return False, f"Kunde inte kontrollera filstorlek: {str(e)}", None
-            
-        return True, None, safe_path
-    
     def validate_directory(self, dir_path: str, 
                           must_exist: bool = True,
                           create_if_missing: bool = False) -> Tuple[bool, Optional[str], Optional[Path]]:

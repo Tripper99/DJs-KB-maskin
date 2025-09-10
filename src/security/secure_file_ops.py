@@ -13,7 +13,6 @@ import tempfile
 import shutil
 from pathlib import Path
 from typing import Optional, List, Union
-import pandas as pd
 
 from .path_validator import PathValidator, get_default_validator
 
@@ -32,39 +31,6 @@ class SecureFileOps:
         """
         self.validator = validator or get_default_validator()
         
-    def read_excel(self, file_path: str, **kwargs) -> pd.DataFrame:
-        """
-        Securely read an Excel file using pandas
-        
-        Args:
-            file_path: Path to Excel file
-            **kwargs: Additional arguments for pd.read_excel
-            
-        Returns:
-            DataFrame from Excel file
-            
-        Raises:
-            ValueError: If path validation fails
-            Exception: If file reading fails
-        """
-        # Validate Excel path
-        is_valid, error_msg, safe_path = self.validator.validate_excel_path(file_path)
-        
-        if not is_valid:
-            logger.error(f"Excel path validation failed: {error_msg}")
-            raise ValueError(f"Ogiltig Excel-sökväg: {error_msg}")
-            
-        logger.info(f"Securely reading Excel file: {safe_path}")
-        
-        try:
-            # Read with pandas using validated path
-            df = pd.read_excel(safe_path, **kwargs)
-            logger.info(f"Successfully read Excel file with {len(df)} rows")
-            return df
-        except Exception as e:
-            logger.error(f"Failed to read Excel file: {e}")
-            raise Exception(f"Kunde inte läsa Excel-fil: {str(e)}")
-    
     def save_file(self, content: Union[bytes, str], 
                   filename: str, 
                   output_dir: str,

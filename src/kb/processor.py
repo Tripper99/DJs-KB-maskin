@@ -10,7 +10,7 @@ import tkinter as tk
 from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 try:
     from PIL import Image
@@ -19,6 +19,7 @@ except ImportError:
     IMAGE_PROCESSING_AVAILABLE = False
 
 from ..security import get_secure_ops, get_default_validator
+from .csv_handler import CSVHandler
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class KBProcessor:
         self.icon_callback = None  # Callback to set window icon
         self.secure_ops = get_secure_ops()
         self.validator = get_default_validator()
+        self.csv_handler = CSVHandler()
     
     def sanitize_filename(self, filename: str) -> str:
         """Sanitize filename using secure validator"""
@@ -153,25 +155,13 @@ class KBProcessor:
             return True
         return self.cancel_requested
     
-    def validate_excel_file(self, file_path: str) -> Tuple[bool, str]:
-        """Validate Excel file format and content"""
-        try:
-            if not IMAGE_PROCESSING_AVAILABLE:
-                return False, "Pandas inte installerat - KB-funktionalitet inte tillgänglig"
-            
-            # Use secure Excel reading
-            df = self.secure_ops.read_excel(file_path, header=None)
-            
-            if df.shape[1] < 2:
-                return False, "Excel-filen måste ha minst 2 kolumner (bib-kod och tidningsnamn)"
-            
-            if df.shape[0] == 0:
-                return False, "Excel-filen är tom"
-            
-            return True, f"Excel-filen validerad: {len(df)} bib-koder hittades"
-            
-        except Exception as e:
-            return False, f"Fel vid läsning av Excel-fil: {str(e)}"
+    def validate_csv_file(self, file_path: Path) -> Tuple[bool, str]:
+        """Validate CSV file format and content"""
+        return self.csv_handler.validate_csv_file(file_path)
+    
+    def load_csv_file(self, file_path: Path) -> Tuple[bool, str, int]:
+        """Load CSV file with bib-codes"""
+        return self.csv_handler.load_csv_file(file_path)
     
     def validate_directories(self, input_dir: str, output_dir: str) -> Tuple[bool, List[str]]:
         """Validate input and output directories securely"""
@@ -199,7 +189,7 @@ class KBProcessor:
         
         return len(errors) == 0, errors
     
-    def process_files(self, excel_path: str, input_dir: str, output_dir: str, 
+    def process_files(self, csv_path: Union[Path, str], input_dir: str, output_dir: str, 
                      keep_renamed: bool = False, keep_originals: bool = False,
                      progress_callback=None, gui_update_callback=None) -> Dict:
         """Process KB files - real implementation"""
@@ -207,28 +197,32 @@ class KBProcessor:
         
         try:
             if not IMAGE_PROCESSING_AVAILABLE:
-                raise Exception("PIL/Pandas inte installerat - KB-funktionalitet inte tillgänglig")
+                raise Exception("PIL inte installerat - KB-funktionalitet inte tillgänglig")
+            
+            # Ensure csv_path is a Path object
+            if isinstance(csv_path, str):
+                csv_path = Path(csv_path)
             
             logger.info("=== Starting KB processing ===")
-            logger.info(f"Excel file: {excel_path}")
+            logger.info(f"CSV file: {csv_path}")
             logger.info(f"Input dir: {input_dir}")
             logger.info(f"Output dir: {output_dir}")
             logger.info(f"Keep renamed: {keep_renamed}")
             logger.info(f"Keep originals: {keep_originals}")
             
-            # Load Excel file
-            if progress_callback:
-                progress_callback("Läser Excel-fil...", 2)
-            if gui_update_callback:
-                gui_update_callback()
+            # Load CSV file if not already loaded
+            if not self.csv_handler.is_loaded() or self.csv_handler.loaded_file != csv_path:
+                if progress_callback:
+                    progress_callback("Läser CSV-fil...", 2)
+                if gui_update_callback:
+                    gui_update_callback()
+                
+                success, message, count = self.csv_handler.load_csv_file(csv_path)
+                if not success:
+                    raise Exception(f"Kunde inte läsa CSV-filen: {message}")
+                logger.info(f"Loaded {count} bib codes from CSV")
             
-            try:
-                # Use secure Excel reading
-                bib_df = self.secure_ops.read_excel(excel_path, header=None)
-                bib_dict = dict(zip(bib_df[0].astype(str), bib_df[1].astype(str)))
-                logger.info(f"Loaded {len(bib_dict)} bib codes from Excel")
-            except Exception as e:
-                raise Exception(f"Kunde inte läsa Excel-filen: {str(e)}")
+            bib_dict = self.csv_handler.bib_dict
             
             # Setup directories
             input_path = Path(input_dir)

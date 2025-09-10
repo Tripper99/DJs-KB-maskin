@@ -36,7 +36,6 @@ def load_config():
         "start_date": "",
         "end_date": "",
         "gmail_output_dir": str(default_download_dir),
-        "excel_path": "",
         "kb_output_dir": "",
         "keep_renamed": False,
         "update_settings": {

@@ -18,11 +18,12 @@ pip install -r requirements.txt
 
 Or manually install:
 ```bash
-pip install ttkbootstrap google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client Pillow pandas openpyxl
+pip install ttkbootstrap google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client Pillow
 ```
 
 ### Required Files
 - `credentials.json` - Google API credentials (not in repository)
+- `titles_bibids_YYYY-MM-DD.csv` - CSV file with bib-code to newspaper name mapping (auto-detected)
 - `requirements.txt` - Python package dependencies with versions
 - `Agg-med-smor-v4-transperent.ico` - Application icon
 - `Manual.docx` - User manual
@@ -38,13 +39,15 @@ python app.py
 
 1. **Configuration** - JSON-based settings persistence (`djs_kb-maskin_settings.json`)
 2. **Gmail Integration** - OAuth authentication, email search, attachment download with conflict resolution
-3. **KB Processing** - JPG to PDF conversion with bib-code mapping, date grouping, and page counting
+3. **KB Processing** - JPG to PDF conversion with CSV-based bib-code mapping, date grouping, and page counting
 4. **GUI** - ttkbootstrap-based interface with progress tracking and cancellation support
 5. **Security** - Comprehensive path validation and secure file operations (`src/security/`)
 6. **Version Management** - Centralized versioning system (`src/version.py`)
 
 ### Key Features
 
+- **CSV-based Bib-code Lookup** - Uses built-in Python CSV module instead of Excel dependencies
+- **Auto-detection** - Automatically finds CSV file in app directory (titles_bibids_*.csv pattern)
 - **Update System** - GitHub Releases API integration for version checking
 - **Threading** - Background processing keeps GUI responsive
 - **Cancellation** - All operations support immediate cancellation
@@ -60,6 +63,17 @@ python app.py
 - **Input JPGs**: `bib{code}_{date}_{sequence}.jpg`
 - **Renamed JPGs**: `{date} {newspaper} {bib} {numbers}.jpg`
 - **Output PDFs**: `{date} {newspaper} ({pages} sid).pdf`
+
+### CSV Format
+
+The CSV file must be named `titles_bibids_YYYY-MM-DD.csv` and placed in the application directory. Format:
+```csv
+"NEWSPAPER NAME","bibcode"
+"AFTONBLADET","4345612"
+"DAGENS NYHETER","1234567"
+```
+
+The application automatically detects the most recent CSV file matching this pattern.
 
 ## File Structure
 
@@ -82,7 +96,7 @@ python app.py
 
 ### Functional Modules  
 - `src/gmail/` - Gmail API integration
-- `src/kb/` - KB file processing
+- `src/kb/` - KB file processing with CSV handler
 - `src/gui/` - User interface
 
 ### Testing & Documentation
@@ -104,18 +118,22 @@ python app.py
 ## Testing Checklist
 
 1. Gmail authentication and download functionality
-2. KB Excel file reading and bib-code mapping
+2. KB CSV file auto-detection and bib-code mapping
 3. PDF creation with correct naming (with parentheses: `(1 sid)`)
 4. Cancellation during operations
 5. File conflict resolution dialogs
 6. Large batch processing (100+ files)
-7. **Security validation** - Run `python -m pytest tests/test_security.py`
-8. **Syntax checking** - Run `python -m ruff check src/`
+7. CSV file validation and error handling
+8. Manual CSV file selection when auto-detection fails
+9. **Security validation** - Run `python -m pytest tests/test_security.py`
+10. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.6.2 - Requirements File Added 2025-09-08)
+## Current Status (v1.7.0 - CSV Migration Completed 2025-09-10)
 
 The application is production-ready with:
-- **Requirements.txt** - Complete dependency list with exact version numbers for reproducible environments
+- **CSV Migration** - Replaced Excel dependency with built-in CSV module, reduced total dependencies
+- **Simplified GUI** - Removed Excel file chooser, CSV files are auto-detected in app directory
+- **Requirements.txt** - Streamlined dependency list with exact version numbers
 - **Professional Installer** - Inno Setup installer with Swedish interface, Start Menu shortcuts, and proper upgrade behavior
 - **Organized Build Tools** - Complete build-tools directory structure with automated scripts
 - **Update System** - GitHub Releases API integration for version checking and update notifications

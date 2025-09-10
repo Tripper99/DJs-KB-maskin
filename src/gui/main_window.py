@@ -226,7 +226,8 @@ class CombinedApp:
         self.gmail_output_dir_var = tk.StringVar()
         
         # KB variables
-        self.excel_path_var = tk.StringVar()
+        self.csv_status_var = tk.StringVar(value="CSV-fil söks automatiskt vid start")
+        self.csv_file_path = None  # Store the found CSV file path
         self.kb_input_dir_var = tk.StringVar()
         self.kb_output_dir_var = tk.StringVar()
         self.keep_renamed_var = tk.BooleanVar(value=False)  # Default OFF - don't save renamed JPGs
@@ -257,7 +258,6 @@ class CombinedApp:
         self.gmail_account_var.trace('w', self.update_status_message)
         self.credentials_file_var.trace('w', self.update_status_message)
         self.start_date_var.trace('w', self.update_status_message)
-        self.excel_path_var.trace('w', self.update_status_message)
         self.kb_input_dir_var.trace('w', self.update_status_message)
         self.kb_output_dir_var.trace('w', self.update_status_message)
         self.gmail_output_dir_var.trace('w', self.update_status_message)
@@ -614,28 +614,17 @@ class CombinedApp:
         """Create KB processor section"""
         self.kb_frame = tb.LabelFrame(parent, text="Bearbetning av jpg-filer från KB", padding=10)
         
-        # Excel file (moved to top for logical workflow)
-        excel_frame = tb.Frame(self.kb_frame)
-        excel_frame.pack(fill="x", pady=(0, 15))
+        # CSV status information (replaces Excel file chooser)
+        csv_frame = tb.Frame(self.kb_frame)
+        csv_frame.pack(fill="x", pady=(0, 15))
         
-        tb.Label(excel_frame, text="Excel-fil med bib-koder översatta till tidningsnamn:", font=('Arial', 10)).pack(anchor="w", pady=(0, 5))
+        tb.Label(csv_frame, text="Bib-kod översättning:", font=('Arial', 10, 'bold')).pack(anchor="w", pady=(0, 5))
         
-        excel_path_frame = tb.Frame(excel_frame)
-        excel_path_frame.pack(fill="x")
-        
-        excel_entry = tb.Entry(excel_path_frame, textvariable=self.excel_path_var, 
-                              font=('Arial', 10))
-        excel_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        self.add_tooltip(excel_entry, "Ett exceldokument som översätter KB:s bib-koder till tidningsnamn. Du fick sannolikt denna fil tillsammans med appen.")
-        
-        browse_excel_btn = tb.Button(excel_path_frame, text="Välj fil...", 
-                                    command=self.browse_excel_file, 
-                                    bootstyle=INFO, width=12)
-        browse_excel_btn.pack(side="right")
-        
-        # Excel validation label
-        self.excel_validation_label = tb.Label(excel_frame, text="", font=('Arial', 9), foreground="green")
-        self.excel_validation_label.pack(anchor="w", pady=(5, 0))
+        # CSV status label
+        self.csv_status_label = tb.Label(csv_frame, textvariable=self.csv_status_var, 
+                                        font=('Arial', 10), foreground="gray")
+        self.csv_status_label.pack(anchor="w")
+        self.add_tooltip(self.csv_status_label, "CSV-filen 'titles_bibids_ÅÅÅÅ-MM-DD.csv' söks automatiskt i programmappen när KB-funktionen aktiveras.")
         
         # Input directory
         kb_input_frame = tb.Frame(self.kb_frame)
@@ -1131,7 +1120,7 @@ class CombinedApp:
         app_dir = self.get_app_directory()
         default_download_path = str(app_dir / "Nedladdningar")
         self.gmail_output_dir_var.set(self.config.get("gmail_output_dir", default_download_path))
-        self.excel_path_var.set(self.config.get("excel_path", "Ingen fil vald"))
+        # CSV file is now auto-detected, no need to load from config
         
         # Only load KB input dir if not both tools are enabled
         if not (self.config.get("gmail_enabled", False) and self.config.get("kb_enabled", False)):
@@ -1184,7 +1173,7 @@ class CombinedApp:
             "start_date": start_date,
             "end_date": end_date,
             "gmail_output_dir": self.gmail_output_dir_var.get(),
-            "excel_path": self.excel_path_var.get(),
+            # excel_path removed - CSV is auto-detected
             "kb_input_dir": self.kb_input_dir_var.get(),
             "kb_output_dir": self.kb_output_dir_var.get(),
             "keep_renamed": self.keep_renamed_var.get(),
@@ -1251,21 +1240,51 @@ class CombinedApp:
             messagebox.showerror("Oväntat fel", 
                                f"Ett oväntat fel inträffade när mappen skulle öppnas.\n\nFel: {str(e)}")
     
-    def browse_excel_file(self):
-        """Browse for Excel file and validate it"""
+    def find_and_validate_csv(self):
+        """Find and validate CSV file automatically"""
+        from pathlib import Path
+        app_dir = Path(self.get_app_directory())
+        
+        # Try to find CSV file
+        csv_file = self.kb_processor.csv_handler.find_csv_file(app_dir)
+        
+        if csv_file:
+            # Validate and load the CSV file
+            success, message, count = self.kb_processor.csv_handler.load_csv_file(csv_file)
+            if success:
+                self.csv_status_var.set(f"✓ {csv_file.name} - {count} bib-koder laddade")
+                self.csv_status_label.config(foreground="green")
+                self.csv_file_path = csv_file
+                return csv_file
+            else:
+                self.csv_status_var.set(f"✗ {csv_file.name} - {message}")
+                self.csv_status_label.config(foreground="red")
+                return None
+        else:
+            self.csv_status_var.set("Ingen CSV-fil hittades i programmappen")
+            self.csv_status_label.config(foreground="orange")
+            return None
+    
+    def browse_for_csv_file(self):
+        """Allow user to manually select CSV file if auto-detection fails"""
+        from pathlib import Path
         file_path = filedialog.askopenfilename(
-            title="Välj Excel-fil med bib-kod översättning",
-            filetypes=[("Excel-filer", "*.xlsx"), ("Alla filer", "*.*")],
+            title="Välj CSV-fil med bib-kod översättning",
+            filetypes=[("CSV-filer", "*.csv"), ("Alla filer", "*.*")],
             initialdir=self.get_app_directory()
         )
         if file_path:
-            is_valid, message = self.kb_processor.validate_excel_file(file_path)
-            if is_valid:
-                self.excel_path_var.set(file_path)
-                self.excel_validation_label.config(text=f"✓ {message}", foreground="green")
+            csv_path = Path(file_path)
+            success, message, count = self.kb_processor.csv_handler.load_csv_file(csv_path)
+            if success:
+                self.csv_status_var.set(f"✓ {csv_path.name} - {count} bib-koder laddade")
+                self.csv_status_label.config(foreground="green")
+                self.csv_file_path = csv_path
+                return csv_path
             else:
-                self.excel_validation_label.config(text="", foreground="green")
-                messagebox.showerror("Ogiltig Excel-fil", message)
+                messagebox.showerror("Ogiltig CSV-fil", message)
+                return None
+        return None
     
     def browse_kb_input_dir(self):
         """Browse for KB input directory"""
@@ -1316,8 +1335,24 @@ class CombinedApp:
         
         # Validate KB settings
         if kb_on:
-            if self.excel_path_var.get() == "Ingen fil vald" or not self.excel_path_var.get().strip():
-                errors.append("Excel-fil måste väljas")
+            # Try to find and validate CSV file
+            if not self.csv_file_path:
+                self.csv_file_path = self.find_and_validate_csv()
+            
+            if not self.csv_file_path:
+                # CSV not found automatically, ask user
+                result = messagebox.askyesno(
+                    "CSV-fil saknas",
+                    "Ingen CSV-fil med bib-koder hittades automatiskt.\n\n"
+                    "Vill du välja en CSV-fil manuellt?",
+                    icon='question'
+                )
+                if result:
+                    self.csv_file_path = self.browse_for_csv_file()
+                    if not self.csv_file_path:
+                        errors.append("CSV-fil med bib-koder måste väljas")
+                else:
+                    errors.append("CSV-fil med bib-koder krävs för KB-bearbetning")
             
             # Check KB input directory (unless auto-linked)
             if not (gmail_on and kb_on):  # Not auto-linked
@@ -1390,7 +1425,7 @@ class CombinedApp:
                 fields_complete = False
         
         if kb_on:
-            if self.excel_path_var.get() in ["Ingen fil vald", ""]:
+            if not self.csv_file_path:
                 fields_complete = False
             
             # Check KB input directory (unless auto-linked)
@@ -1617,7 +1652,7 @@ class CombinedApp:
                     output_dir = self.kb_input_dir_var.get()
 
                 kb_result = self.kb_processor.process_files(
-                    excel_path=self.excel_path_var.get(),
+                    csv_path=self.csv_file_path,
                     input_dir=self.kb_input_dir_var.get(),
                     output_dir=output_dir,
                     keep_renamed=self.keep_renamed_var.get(),

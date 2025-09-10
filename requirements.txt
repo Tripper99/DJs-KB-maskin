@@ -1,6 +1,6 @@
 # DJs KB-maskin Application Requirements
 # Python 3.13.5 or higher recommended
-# Generated 2025-09-08
+# Updated 2025-09-10 - Removed pandas/openpyxl dependencies (now uses built-in CSV module)
 
 # Core GUI Framework
 ttkbootstrap==1.14.0
@@ -13,10 +13,6 @@ google-auth-oauthlib==1.2.2
 
 # Image Processing
 Pillow==10.4.0
-
-# Data Processing
-pandas==2.3.1
-openpyxl==3.1.5
 
 # Development Tools (optional)
 ruff==0.12.4
