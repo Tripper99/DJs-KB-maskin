@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.7.2"
-__version_info__ = (1, 7, 2)
+__version__ = "1.7.3"
+__version_info__ = (1, 7, 3)
 __release_date__ = "2025-09-10"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.7.3 (2025-09-10): GUI reorganization - Moved CSV status info to bottom of KB section
 1.7.2 (2025-09-10): UI cleanup - Removed obsolete Excel references from user messages
 1.7.1 (2025-09-10): Critical fix - Corrected bib-code extraction to strip 'bib' prefix before CSV lookup
 1.7.0 (2025-09-10): Major update - Replaced Excel with CSV for bib-code lookup, simplified GUI, reduced dependencies

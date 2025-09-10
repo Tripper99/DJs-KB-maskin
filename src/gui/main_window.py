@@ -614,17 +614,6 @@ class CombinedApp:
         """Create KB processor section"""
         self.kb_frame = tb.LabelFrame(parent, text="Bearbetning av jpg-filer från KB", padding=10)
         
-        # CSV status information
-        csv_frame = tb.Frame(self.kb_frame)
-        csv_frame.pack(fill="x", pady=(0, 15))
-        
-        tb.Label(csv_frame, text="Bib-kod översättning:", font=('Arial', 10, 'bold')).pack(anchor="w", pady=(0, 5))
-        
-        # CSV status label
-        self.csv_status_label = tb.Label(csv_frame, textvariable=self.csv_status_var, 
-                                        font=('Arial', 10), foreground="gray")
-        self.csv_status_label.pack(anchor="w")
-        self.add_tooltip(self.csv_status_label, "CSV-filen 'titles_bibids_ÅÅÅÅ-MM-DD.csv' söks automatiskt i programmappen när KB-funktionen aktiveras.")
         
         # Input directory
         kb_input_frame = tb.Frame(self.kb_frame)
@@ -719,6 +708,18 @@ class CombinedApp:
                                    command=self.show_delete_files_help,
                                    bootstyle="info-outline")
         delete_help_btn.pack(side="left", padx=(10, 0))
+        
+        # CSV status information (moved to bottom)
+        csv_frame = tb.Frame(self.kb_frame)
+        csv_frame.pack(fill="x", pady=(20, 0))
+        
+        tb.Label(csv_frame, text="Bib-kod översättning:", font=('Arial', 10, 'bold')).pack(anchor="w", pady=(0, 5))
+        
+        # CSV status label
+        self.csv_status_label = tb.Label(csv_frame, textvariable=self.csv_status_var, 
+                                        font=('Arial', 10), foreground="gray")
+        self.csv_status_label.pack(anchor="w")
+        self.add_tooltip(self.csv_status_label, "CSV-filen 'titles_bibids_ÅÅÅÅ-MM-DD.csv' söks automatiskt i programmappen när KB-funktionen aktiveras.")
     
     def create_action_section(self, parent):
         """Create action buttons and progress section"""
