@@ -221,6 +221,7 @@ class KBProcessor:
                 if not success:
                     raise Exception(f"Kunde inte läsa CSV-filen: {message}")
                 logger.info(f"Loaded {count} bib codes from CSV")
+                logger.info(f"Sample CSV entries: {list(self.csv_handler.bib_dict.items())[:3]}...")  # Show first 3 for debugging
             
             bib_dict = self.csv_handler.bib_dict
             
@@ -299,8 +300,15 @@ class KBProcessor:
                         logger.warning(f"Skipping file with unexpected format: {file.name}")
                         continue
                     
-                    bib = parts[0]
+                    bib_full = parts[0]  # e.g. "bib13991089"
                     date_raw = parts[1]
+                    
+                    # Extract numeric bib-code for CSV lookup
+                    if bib_full.startswith("bib"):
+                        bib_code = bib_full[3:]  # Remove "bib" prefix -> "13991089"
+                    else:
+                        bib_code = bib_full  # Fallback if format is different
+                        logger.warning(f"Unexpected bib format (no 'bib' prefix): {bib_full}")
                     
                     # Format date
                     try:
@@ -310,14 +318,18 @@ class KBProcessor:
                         logger.warning(f"Could not parse date from: {date_raw}")
                     
                     siffergrupper = "_".join(parts[2:5])
-                    tidning = bib_dict.get(bib, "OKÄND").upper()
+                    tidning = bib_dict.get(bib_code, "OKÄND").upper()
+                    
+                    # Debug logging for bib-code lookup
+                    logger.debug(f"File: {file.name} | Bib: {bib_full} -> {bib_code} -> {tidning}")
                     
                     # Track unknown bib codes
                     if tidning == "OKÄND":
-                        unknown_bib_codes.add(bib)
+                        unknown_bib_codes.add(bib_code)  # Store numeric code for better error reporting
+                        logger.info(f"Unknown bib-code: {bib_full} -> extracted: {bib_code}")
                     
-                    # Create new filename with bib code included
-                    new_name = f"{date} {tidning} {bib} {siffergrupper}{extra}{suffix}"
+                    # Create new filename with full bib code included
+                    new_name = f"{date} {tidning} {bib_full} {siffergrupper}{extra}{suffix}"
                     
                     # Sanitize filename for security
                     new_name = self.sanitize_filename(new_name)
