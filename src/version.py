@@ -4,9 +4,9 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.6.3"
-__version_info__ = (1, 6, 3)
-__release_date__ = "2025-09-08"
+__version__ = "1.7.0"
+__version_info__ = (1, 7, 0)
+__release_date__ = "2025-09-10"
 
 def get_version():
     """Return the current version string"""
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.7.0 (2025-09-10): Major update - Replaced Excel with CSV for bib-code lookup, simplified GUI, reduced dependencies
 1.6.3 (2025-09-08): Code cleanup - removed redundant if-else statement in KB processor filename construction
 1.6.2 (2025-09-08): Added requirements.txt file with all dependencies and version numbers
 1.6.1 (2025-09-08): Code cleanup - removed unnecessary if statement in KB processor

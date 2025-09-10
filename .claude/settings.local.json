@@ -57,7 +57,10 @@
       "Bash(pyinstaller:*)",
       "Read(//c/Users/dan/.claude/**)",
       "Bash(pip freeze)",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(powershell.exe:*)",
+      "Read(//mnt/c/Dropbox/Dokument/Programmering/Python/claude-code-docs-auto/**)",
+      "Read(//mnt/c/Users/dan/.claude/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
