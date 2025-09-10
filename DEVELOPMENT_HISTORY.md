@@ -2,7 +2,82 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-09-08)
+## Latest Development Session (2025-09-10)
+
+### 🐛 File Conflict Resolution Bug Fix (v1.7.4)
+
+**Problem Identified:**
+- User reported that "Overwrite All" option in PDF file conflict dialogs only worked once
+- After choosing "Overwrite All", subsequent conflicts still showed dialog (behaved like "Overwrite")
+- This affected workflow efficiency when processing multiple files with conflicts
+
+**Root Cause Analysis:**
+- The `overwrite_all` and `skip_all` flags were not persisting across multiple file conflicts
+- Each conflict was being handled independently without checking previous user choices
+- Dialog logic was missing persistent state management
+
+**Technical Solution Implemented:**
+
+1. **Persistent Flag System:**
+   - Added class-level flags: `self.overwrite_all = False` and `self.skip_all = False`
+   - Added `reset_conflict_state()` method to initialize flags at start of processing
+   - Called reset method in `process_files()` to ensure clean state for each session
+
+2. **Pre-Dialog Logic Enhancement:**
+   - Added checks for persistent flags before showing conflict dialog
+   - If `self.skip_all = True` → skip file without dialog, increment skipped count
+   - If `self.overwrite_all = True` → overwrite file without dialog, increment overwritten count
+   - Only show dialog if neither persistent flag is set
+
+3. **Dialog Handler Updates:**
+   - "Skriv över alla" (Overwrite All) button sets `self.overwrite_all = True`
+   - "Hoppa över alla" (Skip All) button sets `self.skip_all = True`
+   - Persistent flags remain active for all remaining conflicts in current session
+
+4. **Code Quality Fixes:**
+   - Fixed significant indentation issues in dialog block (lines ~450-587)
+   - Ensured proper nesting under "else:" statement
+   - All dialog-related code properly indented as one block
+
+**Development Process:**
+- Used TodoWrite tool for systematic task tracking (8 discrete tasks)
+- Fixed indentation issues that were preventing proper code execution
+- Ran comprehensive Ruff syntax checking throughout development
+- Verified all source files pass syntax validation
+- Updated version to 1.7.4 with appropriate release notes
+
+**Testing & Quality Assurance:**
+- All Ruff syntax checks passed: `ruff check src/` ✅
+- Fixed minor unused variable in test file for complete clean code
+- Git commits properly document the fix with technical details
+
+**User Impact:**
+- "Overwrite All" and "Skip All" now work as expected across multiple file conflicts
+- Significantly improved workflow efficiency for bulk file processing
+- Maintains all existing security and validation features
+
+### 🗂️ CSV Migration & UI Improvements (v1.7.0 - v1.7.3)
+
+**Major Architectural Change (v1.7.0):**
+- Replaced Excel dependency with CSV for bib-code lookup
+- Reduced dependencies from 9 to 7 packages (removed pandas, openpyxl)
+- Simplified GUI by removing Excel file chooser dialog
+- Auto-detection of CSV files with pattern `titles_bibids_*.csv`
+
+**Critical Bug Fix (v1.7.1):**
+- Fixed bib-code extraction to strip "bib" prefix before CSV lookup
+- Files like "bib13991089" now correctly find CSV entry "13991089"
+- User confirmed: "It works!"
+
+**UI Cleanup (v1.7.2):**
+- Removed all obsolete Excel references from user messages
+- Updated status messages to reflect CSV-based workflow
+
+**GUI Reorganization (v1.7.3):**
+- Moved CSV status information to bottom of KB section
+- Positioned after "Bevara bib-filerna från KB..." switch for better logical flow
+
+## Previous Development Session (2025-09-08)
 
 ### 🔧 Code Cleanup & Requirements File (v1.6.1 - v1.6.2)
 

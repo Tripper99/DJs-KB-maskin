@@ -2,7 +2,25 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (2025-09-08)
+## ✅ Recently Completed (2025-09-10)
+
+### File Conflict Resolution Bug Fix (v1.7.4) - COMPLETED 2025-09-10
+- ✅ **Persistent Flag System**: Added class-level overwrite_all and skip_all flags
+- ✅ **Pre-Dialog Logic**: Check persistent flags before showing conflict dialog
+- ✅ **Dialog Handler Updates**: "Overwrite All" and "Skip All" buttons set persistent flags
+- ✅ **Code Quality**: Fixed significant indentation issues in dialog block
+- ✅ **Testing**: All Ruff syntax checks passed, minor test cleanup completed
+- ✅ **User Impact**: "Overwrite All" now works correctly across multiple file conflicts
+
+### CSV Migration & UI Improvements (v1.7.0 - v1.7.3) - COMPLETED 2025-09-10
+- ✅ **Major Migration**: Replaced Excel dependency with CSV for bib-code lookup (v1.7.0)
+- ✅ **Dependency Reduction**: Reduced from 9 to 7 packages (removed pandas, openpyxl)
+- ✅ **GUI Simplification**: Removed Excel file chooser, added auto-detection
+- ✅ **Critical Bug Fix**: Fixed bib-code extraction to strip 'bib' prefix (v1.7.1)
+- ✅ **UI Cleanup**: Removed obsolete Excel references from user messages (v1.7.2)
+- ✅ **Layout Improvement**: Moved CSV status to bottom of KB section (v1.7.3)
+
+## ✅ Previously Completed (2025-09-08)
 
 ### Code Cleanup & Documentation (v1.6.1 - v1.6.2) - COMPLETED 2025-09-08
 - ✅ **Code Optimization**: Removed unnecessary if statement from KB processor (v1.6.1)

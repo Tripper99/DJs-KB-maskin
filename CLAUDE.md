@@ -128,11 +128,13 @@ The application automatically detects the most recent CSV file matching this pat
 9. **Security validation** - Run `python -m pytest tests/test_security.py`
 10. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.7.0 - CSV Migration Completed 2025-09-10)
+## Current Status (v1.7.4 - File Conflict Bug Fix Completed 2025-09-10)
 
 The application is production-ready with:
-- **CSV Migration** - Replaced Excel dependency with built-in CSV module, reduced total dependencies
-- **Simplified GUI** - Removed Excel file chooser, CSV files are auto-detected in app directory
+- **File Conflict Resolution Fix** - "Overwrite All" and "Skip All" options now persist across multiple conflicts during PDF creation
+- **CSV Migration** - Replaced Excel dependency with built-in CSV module, reduced total dependencies from 9 to 7 packages
+- **Simplified GUI** - Removed Excel file chooser, CSV files are auto-detected with pattern `titles_bibids_*.csv`
+- **Critical Bib-code Fix** - Files like "bib13991089" now correctly find CSV entry "13991089" by stripping prefix
 - **Requirements.txt** - Streamlined dependency list with exact version numbers
 - **Professional Installer** - Inno Setup installer with Swedish interface, Start Menu shortcuts, and proper upgrade behavior
 - **Organized Build Tools** - Complete build-tools directory structure with automated scripts
