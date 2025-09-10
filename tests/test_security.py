@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from src.security.path_validator import PathValidator
 from src.security.secure_file_ops import SecureFileOps
 from src.security.network_validator import (
-    NetworkValidator, NetworkSecurityError, URLValidationError, ResponseValidationError
+    NetworkValidator, URLValidationError, ResponseValidationError
 )
 
 
@@ -221,7 +221,7 @@ class TestSecureFileOps(unittest.TestCase):
         
         # This should work (though subprocess might fail based on system)
         try:
-            result = self.secure_ops.safe_subprocess_run(
+            _ = self.secure_ops.safe_subprocess_run(
                 ["echo", "test"], 
                 file_arg=str(test_file),
                 check=False  # Don't fail test if command doesn't exist
@@ -517,7 +517,6 @@ class TestNetworkValidator(unittest.TestCase):
         
     def test_version_pattern_matching(self):
         """Test version number pattern validation"""
-        import re
         from src.security.network_validator import VERSION_PATTERN
         
         # Valid versions
