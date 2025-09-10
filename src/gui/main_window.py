@@ -614,7 +614,7 @@ class CombinedApp:
         """Create KB processor section"""
         self.kb_frame = tb.LabelFrame(parent, text="Bearbetning av jpg-filer från KB", padding=10)
         
-        # CSV status information (replaces Excel file chooser)
+        # CSV status information
         csv_frame = tb.Frame(self.kb_frame)
         csv_frame.pack(fill="x", pady=(0, 15))
         
@@ -1897,7 +1897,7 @@ class CombinedApp:
                 
                 unknown_count = kb_result['unknown_bib_count']
                 tb.Label(content_frame, 
-                        text=f"• {unknown_count} filer innehöll bib-koder som saknades i Excel-dokumentet", 
+                        text=f"• {unknown_count} filer innehöll okända bib-koder", 
                         font=("Arial", 9)).pack(anchor="w", pady=1)
                 
                 tb.Label(content_frame, 
@@ -1908,9 +1908,6 @@ class CombinedApp:
                         text="• Den okända bib-koden bevaras i filnamnet", 
                         font=("Arial", 9)).pack(anchor="w", pady=1)
                 
-                tb.Label(content_frame, 
-                        text="Tips: Öppna filerna, kolla tidningsnamnen och uppdatera Excel-dokumentet med de nya bib-koderna", 
-                        font=("Arial", 9), foreground="yellow", wraplength=550).pack(anchor="w", pady=(5, 0))
         
         # Close button
         tb.Button(content_frame, text="Stäng", command=result_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
