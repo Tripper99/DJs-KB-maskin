@@ -7,11 +7,28 @@ Prevents path traversal, injection attacks, and unauthorized file access
 
 import re
 import logging
+import sys
 from pathlib import Path
 from typing import Optional, List, Tuple
 import unicodedata
 
 logger = logging.getLogger(__name__)
+
+def _get_app_directory():
+    """
+    Get the directory where the application is located (local copy to avoid circular imports)
+    
+    Returns:
+        Path: Absolute path to the application directory
+    """
+    if getattr(sys, 'frozen', False):
+        # Running as PyInstaller executable
+        app_dir = Path(sys.executable).parent
+    else:
+        # Running as Python script - go up 2 levels from src/security/path_validator.py
+        app_dir = Path(__file__).parent.parent.parent
+    
+    return app_dir.resolve()
 
 # Windows-specific reserved names
 WINDOWS_RESERVED_NAMES = {
@@ -108,9 +125,12 @@ class PathValidator:
             
         # Check if it's absolute when it shouldn't be
         if not allow_relative and not path.is_absolute():
-            # Make it absolute relative to current working directory
+            # Make it absolute relative to app directory (NOT current working directory)
             try:
-                path = Path.cwd() / path
+                app_dir = _get_app_directory()
+                path = app_dir / path
+                logger.debug(f"Resolved relative path '{path_str}' to '{path}' (app_dir: {app_dir})")
+                logger.debug(f"Current working directory was: {Path.cwd()}")
             except Exception as e:
                 return False, f"Kunde inte lösa relativ sökväg: {str(e)}", None
                 

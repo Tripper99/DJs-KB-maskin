@@ -60,7 +60,9 @@
       "Bash(pip show:*)",
       "Bash(powershell.exe:*)",
       "Read(//mnt/c/Dropbox/Dokument/Programmering/Python/claude-code-docs-auto/**)",
-      "Read(//mnt/c/Users/dan/.claude/**)"
+      "Read(//mnt/c/Users/dan/.claude/**)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

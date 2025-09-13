@@ -10,22 +10,44 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-CONFIG_FILE = "djs_kb-maskin_settings.json"
-
 def get_app_directory():
-    """Get the directory where the application is located (works for both .py and .exe)"""
+    """
+    Get the directory where the application is located (works for both .py and .exe)
+    
+    Returns:
+        Path: Absolute path to the application directory
+    """
     if getattr(sys, 'frozen', False):
         # Running as PyInstaller executable
-        return Path(sys.executable).parent
+        app_dir = Path(sys.executable).parent
+        logger.debug(f"Running as executable - app directory: {app_dir}")
     else:
-        # Running as Python script
-        return Path(__file__).parent.parent
+        # Running as Python script - go up 2 levels from src/config.py
+        app_dir = Path(__file__).parent.parent
+        logger.debug(f"Running as script - app directory: {app_dir}")
+    
+    # Ensure it's absolute
+    app_dir = app_dir.resolve()
+    logger.debug(f"Resolved app directory: {app_dir}")
+    logger.debug(f"Current working directory: {Path.cwd()}")
+    
+    return app_dir
+
+# Use absolute path for config file in app directory
+def get_config_file_path():
+    """Get the absolute path to the configuration file"""
+    config_path = get_app_directory() / "djs_kb-maskin_settings.json"
+    logger.debug(f"Config file path: {config_path}")
+    return config_path
 
 def load_config():
     """Load application configuration"""
-    # Get default download directory in app folder
+    # Get default download directory in app folder - use absolute path
     app_dir = get_app_directory()
     default_download_dir = app_dir / "Nedladdningar"
+    
+    logger.info(f"Loading configuration from app directory: {app_dir}")
+    logger.info(f"Default download directory: {default_download_dir}")
     
     default_config = {
         "gmail_enabled": False,
@@ -35,7 +57,7 @@ def load_config():
         "sender_email": "noreply@kb.se",
         "start_date": "",
         "end_date": "",
-        "gmail_output_dir": str(default_download_dir),
+        "gmail_output_dir": str(default_download_dir.resolve()),  # Always use absolute path
         "kb_output_dir": "",
         "keep_renamed": False,
         "update_settings": {
@@ -49,15 +71,24 @@ def load_config():
         }
     }
     
-    if Path(CONFIG_FILE).exists():
+    config_file = get_config_file_path()
+    logger.debug(f"Looking for config file at: {config_file}")
+    
+    if config_file.exists():
         try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            logger.info(f"Loading existing configuration from: {config_file}")
+            with open(config_file, "r", encoding="utf-8") as f:
                 config = json.load(f)
                 # Deep merge configuration with defaults
                 config = _deep_merge_config(default_config, config)
+                logger.debug("Configuration loaded successfully")
                 return config
-        except (json.JSONDecodeError, IOError):
+        except (json.JSONDecodeError, IOError) as e:
+            logger.warning(f"Error reading config file: {e}, using defaults")
             return default_config
+    else:
+        logger.info("No existing configuration found, using defaults")
+    
     return default_config
 
 
@@ -87,11 +118,18 @@ def _deep_merge_config(default_config, user_config):
 
 def save_config(config):
     """Save application configuration"""
+    config_file = get_config_file_path()
+    logger.debug(f"Saving configuration to: {config_file}")
+    
     try:
-        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        # Ensure the app directory exists
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(config_file, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
+        logger.debug("Configuration saved successfully")
     except IOError as e:
-        logger.error(f"Could not save configuration: {e}")
+        logger.error(f"Could not save configuration to {config_file}: {e}")
 
 
 def get_update_settings(config):

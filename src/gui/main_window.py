@@ -33,7 +33,7 @@ except ImportError:
 
 from ..config import (
     load_config, save_config, get_update_settings, 
-    set_skip_version, update_last_check_date
+    set_skip_version, update_last_check_date, get_app_directory
 )
 from ..gmail.downloader import GmailDownloader
 from ..kb.processor import KBProcessor
@@ -84,20 +84,16 @@ class CombinedApp:
         
         self.load_config_to_gui()
     
-    def get_app_directory(self):
-        """Get the directory where the application is located (works for both .py and .exe)"""
-        if getattr(sys, 'frozen', False):
-            # Running as PyInstaller executable
-            return Path(sys.executable).parent
-        else:
-            # Running as Python script
-            return Path(__file__).parent.parent.parent
     
     def ensure_default_folders(self):
         """Ensure default download folder exists"""
         try:
-            app_dir = self.get_app_directory()
+            app_dir = get_app_directory()
             default_download_dir = app_dir / "Nedladdningar"
+            
+            logger.debug(f"App directory: {app_dir}")
+            logger.debug(f"Working directory: {Path.cwd()}")
+            logger.debug(f"Default download directory: {default_download_dir}")
             
             # Create the folder if it doesn't exist
             if not default_download_dir.exists():
@@ -105,6 +101,15 @@ class CombinedApp:
                 logger.info(f"Created default download folder: {default_download_dir}")
             else:
                 logger.info(f"Default download folder exists: {default_download_dir}")
+                
+            # Verify the folder is accessible
+            if not default_download_dir.is_dir():
+                logger.error(f"Default download path exists but is not a directory: {default_download_dir}")
+            elif not default_download_dir.exists():
+                logger.error(f"Default download folder was not created: {default_download_dir}")
+            else:
+                logger.debug(f"Default download folder is accessible: {default_download_dir}")
+                
         except Exception as e:
             logger.warning(f"Could not create default download folder: {e}")
     
@@ -116,7 +121,7 @@ class CombinedApp:
                 icon_path = Path(sys._MEIPASS) / "Agg-med-smor-v4-transperent.ico"
             else:
                 # Running as Python script - icon is in app directory
-                icon_path = self.get_app_directory() / "Agg-med-smor-v4-transperent.ico"
+                icon_path = get_app_directory() / "Agg-med-smor-v4-transperent.ico"
             
             if icon_path.exists():
                 window.iconbitmap(str(icon_path))
@@ -149,7 +154,7 @@ class CombinedApp:
                 icon_path = Path(sys._MEIPASS) / "Agg-med-smor-v4-transperent.ico"
             else:
                 # Running as script - icon is in app directory
-                icon_path = self.get_app_directory() / "Agg-med-smor-v4-transperent.ico"
+                icon_path = get_app_directory() / "Agg-med-smor-v4-transperent.ico"
             
             if icon_path.exists():
                 self.root.iconbitmap(str(icon_path))
@@ -364,7 +369,7 @@ class CombinedApp:
         help_label = tb.Label(cred_label_frame, text=" ?", font=('Arial', 10, "bold"), foreground="green", cursor="hand2")
         help_label.pack(side="left")
         def open_manual_event(event=None):
-            manual_path = self.get_app_directory() / "Manual.docx"
+            manual_path = get_app_directory() / "Manual.docx"
             if manual_path.exists():
                 try:
                     if sys.platform.startswith('win'):
@@ -886,7 +891,7 @@ class CombinedApp:
     
     def open_manual(self):
         """Open Manual.docx with the default application"""
-        manual_path = self.get_app_directory() / "Manual.docx"
+        manual_path = get_app_directory() / "Manual.docx"
         if not manual_path.exists():
             messagebox.showerror("Fel", f"Manual.docx hittades inte i programmets mapp.\nSökte i: {manual_path}")
             return
@@ -1118,7 +1123,7 @@ class CombinedApp:
         self.end_date_var.set(self.placeholder_text)
         self.end_date_has_placeholder = True
         # Use app directory for default
-        app_dir = self.get_app_directory()
+        app_dir = get_app_directory()
         default_download_path = str(app_dir / "Nedladdningar")
         self.gmail_output_dir_var.set(self.config.get("gmail_output_dir", default_download_path))
         # CSV file is now auto-detected, no need to load from config
@@ -1188,7 +1193,7 @@ class CombinedApp:
         file_path = filedialog.askopenfilename(
             title="Välj Gmail API Credentials-fil",
             filetypes=[("JSON-filer", "*.json"), ("Alla filer", "*.*")],
-            initialdir=self.get_app_directory()
+            initialdir=get_app_directory()
         )
         if file_path:
             try:
@@ -1244,7 +1249,7 @@ class CombinedApp:
     def find_and_validate_csv(self):
         """Find and validate CSV file automatically"""
         from pathlib import Path
-        app_dir = Path(self.get_app_directory())
+        app_dir = Path(get_app_directory())
         
         # Try to find CSV file
         csv_file = self.kb_processor.csv_handler.find_csv_file(app_dir)
@@ -1272,7 +1277,7 @@ class CombinedApp:
         file_path = filedialog.askopenfilename(
             title="Välj CSV-fil med bib-kod översättning",
             filetypes=[("CSV-filer", "*.csv"), ("Alla filer", "*.*")],
-            initialdir=self.get_app_directory()
+            initialdir=get_app_directory()
         )
         if file_path:
             csv_path = Path(file_path)
@@ -1291,7 +1296,7 @@ class CombinedApp:
         """Browse for KB input directory"""
         directory = filedialog.askdirectory(
             title="Välj mapp med KB JPG-filer",
-            initialdir=self.get_app_directory()
+            initialdir=get_app_directory()
         )
         if directory:
             self.kb_input_dir_var.set(directory)
@@ -1300,7 +1305,7 @@ class CombinedApp:
         """Browse for KB output directory"""
         directory = filedialog.askdirectory(
             title="Välj mapp för PDF-utdata",
-            initialdir=self.get_app_directory()
+            initialdir=get_app_directory()
         )
         if directory:
             self.kb_output_dir_var.set(directory)

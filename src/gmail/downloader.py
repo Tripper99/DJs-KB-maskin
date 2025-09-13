@@ -5,6 +5,7 @@ Gmail download manager and orchestrator
 
 import logging
 import tkinter as tk
+from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 from .authenticator import GmailAuthenticator, AuthenticationError
@@ -19,14 +20,22 @@ class DownloadManager:
         self.secure_ops = get_secure_ops()
         self.validator = get_default_validator()
         
+        logger.info(f"Initializing DownloadManager with output_dir: '{output_dir}'")
+        logger.debug(f"Original output_dir type: {type(output_dir)}")
+        logger.debug(f"Is output_dir absolute: {Path(output_dir).is_absolute()}")
+        
         # Validate and set up output directory
         is_valid, error_msg, safe_path = self.validator.validate_directory(
             output_dir, must_exist=False, create_if_missing=True
         )
         if not is_valid:
+            logger.error(f"Output directory validation failed: {error_msg}")
             raise ValueError(f"Ogiltig utdata-katalog: {error_msg}")
             
         self.output_path = safe_path
+        logger.info(f"Resolved output path to: {self.output_path}")
+        logger.debug(f"Output path exists: {self.output_path.exists()}")
+        logger.debug(f"Output path is directory: {self.output_path.is_dir() if self.output_path.exists() else 'N/A'}")
         self.overwrite_all = False
         self.skip_all = False
         self.cancel_event = None
@@ -175,6 +184,11 @@ class DownloadManager:
     
     def save_file(self, filename: str, file_data: bytes) -> bool:
         try:
+            logger.info(f"Saving file: '{filename}' to directory: '{self.output_path}'")
+            logger.debug(f"File size: {len(file_data)} bytes")
+            logger.debug(f"Output directory exists: {self.output_path.exists()}")
+            logger.debug(f"Output directory is writable: {self.output_path.is_dir() and self.output_path.exists()}")
+            
             # Use secure file operations
             output_path = self.secure_ops.save_file(
                 content=file_data,
@@ -183,6 +197,18 @@ class DownloadManager:
                 binary=True
             )
             file_size = len(file_data)
+            
+            logger.info(f"File saved successfully at: {output_path}")
+            logger.debug(f"Saved file exists: {Path(output_path).exists() if output_path else 'No path returned'}")
+            
+            # Verify the file was actually written
+            if output_path and Path(output_path).exists():
+                actual_size = Path(output_path).stat().st_size
+                logger.debug(f"Written file size: {actual_size} bytes (expected: {file_size})")
+                if actual_size != file_size:
+                    logger.warning(f"File size mismatch! Expected: {file_size}, Actual: {actual_size}")
+            else:
+                logger.error(f"File was not found after saving: {output_path}")
             # Add to session tracking set (use sanitized filename)
             self.downloaded_in_session.add(output_path.name)
             logger.info(f"✅ Downloaded: {output_path.name} ({self.format_file_size(file_size)})")

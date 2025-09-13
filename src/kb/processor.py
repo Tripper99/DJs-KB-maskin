@@ -219,6 +219,13 @@ class KBProcessor:
             logger.info(f"Keep renamed: {keep_renamed}")
             logger.info(f"Keep originals: {keep_originals}")
             
+            # Additional path debugging
+            logger.debug(f"Input dir absolute: {Path(input_dir).is_absolute()}")
+            logger.debug(f"Output dir absolute: {Path(output_dir).is_absolute()}")
+            logger.debug(f"Current working directory: {Path.cwd()}")
+            logger.debug(f"Input dir resolved: {Path(input_dir).resolve()}")
+            logger.debug(f"Output dir resolved: {Path(output_dir).resolve()}")
+            
             # Load CSV file if not already loaded
             if not self.csv_handler.is_loaded() or self.csv_handler.loaded_file != csv_path:
                 if progress_callback:
