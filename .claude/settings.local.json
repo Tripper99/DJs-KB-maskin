@@ -62,7 +62,17 @@
       "Read(//mnt/c/Dropbox/Dokument/Programmering/Python/claude-code-docs-auto/**)",
       "Read(//mnt/c/Users/dan/.claude/**)",
       "Bash(gh issue list:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Bash(build_exe_v1.7.5.bat)",
+      "Bash(./build_exe_v1.7.5.bat)",
+      "Bash(cd:*)",
+      "Bash(build_exe_v1.7.6.bat)",
+      "Read(//c/Dropbox/Dokument/Programmering/Python/App DJs KB-maskin/**)",
+      "Bash(cmd.exe:*)",
+      "Bash(./build_installer_v1.7.6.bat)",
+      "Read(//c/Program Files (x86)/Inno Setup 6/**)",
+      "Bash(\"C:/Program Files (x86)/Inno Setup 6/ISCC.exe\" \"C:/Dropbox/Dokument/Programmering/Python/App DJs KB-maskin/DJs_KB_maskin (project)/build-tools/inno-setup/DJs_KB_maskin_setup_v1.7.6.iss\")",
+      "Bash(./build_exe_v1.7.7.bat)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
