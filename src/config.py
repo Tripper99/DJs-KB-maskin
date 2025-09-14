@@ -110,14 +110,24 @@ def get_config_file_path():
 
 def load_config():
     """Load application configuration"""
+    try:
+        from .version import get_version
+    except ImportError:
+        from version import get_version
+    
+    # Get current version for settings validation
+    current_version = get_version()
+    
     # Get default download directory in user's Downloads folder - use absolute path
     user_downloads = get_user_downloads_folder()
     default_download_dir = user_downloads / "Svenska tidningar"
     
     logger.info(f"Loading configuration from user Downloads: {user_downloads}")
     logger.info(f"Default download directory: {default_download_dir}")
+    logger.info(f"Current application version: {current_version}")
     
     default_config = {
+        "_config_version": current_version,  # Track which version created this config
         "gmail_enabled": False,
         "kb_enabled": False,
         "gmail_account": "",
@@ -147,7 +157,15 @@ def load_config():
             logger.info(f"Loading existing configuration from: {config_file}")
             with open(config_file, "r", encoding="utf-8") as f:
                 config = json.load(f)
-                # Deep merge configuration with defaults
+                
+                # Check if configuration is from an older version
+                config_version = config.get("_config_version", "unknown")
+                if config_version != current_version:
+                    logger.info(f"Configuration file is from version {config_version}, current version is {current_version}")
+                    logger.info("Using default configuration to ensure compatibility with new version")
+                    return default_config
+                
+                # Version matches, merge with defaults
                 config = _deep_merge_config(default_config, config)
                 logger.debug("Configuration loaded successfully")
                 return config
@@ -186,12 +204,20 @@ def _deep_merge_config(default_config, user_config):
 
 def save_config(config):
     """Save application configuration"""
+    try:
+        from .version import get_version
+    except ImportError:
+        from version import get_version
+    
     config_file = get_config_file_path()
     logger.debug(f"Saving configuration to: {config_file}")
     
     try:
         # Ensure the app directory exists
         config_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Always update config version when saving
+        config["_config_version"] = get_version()
         
         with open(config_file, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
