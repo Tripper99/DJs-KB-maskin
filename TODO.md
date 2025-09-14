@@ -2,7 +2,20 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (2025-09-10)
+## ✅ Recently Completed (2025-09-13)
+
+### Critical Path Resolution Bug Fix (v1.7.5) - COMPLETED 2025-09-13
+- ✅ **Root Cause Analysis**: Used bug-finder-debugger agent to identify path resolution inconsistencies
+- ✅ **Unified Path Resolution**: Created single get_app_directory() function in config.py
+- ✅ **Fixed Path Validator**: Changed relative path resolution to use app directory instead of working directory
+- ✅ **Configuration File Fix**: Config now saved in app directory with absolute paths
+- ✅ **Comprehensive Logging**: Added debugging throughout path resolution chain
+- ✅ **Repository Documentation**: Created professional README.md for GitHub
+- ✅ **Build Infrastructure**: Updated build scripts and Inno Setup for v1.7.4/v1.7.5
+- ✅ **Executable Created**: Built and tested v1.7.5 executable (40MB)
+- ✅ **User Impact**: Default download folder should now work correctly in installed version
+
+## ✅ Previously Completed (2025-09-10)
 
 ### File Conflict Resolution Bug Fix (v1.7.4) - COMPLETED 2025-09-10
 - ✅ **Persistent Flag System**: Added class-level overwrite_all and skip_all flags

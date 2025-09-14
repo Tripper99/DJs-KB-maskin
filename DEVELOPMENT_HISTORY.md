@@ -2,7 +2,94 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-09-10)
+## Latest Development Session (2025-09-13)
+
+### 🚨 Critical Path Resolution Bug Fix (v1.7.5)
+
+**Problem Identified:**
+- Mysterious bug where JPG files would appear briefly in default download folder then disappear
+- Only affected installed executable version, not Python script version
+- Only happened when using DEFAULT download folder (worked fine with manually selected folders)
+- Files appeared to download successfully but vanished immediately
+- KB processing ran without errors but worked on non-existent files
+
+**Ultra-Think Root Cause Analysis:**
+After comprehensive analysis using bug-finder-debugger agent, identified the core issue:
+
+**Multiple Path Resolution Mechanisms** behaving differently between script and executable:
+
+1. **Working Directory vs App Directory Mismatch:**
+   - CONFIG_FILE saved as filename in current working directory
+   - Default paths calculated relative to app directory  
+   - Path validation resolved relative paths using `Path.cwd()` (wrong!)
+
+2. **Dual get_app_directory() Implementations:**
+   - `src/config.py`: Goes up 2 levels from config file
+   - `src/gui/main_window.py`: Goes up 3 levels from GUI file (!!)
+   - These resolved to same location in script mode but differed in exe mode
+
+3. **Path Validator Critical Bug:**
+   ```python
+   # Line 113 in path_validator.py - THE CULPRIT
+   path = Path.cwd() / path  # Used working directory instead of app directory!
+   ```
+
+4. **Installation Context Differences:**
+   - App directory: `C:\Program Files\DJs KB-maskin\`
+   - Working directory: Could be `C:\Users\Username\Desktop\` or anywhere
+   - Files created in working directory instead of app directory
+   - User couldn't see files because they were in wrong location
+
+**Technical Solution Implemented:**
+
+1. **🔧 Unified Path Resolution:**
+   - Created single `get_app_directory()` function in `src/config.py`
+   - Removed duplicate implementation from `main_window.py`
+   - Added comprehensive debugging logging
+
+2. **📁 Fixed Configuration File Location:**
+   - Created `get_config_file_path()` function
+   - Config file now saved in app directory with absolute path
+   - No longer depends on working directory
+
+3. **🛡️ Fixed Security Path Validator:**
+   - Added local `_get_app_directory()` function to avoid circular imports
+   - Changed line 113: `path = _get_app_directory() / path` 
+   - Now resolves relative paths using app directory, not working directory
+
+4. **📊 Comprehensive Debugging Added:**
+   - Added detailed logging in config loading/saving
+   - Added path resolution tracking in security validator
+   - Added file creation verification in download manager
+   - Added path debugging in KB processor
+
+**Agent Usage:**
+- Used `bug-finder-debugger` agent for complex root cause analysis
+- Agent identified the specific path resolution inconsistencies
+- Provided detailed explanation of why manual folder selection worked (absolute paths)
+
+**Development Process:**
+- Used TodoWrite tool for systematic 6-task breakdown
+- All syntax checks passed throughout development
+- Created comprehensive README.md for GitHub repository
+- Updated build scripts and Inno Setup configuration
+
+**Files Modified:**
+- `src/config.py` - Unified path resolution, absolute config paths
+- `src/security/path_validator.py` - Fixed relative path resolution  
+- `src/gui/main_window.py` - Removed duplicate function, added logging
+- `src/gmail/downloader.py` - Added file creation verification
+- `src/kb/processor.py` - Added path debugging
+- `README.md` - Created professional repository documentation
+
+**Testing Results:**
+- Created v1.7.5 executable (40MB)
+- Ready for testing with default download folder
+- Extensive logging will track file creation locations
+
+---
+
+## Previous Development Session (2025-09-10)
 
 ### 🐛 File Conflict Resolution Bug Fix (v1.7.4)
 
