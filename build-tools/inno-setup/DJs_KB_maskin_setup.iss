@@ -82,7 +82,6 @@ Source: "{#ExcelTemplateDir}Bibkoder och tidningsnamn lista 2025-07-16.xlsx"; De
 
 ; Create default folders
 [Dirs]
-Name: "{app}\Nedladdningar"; Permissions: users-modify
 Name: "{app}\logs"; Permissions: users-modify
 
 [Icons]
@@ -104,7 +103,6 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram}"; Flags: now
 Type: filesandordirs; Name: "{app}\logs"
 Type: files; Name: "{app}\djs_kb-maskin_settings.json"
 Type: files; Name: "{app}\token_*.json"
-Type: dirifempty; Name: "{app}\Nedladdningar"
 Type: dirifempty; Name: "{app}"
 
 [Code]

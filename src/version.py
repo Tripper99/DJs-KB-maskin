@@ -4,9 +4,9 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.7.5"
-__version_info__ = (1, 7, 5)
-__release_date__ = "2025-09-13"
+__version__ = "1.7.6"
+__version_info__ = (1, 7, 6)
+__release_date__ = "2025-09-14"
 
 def get_version():
     """Return the current version string"""
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.7.6 (2025-09-14): Major enhancement - Changed default download location to 'Svenska tidningar' in user's Downloads folder with enhanced folder validation
 1.7.5 (2025-09-13): Critical fix - Resolved default download folder path resolution bug in installed executable
 1.7.4 (2025-09-10): Bug fix - Fixed 'Overwrite All' option to persist across multiple file conflicts during PDF creation
 1.7.3 (2025-09-10): GUI reorganization - Moved CSV status info to bottom of KB section

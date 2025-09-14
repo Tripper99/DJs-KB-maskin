@@ -5,6 +5,7 @@ Configuration management for the DJs app
 
 import json
 import logging
+import subprocess
 import sys
 from pathlib import Path
 
@@ -33,6 +34,73 @@ def get_app_directory():
     
     return app_dir
 
+def get_user_downloads_folder():
+    """
+    Get the user's Downloads folder with cross-platform support and fallbacks
+    
+    Returns:
+        Path: Absolute path to the user's Downloads folder, or fallback location
+    """
+    logger.debug("Detecting user's Downloads folder...")
+    
+    # Try platform-specific detection first
+    try:
+        if sys.platform.startswith('win'):
+            # Windows: Try to get Downloads folder from registry
+            try:
+                import winreg
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, 
+                                    r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders") as key:
+                    downloads_path = winreg.QueryValueEx(key, "{374DE290-123F-4565-9164-39C4925E467B}")[0]
+                    downloads_folder = Path(downloads_path)
+                    if downloads_folder.exists():
+                        logger.info(f"Windows Downloads folder found via registry: {downloads_folder}")
+                        return downloads_folder
+            except (ImportError, OSError, FileNotFoundError):
+                logger.debug("Registry method failed, trying fallback")
+            
+            # Windows fallback: Standard Downloads folder
+            downloads_folder = Path.home() / "Downloads"
+            if downloads_folder.exists():
+                logger.info(f"Windows Downloads folder found via fallback: {downloads_folder}")
+                return downloads_folder
+                
+        elif sys.platform == 'darwin':
+            # macOS: Standard Downloads folder
+            downloads_folder = Path.home() / "Downloads"
+            if downloads_folder.exists():
+                logger.info(f"macOS Downloads folder found: {downloads_folder}")
+                return downloads_folder
+                
+        else:
+            # Linux/Unix: Try XDG user-dirs first
+            try:
+                result = subprocess.run(['xdg-user-dir', 'DOWNLOAD'], 
+                                       capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    downloads_path = result.stdout.strip()
+                    downloads_folder = Path(downloads_path)
+                    if downloads_folder.exists():
+                        logger.info(f"Linux Downloads folder found via XDG: {downloads_folder}")
+                        return downloads_folder
+            except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
+                logger.debug("XDG user-dirs method failed, trying fallback")
+            
+            # Linux fallback: Standard Downloads folder
+            downloads_folder = Path.home() / "Downloads"
+            if downloads_folder.exists():
+                logger.info(f"Linux Downloads folder found via fallback: {downloads_folder}")
+                return downloads_folder
+                
+    except Exception as e:
+        logger.warning(f"Error detecting Downloads folder: {e}")
+    
+    # Ultimate fallback: Create "Svenska tidningar" in app directory
+    app_dir = get_app_directory()
+    fallback_folder = app_dir / "Svenska tidningar"
+    logger.warning(f"Could not find user Downloads folder, using app directory fallback: {fallback_folder}")
+    return fallback_folder
+
 # Use absolute path for config file in app directory
 def get_config_file_path():
     """Get the absolute path to the configuration file"""
@@ -42,11 +110,11 @@ def get_config_file_path():
 
 def load_config():
     """Load application configuration"""
-    # Get default download directory in app folder - use absolute path
-    app_dir = get_app_directory()
-    default_download_dir = app_dir / "Nedladdningar"
+    # Get default download directory in user's Downloads folder - use absolute path
+    user_downloads = get_user_downloads_folder()
+    default_download_dir = user_downloads / "Svenska tidningar"
     
-    logger.info(f"Loading configuration from app directory: {app_dir}")
+    logger.info(f"Loading configuration from user Downloads: {user_downloads}")
     logger.info(f"Default download directory: {default_download_dir}")
     
     default_config = {

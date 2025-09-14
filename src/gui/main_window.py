@@ -1370,7 +1370,97 @@ class CombinedApp:
                 if not self.kb_output_dir_var.get().strip():
                     errors.append("KB output-mapp måste anges")
         
+        # Enhanced folder existence validation
+        if len(errors) == 0:  # Only check folders if basic validation passed
+            folder_errors = self._validate_folder_existence(gmail_on, kb_on)
+            errors.extend(folder_errors)
+        
         return len(errors) == 0, errors
+    
+    def _validate_folder_existence(self, gmail_on, kb_on):
+        """
+        Validate that selected folders exist and offer user options if they don't
+        
+        Args:
+            gmail_on: Boolean indicating if Gmail tool is enabled
+            kb_on: Boolean indicating if KB tool is enabled
+            
+        Returns:
+            List of error messages for folders that still don't exist after user interaction
+        """
+        errors = []
+        
+        # Check Gmail output directory
+        if gmail_on:
+            gmail_dir = self.gmail_output_dir_var.get().strip()
+            if gmail_dir and not Path(gmail_dir).exists():
+                if not self._handle_missing_folder("Gmail nedladdningsmapp", gmail_dir, self.browse_gmail_output_dir):
+                    errors.append("Gmail nedladdningsmapp måste finnas eller väljas")
+        
+        # Check KB input directory (unless auto-linked)
+        if kb_on and not (gmail_on and kb_on):  # Not auto-linked
+            kb_input_dir = self.kb_input_dir_var.get().strip()
+            if kb_input_dir and not Path(kb_input_dir).exists():
+                if not self._handle_missing_folder("KB input-mapp", kb_input_dir, self.browse_kb_input_dir):
+                    errors.append("KB input-mapp måste finnas eller väljas")
+        
+        # Check KB output directory (unless using same directory)
+        if kb_on and not self.use_same_output_dir_var.get():
+            kb_output_dir = self.kb_output_dir_var.get().strip()
+            if kb_output_dir and not Path(kb_output_dir).exists():
+                if not self._handle_missing_folder("KB output-mapp", kb_output_dir, self.browse_kb_output_dir):
+                    errors.append("KB output-mapp måste finnas eller väljas")
+        
+        return errors
+    
+    def _handle_missing_folder(self, folder_type, folder_path, browse_method):
+        """
+        Handle missing folder by offering user choice to select new folder or cancel
+        
+        Args:
+            folder_type: String description of folder type for user message
+            folder_path: Current folder path that doesn't exist
+            browse_method: Method to call for folder browsing
+            
+        Returns:
+            Boolean indicating if folder issue was resolved (True) or user cancelled (False)
+        """
+        result = messagebox.askyesno(
+            "Mapp finns inte",
+            f"{folder_type} finns inte:\n\n{folder_path}\n\n"
+            "Vill du välja en ny mapp?\n\n"
+            "Välj 'Ja' för att välja en ny mapp\n"
+            "Välj 'Nej' för att avbryta",
+            icon='question'
+        )
+        
+        if result:
+            # User chose to select a new folder
+            old_value = None
+            if folder_type == "Gmail nedladdningsmapp":
+                old_value = self.gmail_output_dir_var.get()
+            elif folder_type == "KB input-mapp":
+                old_value = self.kb_input_dir_var.get()
+            elif folder_type == "KB output-mapp":
+                old_value = self.kb_output_dir_var.get()
+            
+            # Call the appropriate browse method
+            browse_method()
+            
+            # Check if user selected a valid folder
+            new_value = None
+            if folder_type == "Gmail nedladdningsmapp":
+                new_value = self.gmail_output_dir_var.get()
+            elif folder_type == "KB input-mapp":
+                new_value = self.kb_input_dir_var.get()
+            elif folder_type == "KB output-mapp":
+                new_value = self.kb_output_dir_var.get()
+            
+            # Return True if user selected a different folder, False if cancelled
+            return new_value != old_value and new_value and Path(new_value).exists()
+        else:
+            # User chose to cancel
+            return False
     
     def update_progress(self, message: str, progress: int):
         """Update progress bar and message - thread-safe"""
