@@ -32,8 +32,8 @@ except ImportError:
     exit(1)
 
 from ..config import (
-    load_config, save_config, get_update_settings, 
-    set_skip_version, update_last_check_date, get_app_directory
+    load_config, save_config, get_update_settings,
+    set_skip_version, update_last_check_date, get_app_directory, get_user_downloads_folder
 )
 from ..gmail.downloader import GmailDownloader
 from ..kb.processor import KBProcessor
@@ -78,20 +78,17 @@ class CombinedApp:
         
         # Set cancel event for processors
         self.kb_processor.cancel_event = self.cancel_event
-        
-        # Ensure default download folder exists
-        self.ensure_default_folders()
-        
+
         self.load_config_to_gui()
     
     
     def ensure_default_folders(self):
         """Ensure default download folder exists"""
         try:
-            app_dir = get_app_directory()
-            default_download_dir = app_dir / "Nedladdningar"
+            user_downloads = get_user_downloads_folder()
+            default_download_dir = user_downloads / "Svenska tidningar"
             
-            logger.debug(f"App directory: {app_dir}")
+            logger.debug(f"User downloads directory: {user_downloads}")
             logger.debug(f"Working directory: {Path.cwd()}")
             logger.debug(f"Default download directory: {default_download_dir}")
             
@@ -466,7 +463,8 @@ class CombinedApp:
         gmail_output_frame = tb.Frame(self.gmail_frame)
         gmail_output_frame.pack(fill="x", pady=(0, 10))
         
-        tb.Label(gmail_output_frame, text="Nedladdningsmapp:", font=('Arial', 10)).pack(anchor="w", pady=(0, 5))
+        tb.Label(gmail_output_frame, text="Nedladdningsmapp: (Lämna tomt för automatisk mapp i Hämtade filer)",
+                 font=('Arial', 10)).pack(anchor="w", pady=(0, 5))
         
         gmail_output_path_frame = tb.Frame(gmail_output_frame)
         gmail_output_path_frame.pack(fill="x")
@@ -1122,10 +1120,15 @@ class CombinedApp:
         
         self.end_date_var.set(self.placeholder_text)
         self.end_date_has_placeholder = True
-        # Use app directory for default
-        app_dir = get_app_directory()
-        default_download_path = str(app_dir / "Nedladdningar")
-        self.gmail_output_dir_var.set(self.config.get("gmail_output_dir", default_download_path))
+        # Only show folder path if it actually exists, otherwise start empty
+        config_path = self.config.get("gmail_output_dir", "")
+        if config_path and Path(config_path).exists():
+            self.gmail_output_dir_var.set(config_path)
+        else:
+            self.gmail_output_dir_var.set("")  # Start with empty field - user will see informative label
+
+        # Update folder link visibility based on current field state
+        self.update_folder_link_visibility()
         # CSV file is now auto-detected, no need to load from config
         
         # Only load KB input dir if not both tools are enabled
@@ -1137,7 +1140,7 @@ class CombinedApp:
         # Set KB output dir to same as Gmail output dir by default
         default_kb_output = self.config.get("kb_output_dir", "")
         if not default_kb_output:
-            default_kb_output = self.config.get("gmail_output_dir", default_download_path)
+            default_kb_output = self.config.get("gmail_output_dir", "")  # Use Gmail dir or empty if not set
         self.kb_output_dir_var.set(default_kb_output)
         # Always start with keep_renamed disabled (default OFF)
         self.keep_renamed_var.set(False)
@@ -1216,6 +1219,8 @@ class CombinedApp:
         )
         if directory:
             self.gmail_output_dir_var.set(directory)
+            # Update folder link visibility after user selects folder
+            self.update_folder_link_visibility()
     
     def open_download_folder_event(self, event=None):
         """Event handler for opening download folder link"""
@@ -1243,9 +1248,20 @@ class CombinedApp:
             logger.info(f"Opened download folder: {folder_path} (exit code: {result.returncode})")
         except Exception as e:
             logger.error(f"Unexpected error opening folder {folder_path}: {e}")
-            messagebox.showerror("Oväntat fel", 
+            messagebox.showerror("Oväntat fel",
                                f"Ett oväntat fel inträffade när mappen skulle öppnas.\n\nFel: {str(e)}")
-    
+
+    def update_folder_link_visibility(self):
+        """Update the 'Open folder' link visibility based on folder existence"""
+        folder_path = self.gmail_output_dir_var.get().strip()
+
+        if folder_path and Path(folder_path).exists():
+            # Show the link if folder exists
+            self.open_folder_link.pack(anchor="w", pady=(2, 0))
+        else:
+            # Hide the link if no folder or folder doesn't exist
+            self.open_folder_link.pack_forget()
+
     def find_and_validate_csv(self):
         """Find and validate CSV file automatically"""
         from pathlib import Path
@@ -1393,7 +1409,23 @@ class CombinedApp:
         # Check Gmail output directory
         if gmail_on:
             gmail_dir = self.gmail_output_dir_var.get().strip()
-            if gmail_dir and not Path(gmail_dir).exists():
+
+            # If field is empty, auto-create default folder
+            if not gmail_dir:
+                user_downloads = get_user_downloads_folder()
+                default_folder = user_downloads / "Svenska tidningar"
+                try:
+                    default_folder.mkdir(parents=True, exist_ok=True)
+                    self.gmail_output_dir_var.set(str(default_folder))
+                    # Update folder link visibility after creating folder
+                    self.update_folder_link_visibility()
+                    logger.info(f"Auto-created default Gmail folder: {default_folder}")
+                except Exception as e:
+                    logger.error(f"Failed to create default Gmail folder: {e}")
+                    errors.append("Kunde inte skapa standard nedladdningsmapp")
+
+            # If field has path but folder doesn't exist, try to create it or ask user
+            elif not Path(gmail_dir).exists():
                 if not self._handle_missing_folder("Gmail nedladdningsmapp", gmail_dir, self.browse_gmail_output_dir):
                     errors.append("Gmail nedladdningsmapp måste finnas eller väljas")
         

@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.7.7"
-__version_info__ = (1, 7, 7)
+__version__ = "1.7.8"
+__version_info__ = (1, 7, 8)
 __release_date__ = "2025-09-14"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.7.8 (2025-09-14): Critical folder management bug fix - Resolved dual path system causing all folder operations to fail, standardized default paths, fixed GUI display issues
 1.7.7 (2025-09-14): Settings compatibility fix - Added version tracking to invalidate old settings files, ensuring fresh defaults with new versions
 1.7.6 (2025-09-14): Major enhancement - Changed default download location to 'Svenska tidningar' in user's Downloads folder with enhanced folder validation
 1.7.5 (2025-09-13): Critical fix - Resolved default download folder path resolution bug in installed executable
