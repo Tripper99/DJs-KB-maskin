@@ -1349,11 +1349,10 @@ class CombinedApp:
                 self.start_date_validation_label.cget("text") != "✓"):
                 errors.append("Startdatum är ogiltigt eller inkonsekvent med slutdatum")
             end_date_value = self.end_date_var.get().strip()
-            if (end_date_value and end_date_value != self.placeholder_text and 
+            if (end_date_value and end_date_value != self.placeholder_text and
                 self.end_date_validation_label.cget("text") != "✓"):
                 errors.append("Slutdatum är ogiltigt eller inkonsekvent med startdatum")
-            if not self.gmail_output_dir_var.get().strip():
-                errors.append("Gmail nedladdningsmapp måste anges")
+            # Removed empty field check - folder will be auto-created if empty
         
         # Validate KB settings
         if kb_on:
