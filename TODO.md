@@ -2,7 +2,18 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (2025-09-13)
+## ✅ Recently Completed (2025-09-14)
+
+### Build & Distribution Enhancement (v1.7.5) - COMPLETED 2025-09-14
+- ✅ **Executable Creation**: Successfully built v1.7.5 executable (40MB) with path resolution bug fix
+- ✅ **Comprehensive Installer**: Created full-featured Inno Setup script with all documentation
+- ✅ **User-Selectable Location**: Installer allows user to choose installation directory
+- ✅ **Complete File Inclusion**: Manual.docx, README.md, CSV template all included in installer
+- ✅ **Professional UI**: Swedish/English bilingual installer with custom messages
+- ✅ **Build Infrastructure**: Complete build system for v1.7.5 distribution
+- ✅ **Issue Resolution**: Fixed ISS compilation error and ensured all paths work correctly
+
+## ✅ Previously Completed (2025-09-13)
 
 ### Critical Path Resolution Bug Fix (v1.7.5) - COMPLETED 2025-09-13
 - ✅ **Root Cause Analysis**: Used bug-finder-debugger agent to identify path resolution inconsistencies

@@ -2,7 +2,51 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-09-13)
+## Latest Development Session (2025-09-14)
+
+### 🚀 Build & Distribution Enhancement (v1.7.5 Continued)
+
+**Session Goals:**
+- Create new v1.7.5 executable with path resolution bug fix
+- Build comprehensive installer with all documentation
+- Enable user-selectable installation location
+
+**Build Results:**
+1. **Executable Creation:**
+   - Successfully built `DJs_KB_maskin_v1.7.5.exe` (40MB)
+   - PyInstaller compilation completed without errors
+   - Includes critical path resolution fixes from earlier session
+
+2. **Comprehensive Inno Setup Installer:**
+   - Created `DJs_KB_maskin_setup_v1.7.5.iss` with full feature set
+   - **User-selectable installation location** (as specifically requested)
+   - **Complete file inclusion**: Manual.docx, README.md, CSV template, application icon
+   - Bilingual support (Swedish primary, English secondary)
+   - Professional installation experience with:
+     - Custom welcome messages explaining v1.7.5 bug fix
+     - Start Menu shortcuts for all documentation
+     - Optional desktop shortcut
+     - Automatic folder creation (Nedladdningar, logs)
+     - Clean uninstallation process
+
+3. **Technical Improvements:**
+   - Fixed ISS file compilation error (corrupted file issue resolved)
+   - Proper Swedish localization throughout installer
+   - Version-specific release notes in post-install dialog
+   - Smart upgrade detection for existing installations
+
+**Files Created:**
+- `build-tools/pyinstaller/DJs_KB_maskin_v1.7.5.spec`
+- `build-tools/scripts/build_exe_v1.7.5.bat`
+- `build-tools/inno-setup/DJs_KB_maskin_setup_v1.7.5.iss`
+- `dist/DJs_KB_maskin_v1.7.5.exe`
+
+**Distribution Ready:**
+The v1.7.5 installer is now ready for compilation and includes everything needed for a professional deployment of the bug-fixed version.
+
+---
+
+## Previous Development Session (2025-09-13)
 
 ### 🚨 Critical Path Resolution Bug Fix (v1.7.5)
 
