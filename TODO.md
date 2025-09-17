@@ -2,7 +2,18 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (2025-09-14)
+## ✅ Recently Completed (2025-09-17)
+
+### Build System Finalization (v1.7.8) - COMPLETED 2025-09-17
+- ✅ **PyInstaller Executable**: Successfully built v1.7.8 executable (41.9 MB) with all resources
+- ✅ **Inno Setup Installer**: Created working installer with simplified ISS configuration
+- ✅ **Error Resolution**: Fixed "Resource update error: EndUpdateResource failed (110)" by removing SetupIconFile
+- ✅ **Path Corrections**: Updated all relative paths in ISS to work from build-tools/inno-setup/
+- ✅ **Deprecation Fix**: Changed {pf} to {autopf} for modern Windows compatibility
+- ✅ **Documentation Research**: Used sub-agent to research official Inno Setup syntax
+- ✅ **Distribution Ready**: Both exe and installer ready for end-user distribution
+
+## ✅ Previously Completed (2025-09-14)
 
 ### Build & Distribution Enhancement (v1.7.5) - COMPLETED 2025-09-14
 - ✅ **Executable Creation**: Successfully built v1.7.5 executable (40MB) with path resolution bug fix

@@ -2,7 +2,109 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-09-14)
+## Latest Development Session (2025-09-17)
+
+### 🔨 Build System Implementation (v1.7.8)
+
+**Task Completed:**
+Successfully created standalone executable and Inno Setup installer for v1.7.8 distribution.
+
+**Components Created:**
+1. **PyInstaller Executable** - `DJs_KB_maskin_v1.7.8.exe` (41.9 MB)
+2. **Inno Setup Installer** - `DJs_KB_maskin_v1.7.8_setup.exe`
+
+**Technical Implementation:**
+
+#### PyInstaller Build
+- Command: `pyinstaller --onefile --windowed --name "DJs_KB_maskin_v1.7.8" --icon "Agg-med-smor-v4-transperent.ico" --add-data` for icon, CSV, and Manual
+- Output location: `dist/` folder
+- Successfully bundled all dependencies and resources
+
+#### Inno Setup Script (ISS) Challenges and Resolution
+**Problem Encountered:**
+- "Resource update error: EndUpdateResource failed (110)" on line 26 (SetupIconFile)
+- This is a known Windows issue with icon resource embedding
+
+**Root Cause:**
+- Windows Defender/antivirus interference with resource updates
+- File locking issues during icon embedding
+- Common issue documented in Inno Setup forums
+
+**Solution:**
+1. Removed `SetupIconFile` directive (line 20)
+2. Kept `UninstallDisplayIcon` for proper app icon display
+3. Updated to use `{autopf}` instead of deprecated `{pf}` constant
+4. Simplified ISS structure based on official documentation
+
+**Final ISS Configuration:**
+- Location: `build-tools/inno-setup/DJs_KB_maskin_setup_v1.7.8.iss`
+- Uses relative paths (`..\..\`) for all resources
+- Swedish language interface
+- Creates Start Menu and optional desktop shortcuts
+- Includes Manual.docx and CSV template
+
+**Research Conducted:**
+- Used general-purpose sub-agent to research official Inno Setup documentation
+- Learned correct ISS syntax for subdirectory-based scripts
+- Identified best practices for path references and error prevention
+
+**Result:**
+✅ Both executable and installer successfully created and tested
+✅ Ready for distribution to end users
+
+## Previous Development Session (2025-09-15)
+
+### 🔧 Critical Folder Management Bug Fixes (v1.7.8)
+
+**Problem Identified:**
+User reported multiple interconnected bugs with folder management:
+1. GUI displayed non-existent folder paths at startup
+2. "Öppna mapp" link failed for non-existent folders
+3. Start button showed error dialogs instead of creating folders
+4. Confusing UX with paths shown before folders existed
+
+**Root Cause Analysis:**
+Comprehensive investigation using bug-finder, architecture-planner, and code-reviewer sub-agents revealed:
+- **Dual path system conflict**: Config.py used `Downloads/Svenska tidningar` while main_window.py used `app_dir/Nedladdningar`
+- **Premature folder creation**: Folders created at initialization in wrong location
+- **Validation logic flaw**: Empty fields rejected before auto-creation logic could run
+
+**Solution Implemented:**
+
+#### Phase 1: Emergency Bug Fix (v1.7.8)
+1. **Standardized default paths** - Both config.py and main_window.py now use `Downloads/Svenska tidningar`
+2. **Removed premature folder creation** - No folders created during initialization
+3. **Empty field with guidance** - Field shows informative Swedish text: "Lämna tomt för automatisk mapp i Hämtade filer"
+4. **Dynamic link visibility** - "Öppna mapp" only appears when folder exists
+5. **Auto-folder creation** - Start button creates default folder instead of showing errors
+
+#### Phase 2: Validation Bug Fix (v1.7.8a)
+- **Critical fix**: Removed premature empty field validation that prevented auto-creation
+- **Result**: Empty fields now correctly trigger automatic folder creation
+
+**Technical Changes:**
+- Modified `src/gui/main_window.py`:
+  - Lines 82-83: Removed `ensure_default_folders()` from `__init__`
+  - Lines 91-92, 1125-1127: Standardized to use `Downloads/Svenska tidningar`
+  - Line 466: Added informative label text
+  - Lines 1249-1258: Added `update_folder_link_visibility()` method
+  - Lines 1413-1425: Enhanced folder validation with auto-creation
+  - Line 1355: Removed premature empty field check
+
+**Testing Results:**
+✅ Verified working by user on 2025-09-15
+- Empty field correctly triggers auto-creation
+- Folder created at: `C:\Users\dan\Downloads\Svenska tidningar`
+- No error dialogs shown
+- Processing continues normally
+
+**Development Process Notes:**
+- Used comprehensive sub-agent analysis for deep investigation
+- Discovered issue was more complex than initially reported
+- Fixed both immediate bugs and underlying architectural issues
+- Maintained backward compatibility with existing configurations
+
+## Previous Development Session (2025-09-14)
 
 ### 🚀 Build & Distribution Enhancement (v1.7.5 Continued)
 
