@@ -72,7 +72,9 @@
       "Bash(./build_installer_v1.7.6.bat)",
       "Read(//c/Program Files (x86)/Inno Setup 6/**)",
       "Bash(\"C:/Program Files (x86)/Inno Setup 6/ISCC.exe\" \"C:/Dropbox/Dokument/Programmering/Python/App DJs KB-maskin/DJs_KB_maskin (project)/build-tools/inno-setup/DJs_KB_maskin_setup_v1.7.6.iss\")",
-      "Bash(./build_exe_v1.7.7.bat)"
+      "Bash(./build_exe_v1.7.7.bat)",
+      "WebFetch(domain:jrsoftware.org)",
+      "Read(//c/Dropbox/Dokument/Programmering/Python/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

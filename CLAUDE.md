@@ -297,3 +297,5 @@ build_all.bat
 - Secure Excel file reading with validation
 - Automatic directory validation and creation
 - Always save new version before coding. Commit it with info on what changes are attempted. After successful testing commit again with new info on successful implementation.
+- All exe files should always be placed in /dist/ folder.
+- All iss files created for Inno Setup should always be places in \build-tools\inno-setup
