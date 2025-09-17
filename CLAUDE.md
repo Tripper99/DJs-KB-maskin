@@ -128,9 +128,12 @@ The application automatically detects the most recent CSV file matching this pat
 9. **Security validation** - Run `python -m pytest tests/test_security.py`
 10. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.7.5 - Critical Path Resolution Bug Fix Completed 2025-09-13)
+## Current Status (v1.8.0 - Folder Creation Fix Completed 2025-09-17)
 
 The application is production-ready with:
+- **🛠️ Fixed Outdated Folder Creation** - Eliminated legacy "Nedladdningar" folder creation in program directory (v1.8.0)
+- **🔐 Single Instance Restriction** - Windows mutex prevents multiple app instances with Swedish error messages (v1.7.9)
+- **🔨 Complete Build System** - Professional Inno Setup installer and PyInstaller executable ready for distribution (v1.7.8)
 - **🚨 Critical Path Resolution Bug Fix** - Resolved mysterious issue where files disappeared when using default download folder in installed executable
 - **File Conflict Resolution Fix** - "Overwrite All" and "Skip All" options persist across multiple conflicts during PDF creation
 - **CSV Migration** - Replaced Excel dependency with built-in CSV module, reduced total dependencies from 9 to 7 packages

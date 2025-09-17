@@ -4,6 +4,23 @@ This document tracks known issues, improvements, and future development tasks.
 
 ## ✅ Recently Completed (2025-09-17)
 
+### Fixed Outdated Folder Creation (v1.8.0) - COMPLETED 2025-09-17
+- ✅ **Problem Analysis**: Identified "Nedladdningar" folder being created in program directory as legacy installer behavior
+- ✅ **Root Cause**: Found Inno Setup script was creating `{app}\Nedladdningar` folder from old v1.4.7 code
+- ✅ **Code Verification**: Confirmed application code correctly creates only `Downloads\Svenska tidningar`
+- ✅ **Installer Fix**: Removed outdated folder creation directives from Inno Setup script
+- ✅ **Version Update**: Incremented to v1.8.0 with clear fix documentation
+- ✅ **Build & Test**: Created corrected executable and installer, verified no unwanted folder creation
+- ✅ **User Impact**: Downloads now correctly go only to intended location, no legacy program folders
+
+### Single Instance Restriction (v1.7.9) - COMPLETED 2025-09-17
+- ✅ **Windows Mutex Implementation**: Created `src/singleton/` module using ctypes for Windows mutex
+- ✅ **Swedish User Messages**: Added "DJs KB-maskin körs redan!" dialog for second instance attempts
+- ✅ **Window Focus**: Implemented automatic focus of existing instance with Alt key workaround
+- ✅ **Crash Recovery**: Added Windows WAIT_ABANDONED detection for abandoned mutex cleanup
+- ✅ **Testing Verification**: Confirmed working perfectly in compiled .exe environment
+- ✅ **User Feedback**: User confirmed "It works" - single instance restriction successful
+
 ### Build System Finalization (v1.7.8) - COMPLETED 2025-09-17
 - ✅ **PyInstaller Executable**: Successfully built v1.7.8 executable (41.9 MB) with all resources
 - ✅ **Inno Setup Installer**: Created working installer with simplified ISS configuration

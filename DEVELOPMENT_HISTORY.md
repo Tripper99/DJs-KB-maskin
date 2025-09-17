@@ -4,6 +4,54 @@ This document contains the historical development notes and issue resolutions fo
 
 ## Latest Development Session (2025-09-17)
 
+### ✅ Fixed Outdated Folder Creation Issue (v1.8.0)
+
+**Problem Identified:**
+Application was creating unnecessary "Nedladdningar" folder in program directory - legacy behavior from when that was the default download location.
+
+**Root Cause Analysis:**
+- User reported: "The app is still creating the folder 'nedladdningar' in the same folder as the exe file"
+- Investigation revealed the issue was in Inno Setup script v1.7.9
+- Lines 73 and 90 were creating `{app}\Nedladdningar` folder during installation
+- This was outdated code from v1.4.7 when downloads went to program directory
+
+**Technical Solution:**
+1. **Identified Source**: Found folder creation in `build-tools/inno-setup/DJs_KB_maskin_setup_v1.7.9.iss`
+2. **Verified No Code Issues**: Confirmed `ensure_default_folders()` correctly creates `Downloads\Svenska tidningar`
+3. **Fixed Installer Script**: Removed outdated folder creation directives
+4. **Updated Version**: Incremented to v1.8.0 to reflect this important fix
+
+**Files Modified:**
+- `build-tools/inno-setup/DJs_KB_maskin_setup_v1.8.0.iss` - Removed Nedladdningar folder creation
+- `src/version.py` - Updated to v1.8.0 with fix documentation
+- Created new executable: `dist/DJs_KB_maskin_v1.8.0.exe`
+
+**Verification:**
+- Inno Setup compilation successful without folder creation
+- Application now only creates folders where intended (user Downloads)
+- Legacy program directory folder creation eliminated
+
+### 🔐 Single Instance Restriction Implementation (v1.7.9)
+
+**Problem Solved:**
+User requested prevention of multiple application instances running simultaneously to avoid file conflicts.
+
+**Technical Implementation:**
+- Created `src/singleton/` module with Windows mutex-based restriction
+- Uses named mutex "DJs_KB_maskin_SingleInstance" via ctypes
+- Swedish error dialog: "DJs KB-maskin körs redan!"
+- Automatic window focusing with Alt key workaround for Windows restrictions
+- Proper mutex cleanup on application exit
+- Crash recovery via Windows WAIT_ABANDONED detection
+
+**Testing Results:**
+- ✅ VS Code behavior: Different results depending on "Run in dedicated terminal" vs regular run
+- ✅ Compiled .exe: Perfect single-instance restriction with Swedish dialog
+- ✅ Window focusing works as intended
+- ✅ All existing functionality preserved
+
+**User Feedback:** "It works" - Single instance functionality confirmed working in executable.
+
 ### 🔨 Build System Implementation (v1.7.8)
 
 **Task Completed:**
