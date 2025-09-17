@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from src.gui.main_window import CombinedApp
+from src.singleton import SingleInstance
 
 def setup_logging():
     """Setup logging to file in date-based subdirectories"""
@@ -38,13 +39,21 @@ def setup_logging():
 
 def main():
     """Main entry point"""
+    # Check for existing instance before doing anything else
+    single_instance = SingleInstance("DJs_KB_maskin")
+
+    if not single_instance.check_and_handle_instance():
+        # Another instance is running, exit gracefully
+        sys.exit(0)
+
     # Setup logging
     log_file = setup_logging()
     logger = logging.getLogger(__name__)
-    
+
     logger.info("=== Starting DJs Svenska Tidningar app ===")
     logger.info(f"Log file: {log_file}")
-    
+    logger.info("Single instance check passed")
+
     try:
         # Create and run the application
         app = CombinedApp()
@@ -52,6 +61,9 @@ def main():
     except Exception as e:
         logger.error(f"Application error: {e}")
         raise
+    finally:
+        # Ensure mutex is released
+        single_instance.release_mutex()
 
 if __name__ == "__main__":
     main()
