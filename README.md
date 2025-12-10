@@ -1,4 +1,7 @@
 Om DJ:s KB-maskin
+
+![Skärmbild 2025-12-03 084223](https://github.com/user-attachments/assets/ccb4ca1e-e5a6-497d-bccb-c85c03ab7a92)
+
 Detta windows-program (finns i nuläget inte till Mac) är skapat för att förenkla tillvaron för oss som brukar ladda ned större mängder tidningssidor från Kungliga Bibliotekets databas Svenska Tidningar. Deras system funkar så att du från en skärm på KB skicka jpg-bilder av tidningssidor till dig själv via mejl. Varje enskild jpg skicks som bilaga i ett separat mejl. Du måste sedan öppna ditt mejlprogram och spara ned alla jpg-bilagorna en och en. Vanligen vill du också döpa om filerna eftersom de är namngivna med en lång kod istället för tidningsnamn. För att kunna arbeta med filerna vill du antagligen också konvertera bilderna till pdf, och slå samman flersidiga artiklar till flersidiga pdf-filer. Alla som gått igenom denna process med 500 jpg-bilagor (maxantalet som kan skickas från KB under en session) vet att det kan ta väldigt lång tid.
 Det är här DJ:s KB-maskin kommer in i bilden.
 För att använda appen behöver du först koppla ett Gmail-konto till ditt konto på Svenska Tidningar. Då kan appen automatiskt koppla upp sig till gmailkontot via API och hämta ned samtliga jpg-filer som kommit från KB inom ett tidsspann som du själv bestämmer. Appen konverterar automatiskt jpg-bilderna pdf:er, slår samma flersidiga artiklar, samt ger filerna begripliga namn bestående av datum för publicering, tidningsnamn samt sidantal.
