@@ -2,6 +2,22 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
+## ✅ Recently Completed (2025-12-10)
+
+### Automatic Update Checking at Startup (v1.9.0) - COMPLETED 2025-12-10
+- ✅ **Feature Design**: Used 3 parallel Explore agents to research startup flow, config system, existing update implementation
+- ✅ **User Requirements**: Confirmed once-per-week, non-blocking notification, silent errors, user control via checkbox
+- ✅ **UpdateNotification Component**: Created non-modal 350x150px window, bottom-right position, 15-second auto-dismiss
+- ✅ **Startup Check Method**: Background daemon thread, silent error handling, respects settings and skip_version
+- ✅ **Help Menu Integration**: Added checkbox "Sök automatiskt efter uppdateringar vid start" with toggle method
+- ✅ **Configuration Updates**: Changed defaults to ON (enabled) for new users in 3 locations
+- ✅ **Bug Fix #1**: Fixed initialization order - moved create_variables() before menu creation
+- ✅ **Bug Fix #2**: Changed auto-check default from OFF to ON as requested by user
+- ✅ **Build System**: Created v1.9.0 PyInstaller spec, build script, and Inno Setup script
+- ✅ **Permissions Fix**: Changed installer shortcuts to user-level paths (no admin required)
+- ✅ **Testing**: All Ruff checks passed, app starts successfully, executable and installer built
+- ✅ **User Impact**: Non-intrusive weekly update notifications, full user control, silent failures
+
 ## ✅ Recently Completed (2025-09-17)
 
 ### Fixed Outdated Folder Creation (v1.8.0) - COMPLETED 2025-09-17

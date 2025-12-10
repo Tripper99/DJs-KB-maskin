@@ -2,7 +2,112 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-09-17)
+## Latest Development Session (2025-12-10)
+
+### ✅ Automatic Update Checking at Startup (v1.9.0)
+
+**Feature Implemented:**
+Added automatic version checking when application starts, with non-blocking notifications for available updates.
+
+**User Requirements:**
+- Check for updates automatically at startup (not just manual Help menu)
+- Once per week frequency (7-day interval)
+- Non-blocking notification (small window, not modal dialog)
+- Silent error handling (no startup error dialogs)
+- User control via Help menu checkbox
+
+**Technical Implementation:**
+
+1. **New UpdateNotification Component** (`src/update/update_notification.py`):
+   - Non-modal Toplevel window (transient but NO grab_set)
+   - 350x150px positioned bottom-right corner (screen_width-370, screen_height-250)
+   - Auto-dismisses after 15 seconds via cancellable timer
+   - Two action buttons: "Visa uppdatering" (opens full UpdateDialog), "Stäng" (dismiss)
+   - Swedish UI with tooltips and keyboard shortcuts (Enter/Escape)
+   - Application icon integration
+
+2. **Startup Check Method** (`src/gui/main_window.py:935`):
+   - `check_for_updates_at_startup()` method triggered 2 seconds after GUI loads
+   - Background daemon thread (startup_check_worker) - won't block app exit
+   - Checks `should_check_for_updates()` first - respects enabled setting and 7-day interval
+   - Silent error handling - all exceptions logged only, no user-facing dialogs
+   - Respects skip_version setting to suppress notifications for skipped versions
+   - Thread-safe GUI updates via `self.root.after(0, show_notification_if_needed)`
+   - Updates last_check_date in config after successful check
+
+3. **User Control** (`src/gui/main_window.py:210-217`):
+   - Help menu checkbox: "Sök automatiskt efter uppdateringar vid start"
+   - Bound to auto_check_enabled_var (BooleanVar, default True)
+   - Calls toggle_auto_check() which syncs both auto_check_enabled and check_on_startup settings
+   - Settings saved immediately to djs_kb-maskin_settings.json
+   - **Default: ON (enabled) for new users**
+
+4. **Configuration Updates** (`src/config.py`):
+   - Changed default for auto_check_enabled from False to True (3 locations)
+   - Changed default for check_on_startup from False to True
+   - Existing users' saved preferences preserved
+   - New installations have automatic checking enabled by default
+
+**Key Design Decisions:**
+- **Modal vs Non-Modal**: Manual check (Help menu) uses modal UpdateDialog blocking interaction. Startup check uses non-modal UpdateNotification allowing immediate app use.
+- **Delayed Startup**: 2-second delay (`root.after(2000, ...)`) ensures GUI fully rendered before check
+- **Daemon Thread**: Won't prevent app exit if check still running
+- **Silent Failures**: Network errors, API failures, timeouts all logged only - no user-facing error dialogs at startup
+- **Opt-Out Design**: Enabled by default, users can disable via checkbox
+- **Respect Skip Version**: If user skipped a version, don't nag about it at startup
+
+**Development Process:**
+1. Used 3 parallel Explore agents to research: startup flow, config system, existing update implementation
+2. Asked user 4 questions to clarify requirements (frequency, presentation, error handling, user control)
+3. Plan agent designed complete implementation approach
+4. Created UpdateNotification component with Swedish UI
+5. Added startup check method with threading and error handling
+6. Integrated Help menu checkbox for user control
+7. **Bug Fix**: Initialization order - moved create_variables() before menu creation
+8. **Default Setting Fix**: Changed auto-check to ON by default (3 locations)
+9. Updated version to 1.9.0 with release date 2025-12-10
+
+**Build System:**
+- Created PyInstaller spec: `build-tools/pyinstaller/DJs_KB_maskin_v1.9.0.spec`
+- Created build script: `build-tools/scripts/build_exe_v1.9.0.bat`
+- Created Inno Setup script: `build-tools/inno-setup/DJs_KB_maskin_setup_v1.9.0.iss`
+- **Permissions Fix**: Changed installer shortcuts from admin-required ({commondesktop}, {group}) to user-level ({userdesktop}, {userprograms}) to work with PrivilegesRequired=lowest
+
+**Files Modified:**
+- `src/update/update_notification.py` (NEW) - Non-blocking notification component
+- `src/gui/main_window.py` - Startup check method, Help menu checkbox, toggle method
+- `src/config.py` - Default auto-check enabled
+- `src/update/__init__.py` - Export UpdateNotification
+- `src/version.py` - Version bump to 1.9.0
+- `build-tools/inno-setup/DJs_KB_maskin_setup_v1.9.0.iss` (NEW) - Installer with permissions fix
+- `build-tools/scripts/build_exe_v1.9.0.bat` (NEW) - Build script
+
+**Testing Results:**
+- ✅ All Ruff syntax checks passed
+- ✅ App starts successfully with auto-check enabled by default
+- ✅ No initialization errors after variable creation order fix
+- ✅ Executable built successfully: dist/DJs_KB_maskin_v1.9.0.exe (40 MB)
+- ✅ Installer built successfully: dist/DJs_KB_maskin_v1.9.0_setup.exe (42 MB)
+- ⚠️ Initial installer had permissions issue - fixed by changing shortcuts to user-level paths
+
+**User Impact:**
+- Users automatically notified of updates weekly (if enabled)
+- Non-intrusive notification doesn't block main window
+- Full control via Help menu checkbox
+- No startup error dialogs for network issues
+- Silent, professional user experience
+
+**Lessons Learned:**
+- Modal dialogs wrong for startup notifications - block user interaction
+- Non-modal Toplevel with transient() but no grab_set() is correct pattern
+- Must set defaults in 3 places for consistency: BooleanVar, config.get() fallback, default config template
+- Variable initialization order matters - create_variables() must run before menu creation
+- Inno Setup PrivilegesRequired=lowest incompatible with {commondesktop} and {group} constants
+- Always use user-level paths ({userdesktop}, {userprograms}) for non-admin installers
+
+---
+
+## Previous Development Session (2025-09-17)
 
 ### ✅ Fixed Outdated Folder Creation Issue (v1.8.0)
 

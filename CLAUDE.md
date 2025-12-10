@@ -90,7 +90,8 @@ The application automatically detects the most recent CSV file matching this pat
 
 ### Update System Modules
 - `src/update/version_checker.py` - GitHub API integration for version checking
-- `src/update/update_dialog.py` - Swedish language update notifications
+- `src/update/update_dialog.py` - Swedish language update notifications (modal dialog)
+- `src/update/update_notification.py` - Non-blocking startup notifications (v1.9.0+)
 - `src/update/models.py` - Data models for update information
 - `src/update/__init__.py` - Update module exports
 
@@ -128,9 +129,10 @@ The application automatically detects the most recent CSV file matching this pat
 9. **Security validation** - Run `python -m pytest tests/test_security.py`
 10. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.8.0 - Folder Creation Fix Completed 2025-09-17)
+## Current Status (v1.9.0 - Automatic Update Checking Completed 2025-12-10)
 
 The application is production-ready with:
+- **🔔 Automatic Update Checking** - Non-blocking startup notifications for new versions, enabled by default, user control via Help menu (v1.9.0)
 - **🛠️ Fixed Outdated Folder Creation** - Eliminated legacy "Nedladdningar" folder creation in program directory (v1.8.0)
 - **🔐 Single Instance Restriction** - Windows mutex prevents multiple app instances with Swedish error messages (v1.7.9)
 - **🔨 Complete Build System** - Professional Inno Setup installer and PyInstaller executable ready for distribution (v1.7.8)
@@ -142,7 +144,7 @@ The application is production-ready with:
 - **Requirements.txt** - Streamlined dependency list with exact version numbers
 - **Professional Installer** - Inno Setup installer with Swedish interface, Start Menu shortcuts, and proper upgrade behavior
 - **Organized Build Tools** - Complete build-tools directory structure with automated scripts
-- **Update System** - GitHub Releases API integration for version checking and update notifications
+- **Update System** - GitHub Releases API integration for manual and automatic update checking with Swedish notifications
 - **Session Management Enhancement** - Date fields no longer persist between sessions, always start fresh
 - **Email Confirmation Dialog** - Added confirmation dialog showing email count before download begins
 - **Unicode Compatibility** - Resolved Windows encoding issues by removing emoji characters from logs
@@ -172,7 +174,22 @@ The application is production-ready with:
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
 
-## Recent Improvements (v1.5.9)
+## Recent Improvements (v1.9.0)
+
+### Automatic Update Checking at Startup (v1.9.0)
+- **Non-Blocking Notifications** - Small 350x150px window appears bottom-right, auto-dismisses after 15 seconds
+- **Weekly Check Frequency** - Automatic check once per week (7-day interval), respects last check date
+- **User Control** - Help menu checkbox: "Sök automatiskt efter uppdateringar vid start" (enabled by default)
+- **Silent Error Handling** - Network errors and API failures logged only, no startup error dialogs
+- **Smart Notifications** - Respects skip_version setting, only shows if update available
+- **Threading** - Background daemon thread keeps GUI responsive, 2-second delayed startup
+- **Two Notification Types**:
+  - Manual check (Help menu) - Modal UpdateDialog with full details
+  - Automatic startup check - Non-modal UpdateNotification with "View Update" button
+- **Default Enabled** - New users have automatic checking ON by default for better user experience
+- **Permissions Fix** - Installer uses user-level shortcuts (no admin required)
+
+## Previous Improvements (v1.5.9)
 
 ### Update Dialog Enhancement (v1.5.9)
 - **Improved Dialog Height** - Doubled update dialog window height to 900px for full content visibility
