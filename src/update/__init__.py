@@ -24,9 +24,14 @@ from .update_dialog import (
     show_update_check_result
 )
 
+from .update_notification import (
+    UpdateNotification,
+    show_update_notification
+)
+
 __all__ = [
     'AssetInfo',
-    'ReleaseAssets', 
+    'ReleaseAssets',
     'UpdateInfo',
     'UpdateCheckResult',
     'VersionChecker',
@@ -34,5 +39,7 @@ __all__ = [
     'quick_update_check',
     'UpdateDialog',
     'show_update_dialog',
-    'show_update_check_result'
+    'show_update_check_result',
+    'UpdateNotification',
+    'show_update_notification'
 ]

@@ -141,11 +141,11 @@ def load_config():
         "update_settings": {
             "github_repo_owner": "Tripper99",  # TODO: Replace with actual GitHub username
             "github_repo_name": "DJs-KB-maskin",
-            "check_on_startup": False,
+            "check_on_startup": True,
             "last_check_date": None,
             "check_interval_days": 7,
             "skip_version": None,
-            "auto_check_enabled": False
+            "auto_check_enabled": True
         }
     }
     

@@ -33,13 +33,14 @@ except ImportError:
 
 from ..config import (
     load_config, save_config, get_update_settings,
-    set_skip_version, update_last_check_date, get_app_directory, get_user_downloads_folder
+    set_skip_version, update_last_check_date, get_app_directory, get_user_downloads_folder,
+    should_check_for_updates, set_update_setting
 )
 from ..gmail.downloader import GmailDownloader
 from ..kb.processor import KBProcessor
 from ..version import __version__ as VERSION
 from ..security import get_secure_ops, get_default_validator
-from ..update import create_version_checker, show_update_check_result
+from ..update import create_version_checker, show_update_check_result, UpdateNotification
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +198,10 @@ class CombinedApp:
             canvas.configure(scrollregion=canvas.bbox("all"))
         main_frame.bind("<Configure>", on_configure)
         self.main_frame = main_frame
-        
+
+        # Create variables first (needed for menu creation)
+        self.create_variables()
+
         # Add menu bar
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
@@ -205,12 +209,21 @@ class CombinedApp:
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Hjälp", menu=help_menu)
+
+        # Add automatic update check setting
+        help_menu.add_checkbutton(
+            label="Sök automatiskt efter uppdateringar vid start",
+            variable=self.auto_check_enabled_var,
+            command=self.toggle_auto_check
+        )
+        help_menu.add_separator()
+
         help_menu.add_command(label="Sök efter uppdateringar...", command=self.check_for_updates)
         help_menu.add_separator()
         help_menu.add_command(label="Manual", command=self.open_manual)
         help_menu.add_command(label="Om appen", command=self.show_about)
-        
-        self.create_variables()
+
+        # Create widgets (variables already created above)
         self.create_widgets()
     
     def create_variables(self):
@@ -235,7 +248,10 @@ class CombinedApp:
         self.keep_renamed_var = tk.BooleanVar(value=False)  # Default OFF - don't save renamed JPGs
         self.use_same_output_dir_var = tk.BooleanVar(value=True)  # Default to True
         self.delete_original_files_var = tk.BooleanVar(value=False)  # Default to False (delete originals when OFF)
-        
+
+        # Update checking
+        self.auto_check_enabled_var = tk.BooleanVar(value=True)  # Default ON - automatic update checking enabled
+
         # Status
         self.status_var = tk.StringVar(value="Fyll i fälten nedan")
         
@@ -904,7 +920,82 @@ class CombinedApp:
                 self.secure_ops.safe_subprocess_run(['xdg-open'], file_arg=str(manual_path))
         except Exception as e:
             messagebox.showerror("Fel", f"Kunde inte öppna Manual.docx: {e}")
-    
+
+    def toggle_auto_check(self):
+        """Toggle automatic update checking setting"""
+        try:
+            enabled = self.auto_check_enabled_var.get()
+
+            set_update_setting(self.config, "auto_check_enabled", enabled)
+            set_update_setting(self.config, "check_on_startup", enabled)
+            save_config(self.config)
+
+            logger.info(f"Automatic update checking {'enabled' if enabled else 'disabled'}")
+
+        except Exception as e:
+            logger.error(f"Error toggling auto-check setting: {e}")
+
+    def check_for_updates_at_startup(self):
+        """Check for updates at startup (silent, non-blocking)"""
+        def startup_check_worker():
+            """Background thread for silent startup update check"""
+            try:
+                # Check if we should perform update check
+                if not should_check_for_updates(self.config):
+                    logger.info("Skipping startup update check (not due or disabled)")
+                    return
+
+                logger.info("Starting automatic startup update check")
+
+                # Get repository configuration
+                update_settings = self.config.get("update_settings", {})
+                repo_owner = update_settings.get("github_repo_owner", "")
+                repo_name = update_settings.get("github_repo_name", "DJs_KB_maskin")
+
+                if not repo_owner:
+                    logger.warning("GitHub repository not configured")
+                    return
+
+                # Perform check
+                checker = create_version_checker(repo_owner, repo_name)
+                result = checker.check_for_updates()
+
+                # Update last check date
+                update_last_check_date(self.config)
+                save_config(self.config)
+
+                # Show notification if update available
+                def show_notification_if_needed():
+                    try:
+                        update_settings = get_update_settings(self.config)
+                        skip_version = update_settings.get("skip_version")
+
+                        # Don't show if version is skipped
+                        if (result.has_update and skip_version and
+                            result.update_info.latest_version == skip_version):
+                            logger.info(f"Skipping notification for version {skip_version}")
+                            return
+
+                        # Show notification only if update available
+                        if result.success and result.has_update:
+                            notification = UpdateNotification(self.root, result.update_info)
+                            notification.show()
+                            logger.info(f"Update notification shown: {result.update_info.latest_version}")
+                        elif result.success and result.is_current:
+                            logger.info("Application is up-to-date")
+                    except Exception as e:
+                        logger.error(f"Error showing update notification: {e}")
+
+                self.root.after(0, show_notification_if_needed)
+
+            except Exception as e:
+                # Silent failure - only log
+                logger.error(f"Error during startup update check: {e}")
+
+        # Start background thread
+        update_thread = threading.Thread(target=startup_check_worker, daemon=True)
+        update_thread.start()
+
     def check_for_updates(self):
         """Check for application updates from GitHub"""
         def update_check_worker():
@@ -1152,9 +1243,17 @@ class CombinedApp:
         self.delete_original_files_var.set(False)
         
         self.update_ui_state()
-        
+
+        # Load update check setting
+        update_settings = get_update_settings(self.config)
+        auto_check_enabled = update_settings.get("auto_check_enabled", True)  # Default True for new users
+        self.auto_check_enabled_var.set(auto_check_enabled)
+
         # Set initial placeholder appearance after UI is created
         self.root.after(10, self._apply_initial_placeholder_styling)
+
+        # Schedule startup update check (2-second delay to ensure GUI is ready)
+        self.root.after(2000, self.check_for_updates_at_startup)
     
     def _apply_initial_placeholder_styling(self):
         """Apply initial gray styling to placeholder text"""

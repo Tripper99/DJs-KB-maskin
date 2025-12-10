@@ -4,9 +4,9 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.8.0"
-__version_info__ = (1, 8, 0)
-__release_date__ = "2025-09-17"
+__version__ = "1.9.0"
+__version_info__ = (1, 9, 0)
+__release_date__ = "2025-12-10"
 
 def get_version():
     """Return the current version string"""
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.9.0 (2025-12-10): Automatic update checking at startup - Added non-blocking notification system that checks GitHub for updates once per week, with user control via Help menu checkbox
 1.8.0 (2025-09-17): Fixed outdated folder creation - Removed legacy "Nedladdningar" folder creation in program directory (downloads now correctly go to Downloads\Svenska tidningar)
 1.7.9 (2025-09-17): Single instance restriction - Added Windows mutex to prevent multiple app instances, includes Swedish error message and focus existing window functionality
 1.7.8 (2025-09-14): Critical folder management bug fix - Resolved dual path system causing all folder operations to fail, standardized default paths, fixed GUI display issues
