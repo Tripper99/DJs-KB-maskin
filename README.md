@@ -1,110 +1,40 @@
-# DJs KB-maskin
+Om DJ:s KB-maskin
 
-[![Version](https://img.shields.io/badge/version-1.7.4-blue.svg)](https://github.com/Tripper99/DJs-KB-maskin/releases)
-[![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+![Skärmbild 2025-12-03 084223](https://github.com/user-attachments/assets/ccb4ca1e-e5a6-497d-bccb-c85c03ab7a92)
 
-En specialiserad Python-applikation för hantering av tidningsfiler från "Svenska Tidningar" - utvecklad för Kungliga Biblioteket (KB).
+Detta windows-program (finns i nuläget inte till Mac) är skapat för att förenkla tillvaron för oss som brukar ladda ned större mängder tidningssidor från Kungliga Bibliotekets databas Svenska Tidningar. Deras system funkar så att du från en skärm på KB skicka jpg-bilder av tidningssidor till dig själv via mejl. Varje enskild jpg skicks som bilaga i ett separat mejl. Du måste sedan öppna ditt mejlprogram och spara ned alla jpg-bilagorna en och en. Vanligen vill du också döpa om filerna eftersom de är namngivna med en lång kod istället för tidningsnamn. För att kunna arbeta med filerna vill du antagligen också konvertera bilderna till pdf, och slå samman flersidiga artiklar till flersidiga pdf-filer. Alla som gått igenom denna process med 500 jpg-bilagor (maxantalet som kan skickas från KB under en session) vet att det kan ta väldigt lång tid.
+Det är här DJ:s KB-maskin kommer in i bilden.
+För att använda appen behöver du först koppla ett Gmail-konto till ditt konto på Svenska Tidningar. Då kan appen automatiskt koppla upp sig till gmailkontot via API och hämta ned samtliga jpg-filer som kommit från KB inom ett tidsspann som du själv bestämmer. Appen konverterar automatiskt jpg-bilderna pdf:er, slår samma flersidiga artiklar, samt ger filerna begripliga namn bestående av datum för publicering, tidningsnamn samt sidantal.
 
-## Översikt
+Exempel
+Låt oss säga att du hämtat hem dessa fyra filer, som alltså anländer i vars ett mail från KB:
+bib4345612_19850708_10985_181_0001.jpg
+bib4345612_19850708_10985_181_0007.jpg
+bib4345612_19850708_10985_181_0008.jpg
+bib4345612_19850708_10985_181_0009.jpg
 
-DJs KB-maskin är ett GUI-baserat verktyg som automatiserar nedladdning och bearbetning av digitaliserade tidningsskanningar. Applikationen har två huvudfunktioner:
+DJ:s KB-maskin hämtar automatiskt hem filerna utan att du ens behöver öppna Gmail, och skapar denna fil av dem:
 
-1. **Gmail JPG-nedladdare** - Laddar ner JPG-bilagor från Gmail med hjälp av Gmail API
-2. **KB-filbearbetare** - Konverterar JPG-filer till PDF:er med meningsfulla namn och slår samman flersidiga artiklar
+1985-07-08 AFTONBLADET (4 sid).pdf
 
-## Funktioner
+Specialfunktiner
+Under konverteringsprocessen döper appen om jpg-filerna till begripliga namn, varefter de konverteras till pdf. Som standard raderas de omdöpta jpg-bilderna men du kan även välja att spara dem. Detta kan t ex vara vara bra om en redigerare vill använda tidningssidorna som jpg i teve- eller tidningsproduktion och då vill slippa konvertera tillbaka från pdf-format.
 
-- 📧 **Gmail-integration** - OAuth-autentisering och automatisk nedladdning av bilagor
-- 📄 **Smart PDF-konvertering** - Automatisk namngivning baserad på tidningskoder
-- 🗂️ **CSV-baserad mappning** - Använder CSV-filer för bib-kod till tidningsnamn
-- 🔄 **Uppdateringssystem** - Automatisk kontroll av nya versioner via GitHub
-- 🛡️ **Säkerhet** - Omfattande vägvalidering och säkra filoperationer
-- 🇸🇪 **Svenskt gränssnitt** - Komplett lokalisering på svenska
-- ⚡ **Responsivt** - Bakgrundstrådar håller gränssnittet responsivt
-- 🎯 **Konflikthantering** - Interaktiva dialoger för hantering av befintliga filer
+Exempel
+Om du i exemplet ovan väljer att även spara de omdöpta jpg-filerna så kommer appen att producera dessa filer:
+1985-07-08 AFTONBLADET (4 sid).pdf
+1985-07-08 AFTONBLADET bib4345612 10985_181_0001.jpg
+1985-07-08 AFTONBLADET bib4345612 10985_181_0007.jpg
+1985-07-08 AFTONBLADET bib4345612 10985_181_0008.jpg
+1985-07-08 AFTONBLADET bib4345612 10985_181_0009.jpg
 
-## Installation
+Tips för ökad säkerhet
+Det rekommenderas starkt att du skapar en ny gmail-adress som bara används tillsammans med Svenska Tidningar. Du måste nämligen ge appen rättigheter att läsa Gmail-kontot via API. Appen kan i och för sig inte göra något annat än spara ned jpg-bilagor från den avsändare som du själv anger, så säkerhetsrisken är minimal. Men det är ändå klokt att inte öppna ditt vanliga gmail-konto för API-access i onödan.
 
-### Windows Installer
-1. Ladda ner senaste `DJs_KB_maskin_vX.X.X_setup.exe` från [Releases](https://github.com/Tripper99/DJs-KB-maskin/releases)
-2. Kör installationsprogrammet
-3. Följ instruktionerna.
+Tips för ännu bättre arbetsflöde
+DJ:s KB-maskin har en syster-app som heter DJ:s Timeline-maskin. Den är skapad för journalist, forskare och researchers som gillar att organisera sin research i form av timelines i excel. DJ:s Timeline-maskin är ett verktyg som låter dig snabbt och effektivt lägga till rader i din timeline utan att du behöver redigera excel-dokumentet manuellt. DJ:s Timeline-maskin arbetar mycket effektivt med pdf:er som skapats med hjälp av DJ:s KB-maskin.
 
-
-### Gmail-nedladdning
-1. Välj "Gmail jpg-bilage nedladdning" i gränssnittet
-2. Ange e-postadress och lösenord (app-specifikt lösenord för Gmail)
-3. Välj datumintervall för sökning
-4. Klicka "Kör igång" för att starta nedladdningen
-
-### KB-filbearbetning
-1. Välj "KB filkonvertering" i gränssnittet
-2. Välj mapp med JPG-filer att bearbeta
-3. Välj utdatamapp för PDF:er
-4. Klicka "Kör igång" för att starta konverteringen
-
-### Filnamnkonventioner
-- **Indata JPG**: `bib{kod}_{datum}_{sekvens}.jpg`
-- **Omdöpta JPG**: `{datum} {tidning} {bib} {nummer}.jpg`
-- **Utdata PDF**: `{datum} {tidning} ({sidor} sid).pdf`
-
-## Projektstruktur
-
-```
-DJs_KB_maskin/
-├── app.py                 # Huvudingångspunkt
-├── src/                   # Källkod
-│   ├── gmail/            # Gmail API-integration
-│   ├── kb/               # KB-filbearbetning
-│   ├── gui/              # Användargränssnitt
-│   ├── security/         # Säkerhetsmoduler
-│   ├── update/           # Uppdateringssystem
-│   └── version.py        # Versionshantering
-├── build-tools/          # Byggverktyg
-│   ├── pyinstaller/      # PyInstaller-konfiguration
-│   ├── inno-setup/       # Inno Setup-skript
-│   └── scripts/          # Byggskript
-├── tests/                # Testsvit
-├── docs/                 # Dokumentation
-└── requirements.txt      # Python-beroenden
-```
-
-## Utveckling
-
-## Versionshistorik
-
-### v1.7.4 (2025-09-10)
-- Buggfix: "Skriv över alla" fungerar nu korrekt över flera filkonflikter
-
-### v1.7.0 (2025-09-10)
-- Stor uppdatering: Ersatte Excel med CSV för bib-koduppslag
-- Förenklat gränssnitt och minskade beroenden
-
-Se [DEVELOPMENT_HISTORY.md](DEVELOPMENT_HISTORY.md) för fullständig historik.
-
-## Licens
-
-Detta projekt är licensierat under MIT-licensen - se [LICENSE](LICENSE) för detaljer.
-
-## Upphovsman
-
-Dan Josefsson - dan@josefsson.net
-
-## Erkännanden
-
-- Utvecklad med hjälp av Claude Code, Grok och Cursor
-- Använder [ttkbootstrap](https://github.com/israel-dryer/ttkbootstrap) för modernt GUI
-- Google Gmail API för e-postintegration
-
-## Support
-
-För problem eller frågor, vänligen öppna ett [GitHub Issue](https://github.com/Tripper99/DJs-KB-maskin/issues).
-
-## Skärmdumpar
-
-*Kommer snart*
-
----
-
-**Notera**: Denna applikation är specifikt utvecklad för arbete med filer hämtade från databasen Svenska tidningar (Kungliga biblioteket) och gränssnittet är helt på svenska.
+DJ:s KB-maskin är skrivet i Python av journalisten Dan Josefsson 2025, som själv använder appen flitigt i sitt jobb.
+Rapportera gärna buggar till dan@josefsson.net.
+Python-kodningen är gjord med assistans av Claude Code.
+Alla användning av programmet sker på egen risk.
