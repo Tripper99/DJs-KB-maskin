@@ -129,9 +129,15 @@ The application automatically detects the most recent CSV file matching this pat
 9. **Security validation** - Run `python -m pytest tests/test_security.py`
 10. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.9.0 - Automatic Update Checking Completed 2025-12-10)
+## Current Status (v1.10.0 - Cross-Platform Compatibility Completed 2026-01-11)
 
 The application is production-ready with:
+- **🌍 Cross-Platform Compatibility** - Full Windows/Linux/macOS support with platform-specific config persistence (v1.10.0)
+  * Windows: Settings in %APPDATA%\DJs KB-maskin\
+  * Linux/macOS: Settings in ~/.djs_kb_maskin/
+  * Automatic migration from old location with backup
+  * Cross-platform folder opening (explorer/xdg-open/open)
+  * Bug fix: safe_subprocess_run now correctly appends file arguments
 - **🔔 Automatic Update Checking** - Non-blocking startup notifications for new versions, enabled by default, user control via Help menu (v1.9.0)
 - **🛠️ Fixed Outdated Folder Creation** - Eliminated legacy "Nedladdningar" folder creation in program directory (v1.8.0)
 - **🔐 Single Instance Restriction** - Windows mutex prevents multiple app instances with Swedish error messages (v1.7.9)
@@ -174,7 +180,27 @@ The application is production-ready with:
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
 
-## Recent Improvements (v1.9.0)
+## Recent Improvements (v1.10.0)
+
+### Cross-Platform Compatibility (v1.10.0)
+- **Platform-Specific Config Paths** - Settings now persist correctly across all platforms
+  * Used proven pattern from DJs Timeline-maskin v2.6.18
+  * Windows: %APPDATA%\DJs KB-maskin\djs_kb-maskin_settings.json
+  * Linux/macOS: ~/.djs_kb_maskin/djs_kb-maskin_settings.json
+- **Automatic Migration** - Seamless upgrade from v1.9.0
+  * Safe copy-then-rename approach (uses shutil.copy2)
+  * Old config backed up as .json.old
+  * Idempotent - safe to run on every startup
+- **Cross-Platform Folder Opening** - "Öppna mapp" button works on all platforms
+  * Windows: Uses explorer command
+  * Linux: Uses xdg-open command
+  * macOS: Uses open command
+- **Critical Bug Fix** - Fixed safe_subprocess_run file argument handling
+  * Affects both folder opening and Manual.docx opening
+  * File paths now correctly appended to subprocess commands
+- **Testing** - Verified on Ubuntu Linux, ready for Windows and macOS testing
+
+## Previous Improvements (v1.9.0)
 
 ### Automatic Update Checking at Startup (v1.9.0)
 - **Non-Blocking Notifications** - Small 350x150px window appears bottom-right, auto-dismisses after 15 seconds

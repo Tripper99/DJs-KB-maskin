@@ -2,7 +2,96 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2025-12-10)
+## Latest Development Session (2026-01-10/11)
+
+### ✅ Cross-Platform Compatibility (v1.10.0)
+
+**Problem Solved:**
+The application was Windows-only and had critical issues with settings persistence in Linux AppImage distributions.
+
+**Issues Identified:**
+1. **Config File Persistence**: Settings saved to app directory which is a temporary mount point in Linux AppImage (changes each run) → settings lost between sessions
+2. **Folder Opening Button**: Used Windows-only `explorer` command → didn't work on Linux/macOS
+3. **Bug in safe_subprocess_run**: File arguments not being appended to subprocess commands → both folder opening and Manual.docx opening broken
+
+**Technical Implementation:**
+
+1. **Platform-Specific Config Persistence** (`src/config.py`):
+   - **New `get_config_file_path()`**: Detects platform via `os.environ.get('APPDATA')`
+     - Windows: `%APPDATA%\DJs KB-maskin\djs_kb-maskin_settings.json`
+     - Linux/macOS: `~/.djs_kb_maskin/djs_kb-maskin_settings.json`
+   - **New `ensure_config_directory_exists()`**: Creates config directory with `parents=True, exist_ok=True`
+   - **New `migrate_config_if_needed()`**: Automatic migration from old location
+     - Checks if config exists at new location (idempotent)
+     - Uses `shutil.copy2()` (not move) for safety - preserves original
+     - Renames old config to `.json.old` as backup
+     - Graceful degradation - logs errors but continues with defaults
+   - **Updated `load_config()`**: Calls directory creation and migration on startup
+   - **Updated `save_config()`**: Uses centralized directory creation function
+   - Added missing `import os` for platform detection
+
+2. **Cross-Platform Folder Opening** (`src/gui/main_window.py`):
+   - **Updated `open_download_folder()`**: Platform detection using `sys.platform.startswith()`
+     - Windows: `subprocess.run(['explorer', os.path.normpath(folder_path)])`
+     - macOS: `self.secure_ops.safe_subprocess_run(['open'], file_arg=str(folder_path))`
+     - Linux: `self.secure_ops.safe_subprocess_run(['xdg-open'], file_arg=str(folder_path))`
+   - **Updated tooltip**: Changed from "öppna nedladdningsmappen i Utforskaren" to platform-neutral "öppna nedladdningsmappen i filhanteraren"
+
+3. **Critical Bug Fix** (`src/security/secure_file_ops.py`):
+   - **Problem**: `safe_subprocess_run()` validated `file_arg` but didn't append it to command
+   - **Fix**: Changed line 155 from attempting to replace (which never matched) to appending:
+     ```python
+     # Before: command = [str(safe_path) if arg == file_arg else arg for arg in command]
+     # After:  command = command + [str(safe_path)]
+     ```
+   - **Impact**: Fixed both folder opening AND Manual.docx opening (which used same pattern)
+
+**Development Process:**
+1. Used 2 parallel Explore agents to investigate folder opening and config implementations
+2. Read comprehensive Cross_Platform_Config_Persistence_Tutorial.md (1349 lines) from DJs Timeline-maskin v2.6.18
+3. Used Plan agent to design implementation following proven tutorial pattern
+4. Implemented all changes in 3 core files
+5. Discovered and fixed critical subprocess bug during Ubuntu testing
+6. Verified with ruff linting (passed)
+7. Tested on Ubuntu Linux - config persistence and folder opening both working
+
+**Pattern Source:**
+Implementation follows proven pattern from DJs Timeline-maskin v2.6.18 which successfully solved identical config persistence issues in AppImage distributions.
+
+**Testing Results:**
+- ✅ Linux Ubuntu: Config path correctly set to `/home/user/.djs_kb_maskin/djs_kb-maskin_settings.json`
+- ✅ Linux Ubuntu: Folder opening works with `xdg-open`
+- ✅ Ruff linting: All checks passed
+- ✅ Settings persist between application runs on Linux
+- ⏳ Windows testing pending (migration and folder opening)
+- ⏳ AppImage build testing pending
+
+**Files Modified:**
+- `src/config.py`: +87 lines (platform detection, migration, directory creation)
+- `src/gui/main_window.py`: +30/-26 lines (cross-platform folder opening)
+- `src/security/secure_file_ops.py`: +8/-8 lines (bug fix)
+- `src/version.py`: Version 1.10.0
+- `.gitignore`: Added `*.json.old` pattern
+
+**Migration Behavior:**
+- **Windows users**: Settings automatically migrated from app directory to `%APPDATA%`, old file backed up as `.json.old`
+- **Linux users**: Fresh start (old temp config was already lost)
+- **Migration is idempotent**: Safe to run on every startup, only migrates once
+
+**Git Commits:**
+- `6578d0c` - Version 1.10.0 - Plattformsoberoende kompatibilitet
+- `753a209` - Add *.json.old to .gitignore
+- `f9f078c` - Merge remote README.md (resolved conflict)
+
+**Next Steps:**
+- Test on Windows to verify migration works correctly
+- Build and test Linux AppImage to verify settings persist across runs
+- Build Windows installer for v1.10.0
+- Consider macOS build in future
+
+---
+
+## Previous Development Session (2025-12-10)
 
 ### ✅ Automatic Update Checking at Startup (v1.9.0)
 

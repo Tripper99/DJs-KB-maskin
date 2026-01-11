@@ -2,6 +2,19 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
+## ✅ Recently Completed (2026-01-10/11)
+
+### Cross-Platform Compatibility (v1.10.0) - COMPLETED 2026-01-11
+- ✅ **Platform-Specific Config Persistence**: Implemented Windows (%APPDATA%), Linux/macOS (~/.djs_kb_maskin) paths
+- ✅ **Automatic Migration**: Safe, idempotent migration from old location with .json.old backup
+- ✅ **Cross-Platform Folder Opening**: Windows (explorer), Linux (xdg-open), macOS (open)
+- ✅ **Critical Bug Fix**: Fixed safe_subprocess_run not appending file_arg to commands
+- ✅ **Ubuntu Testing**: Config persistence and folder opening verified working
+- ✅ **Ruff Linting**: All checks passed
+- ✅ **Git Commits**: v1.10.0 committed and pushed to GitHub
+- ✅ **Documentation**: DEVELOPMENT_HISTORY.md updated with full technical details
+- ✅ **User Impact**: Linux AppImage users can now persist settings between runs
+
 ## ✅ Recently Completed (2025-12-10)
 
 ### Automatic Update Checking at Startup (v1.9.0) - COMPLETED 2025-12-10
