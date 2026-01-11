@@ -5,6 +5,7 @@ Configuration management for the DJs app
 
 import json
 import logging
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -103,10 +104,76 @@ def get_user_downloads_folder():
 
 # Use absolute path for config file in app directory
 def get_config_file_path():
-    """Get the absolute path to the configuration file"""
-    config_path = get_app_directory() / "djs_kb-maskin_settings.json"
-    logger.debug(f"Config file path: {config_path}")
+    r"""
+    Get the absolute path to the configuration file using platform-specific directory.
+
+    Windows: %APPDATA%\DJs KB-maskin\djs_kb-maskin_settings.json
+    Linux/macOS: ~/.djs_kb_maskin/djs_kb-maskin_settings.json
+
+    Returns:
+        Path: Absolute path to configuration file
+    """
+    # Detect platform via APPDATA environment variable
+    appdata = os.environ.get('APPDATA')
+
+    if appdata:
+        # Windows: Use AppData\Roaming
+        base_dir = Path(appdata) / "DJs KB-maskin"
+    else:
+        # Linux/macOS: Use hidden folder in home directory
+        base_dir = Path.home() / ".djs_kb_maskin"
+
+    config_path = base_dir / "djs_kb-maskin_settings.json"
+    logger.info(f"Config file path: {config_path}")
     return config_path
+
+def ensure_config_directory_exists():
+    """
+    Ensure the configuration directory exists.
+    Creates the directory if it doesn't exist, including parent directories.
+    """
+    config_file = get_config_file_path()
+    try:
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Config directory ensured: {config_file.parent}")
+    except Exception as e:
+        logger.error(f"Failed to create config directory: {e}")
+
+def migrate_config_if_needed():
+    """
+    Migrate config file from old app directory location to new platform-specific location.
+    Handles transition for existing users upgrading from v1.9.0 to v1.10.0.
+
+    This function is idempotent - safe to call on every startup.
+    """
+    new_config_path = get_config_file_path()
+
+    # If config already exists at new location, no migration needed
+    if new_config_path.exists():
+        logger.info("Config file already exists at new location - no migration needed")
+        return
+
+    # Look for old config in app directory
+    old_config_path = get_app_directory() / "djs_kb-maskin_settings.json"
+
+    if old_config_path.exists() and old_config_path.is_file():
+        try:
+            import shutil
+
+            # Copy old config to new location (safer than move)
+            shutil.copy2(old_config_path, new_config_path)
+            logger.info(f"Migrated config from {old_config_path} to {new_config_path}")
+
+            # Rename old file as backup
+            backup_path = old_config_path.with_suffix('.json.old')
+            old_config_path.rename(backup_path)
+            logger.info(f"Renamed old config to {backup_path}")
+
+        except Exception as e:
+            logger.warning(f"Failed to migrate old config file: {e}")
+            logger.warning("Application will continue with default configuration")
+    else:
+        logger.debug("No old config file found - fresh installation")
 
 def load_config():
     """Load application configuration"""
@@ -114,7 +181,11 @@ def load_config():
         from .version import get_version
     except ImportError:
         from version import get_version
-    
+
+    # Ensure config directory exists and migrate old config if needed
+    ensure_config_directory_exists()
+    migrate_config_if_needed()
+
     # Get current version for settings validation
     current_version = get_version()
     
@@ -211,11 +282,11 @@ def save_config(config):
     
     config_file = get_config_file_path()
     logger.debug(f"Saving configuration to: {config_file}")
-    
+
     try:
-        # Ensure the app directory exists
-        config_file.parent.mkdir(parents=True, exist_ok=True)
-        
+        # Ensure the config directory exists (uses platform-specific path)
+        ensure_config_directory_exists()
+
         # Always update config version when saving
         config["_config_version"] = get_version()
         

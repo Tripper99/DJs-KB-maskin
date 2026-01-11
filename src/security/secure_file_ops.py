@@ -146,13 +146,13 @@ class SecureFileOps:
                 file_arg,
                 must_exist=True
             )
-            
+
             if not is_valid:
                 logger.error(f"File argument validation failed: {error_msg}")
                 raise ValueError(f"Ogiltig fil för subprocess: {error_msg}")
-                
-            # Replace file_arg in command with validated path
-            command = [str(safe_path) if arg == file_arg else arg for arg in command]
+
+            # Append validated path to command
+            command = command + [str(safe_path)]
             
         # Set secure defaults
         kwargs.setdefault('shell', False)

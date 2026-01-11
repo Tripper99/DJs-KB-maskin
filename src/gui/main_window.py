@@ -501,7 +501,7 @@ class CombinedApp:
                                         cursor="hand2")
         self.open_folder_link.pack(anchor="w", pady=(2, 0))
         self.open_folder_link.bind("<Button-1>", self.open_download_folder_event)
-        self.add_tooltip(self.open_folder_link, "Klicka för att öppna nedladdningsmappen i Utforskaren")
+        self.add_tooltip(self.open_folder_link, "Klicka för att öppna nedladdningsmappen i filhanteraren")
     
     def validate_date(self, input_str: str, field: str) -> bool:
         """Validate date format and trigger cross-field validation"""
@@ -1326,25 +1326,33 @@ class CombinedApp:
         self.open_download_folder()
     
     def open_download_folder(self):
-        """Open the selected download folder in Windows Explorer"""
+        """Open the selected download folder in file manager (cross-platform)"""
         folder_path = self.gmail_output_dir_var.get().strip()
-        
+
         if not folder_path:
             messagebox.showwarning("Ingen mapp vald", "Välj först en nedladdningsmapp.")
             return
-            
+
         # Validate the path exists
         if not os.path.exists(folder_path):
-            messagebox.showerror("Mappen finns inte", 
+            messagebox.showerror("Mappen finns inte",
                                f"Den valda mappen finns inte:\n{folder_path}")
             return
-            
+
         try:
-            # Use Windows Explorer to open the folder
-            # Note: Don't use check=True as Explorer may return non-zero exit codes even on success
-            result = subprocess.run(['explorer', os.path.normpath(folder_path)], 
-                                   capture_output=True, text=True)
-            logger.info(f"Opened download folder: {folder_path} (exit code: {result.returncode})")
+            if sys.platform.startswith('win'):
+                # Windows: Use explorer
+                subprocess.run(['explorer', os.path.normpath(folder_path)],
+                              capture_output=True, text=True)
+                logger.info(f"Opened download folder (Windows): {folder_path}")
+            elif sys.platform.startswith('darwin'):
+                # macOS: Use open command
+                self.secure_ops.safe_subprocess_run(['open'], file_arg=str(folder_path))
+                logger.info(f"Opened download folder (macOS): {folder_path}")
+            else:
+                # Linux: Use xdg-open
+                self.secure_ops.safe_subprocess_run(['xdg-open'], file_arg=str(folder_path))
+                logger.info(f"Opened download folder (Linux): {folder_path}")
         except Exception as e:
             logger.error(f"Unexpected error opening folder {folder_path}: {e}")
             messagebox.showerror("Oväntat fel",
