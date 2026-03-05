@@ -133,6 +133,12 @@ def post_build_macos(project_root, dist_dir, version):
         print("Falling back to onedir output...")
         app_bundle = dist_dir / output_name
 
+    # Copy companion files INTO the .app bundle (Contents/MacOS/)
+    # so get_app_directory() finds them next to the executable
+    macos_dir = app_bundle / "Contents" / "MacOS"
+    print("Copying companion files into .app bundle...")
+    copy_companion_files(project_root, macos_dir)
+
     # Create staging directory for DMG contents
     dmg_name = f"DJs_KB_maskin_v{version}-macos"
     staging_dir = project_root / f"_staging_{dmg_name}"
@@ -140,7 +146,7 @@ def post_build_macos(project_root, dist_dir, version):
         shutil.rmtree(staging_dir)
     staging_dir.mkdir()
 
-    # Copy .app bundle into staging
+    # Copy .app bundle (now with companion files inside) into staging
     dest_app = staging_dir / app_bundle.name
     shutil.copytree(str(app_bundle), str(dest_app))
     print(f"  Staged: {app_bundle.name}")
@@ -149,9 +155,6 @@ def post_build_macos(project_root, dist_dir, version):
     apps_link = staging_dir / "Applications"
     apps_link.symlink_to("/Applications")
     print("  Created: Applications symlink")
-
-    # Copy companion files into staging
-    copy_companion_files(project_root, staging_dir)
 
     # Create DMG using hdiutil (preserves permissions and executable bits)
     dmg_path = dist_dir / f"{dmg_name}.dmg"
