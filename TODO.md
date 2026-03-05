@@ -2,7 +2,20 @@
 
 This document tracks known issues, improvements, and future development tasks.
 
-## ✅ Recently Completed (2026-01-10/11)
+## ✅ Recently Completed (2026-03-05)
+
+### CI/CD Build Fixes & macOS DMG (v1.12.0-v1.12.1) - COMPLETED 2026-03-05
+- ✅ **macOS CI Hang Fix**: Removed --argv-emulation, switched to --onedir for proper .app bundle
+- ✅ **Zip Self-Inclusion Bug**: Fixed shutil.make_archive writing into its own source directory
+- ✅ **Path.with_suffix() Bug**: Fixed dotted version numbers breaking zip path construction
+- ✅ **DMG Installer**: Replaced zip with DMG for macOS (preserves permissions, drag-to-Applications)
+- ✅ **Companion File Bundling**: Manual + CSVs bundled inside .app at Contents/MacOS/
+- ✅ **Workflow Update**: Artifact paths updated from .zip to .dmg
+- ✅ **All 3 Platforms**: Windows, macOS, Linux builds passing in GitHub Actions
+- ✅ **Ruff Linting**: All checks passed
+- ✅ **Documentation**: DEVELOPMENT_HISTORY.md, CLAUDE.md updated
+
+## ✅ Previously Completed (2026-01-10/11)
 
 ### Cross-Platform Compatibility (v1.10.0) - COMPLETED 2026-01-11
 - ✅ **Platform-Specific Config Persistence**: Implemented Windows (%APPDATA%), Linux/macOS (~/.djs_kb_maskin) paths

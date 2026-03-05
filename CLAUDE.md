@@ -129,9 +129,13 @@ The application automatically detects the most recent CSV file matching this pat
 9. **Security validation** - Run `python -m pytest tests/test_security.py`
 10. **Syntax checking** - Run `python -m ruff check src/`
 
-## Current Status (v1.10.0 - Cross-Platform Compatibility Completed 2026-01-11)
+## Current Status (v1.12.1 - CI/CD Build Fixes Completed 2026-03-05)
 
 The application is production-ready with:
+- **🏗️ CI/CD Build System** - GitHub Actions builds for Windows (.exe), macOS (.dmg), Linux (binary) (v1.12.0-v1.12.1)
+  * macOS: DMG installer with drag-to-Applications, companion files bundled inside .app
+  * Removed --argv-emulation (caused CI hangs), switched to --onedir for proper .app bundle
+  * Fixed zip self-inclusion bug and Path.with_suffix() issue with dotted version numbers
 - **🌍 Cross-Platform Compatibility** - Full Windows/Linux/macOS support with platform-specific config persistence (v1.10.0)
   * Windows: Settings in %APPDATA%\DJs KB-maskin\
   * Linux/macOS: Settings in ~/.djs_kb_maskin/
@@ -180,7 +184,22 @@ The application is production-ready with:
 - **[TODO.md](TODO.md)** - Prioritized list of known issues and future improvements
 - **Security Features** - See `src/security/` modules for implementation details
 
-## Recent Improvements (v1.10.0)
+## Recent Improvements (v1.12.0-v1.12.1)
+
+### CI/CD Build System & macOS DMG Installer (v1.12.0-v1.12.1)
+- **GitHub Actions CI/CD** - Automated builds for Windows, macOS, Linux on every release
+- **macOS DMG Installer** - Drag-to-Applications experience with proper .app bundle
+  * Companion files (Manual, CSVs) bundled inside .app at Contents/MacOS/
+  * Uses hdiutil for DMG creation (preserves executable permissions)
+  * Applications symlink for intuitive installation
+- **Build Fixes** - Resolved multiple macOS CI issues:
+  * Removed --argv-emulation (caused headless CI hangs)
+  * Switched from --onefile to --onedir for proper .app bundle (--onefile+--windowed deprecated in PyInstaller v7)
+  * Fixed zip self-inclusion bug (shutil.make_archive writing into its own source directory)
+  * Fixed Path.with_suffix(".zip") breaking on dotted version numbers (1.12.1)
+- **Build Script** - `build.py` handles all platforms with post-build packaging
+
+## Previous Improvements (v1.10.0)
 
 ### Cross-Platform Compatibility (v1.10.0)
 - **Platform-Specific Config Paths** - Settings now persist correctly across all platforms

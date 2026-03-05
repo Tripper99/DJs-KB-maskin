@@ -2,7 +2,41 @@
 
 This document contains the historical development notes and issue resolutions for the KB newspaper processing application.
 
-## Latest Development Session (2026-01-10/11)
+## Latest Development Session (2026-03-05)
+
+### ✅ CI/CD Build Fixes & macOS DMG Installer (v1.12.0-v1.12.1)
+
+**Problem Solved:**
+The macOS CI build in GitHub Actions either hung indefinitely or produced a non-functional .app bundle (opened as folder, not application).
+
+**Root Causes Identified:**
+1. `--argv-emulation` flag — Known to cause hangs in headless CI environments
+2. `--onefile` + `--windowed` on macOS — Deprecated in PyInstaller (becomes error in v7), creates hybrid that isn't a proper .app
+3. `shutil.make_archive()` writing zip INTO the directory being archived — Potential infinite growth/corruption
+4. `Path.with_suffix(".zip")` on version strings like `v1.12.1-macos` — Replaces `.1-macos` with `.zip` due to dots in version
+5. Zip format strips Unix executable permissions — .app opens as folder after unzip
+
+**Technical Implementation:**
+
+1. **Removed `--argv-emulation`** (`build.py`): Eliminated the flag that caused CI hangs
+2. **Switched to `--onedir`** on macOS: Produces proper `.app` bundle via PyInstaller's BUNDLE step
+3. **Fixed zip self-inclusion**: Write archive to project root first, then move into dist/
+4. **Fixed Path.with_suffix()**: Replaced with f-string concatenation (`f"{path}.zip"`)
+5. **Replaced zip with DMG** (`hdiutil create`): Preserves Unix permissions, adds drag-to-Applications UX
+6. **Bundled companion files inside .app**: Copied Manual + CSVs to `Contents/MacOS/` where `get_app_directory()` finds them
+
+**Development Process:**
+- Iterative CI debugging (4 workflow runs to resolve all issues)
+- Each fix committed and pushed separately for clear git history
+- Windows and Linux builds passed from the first attempt
+- macOS required multiple rounds: hang fix → zip path fix → .app packaging → DMG conversion → companion file bundling
+
+**Files Modified:**
+- `build.py` — All build fixes (post_build_macos rewritten)
+- `.github/workflows/build.yml` — Updated artifact paths from .zip to .dmg
+- `src/version.py` — Version bump to 1.12.1
+
+## Previous Development Session (2026-01-10/11)
 
 ### ✅ Cross-Platform Compatibility (v1.10.0)
 
