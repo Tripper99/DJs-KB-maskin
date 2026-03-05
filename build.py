@@ -137,9 +137,9 @@ def post_build_macos(project_root, dist_dir, version):
     zip_path_no_ext = project_root / zip_name
     shutil.make_archive(str(zip_path_no_ext), "zip", dist_dir, output_name)
 
-    # Move zip into dist/
+    # Move zip into dist/ (don't use .with_suffix — dots in version break it)
     final_zip = dist_dir / f"{zip_name}.zip"
-    shutil.move(str(zip_path_no_ext.with_suffix(".zip")), str(final_zip))
+    shutil.move(f"{zip_path_no_ext}.zip", str(final_zip))
     print(f"Created: {final_zip}")
     return final_zip
 
