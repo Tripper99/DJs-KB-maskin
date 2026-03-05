@@ -124,22 +124,41 @@ def copy_companion_files(project_root, dist_dir):
 
 
 def post_build_macos(project_root, dist_dir, version):
-    """Post-build steps for macOS: copy companion files into bundle dir, create .zip"""
+    """Post-build steps for macOS: package .app bundle + companion files into .zip"""
     output_name = f"DJs_KB_maskin_v{version}"
-    bundle_dir = dist_dir / output_name  # --onedir output directory
+    app_bundle = dist_dir / f"{output_name}.app"
 
-    print("Copying companion files into bundle directory...")
-    copy_companion_files(project_root, bundle_dir)
+    if not app_bundle.exists():
+        print(f"WARNING: Expected .app bundle not found at {app_bundle}")
+        print("Falling back to onedir output...")
+        app_bundle = dist_dir / output_name
 
-    # Create zip in project root first to avoid writing into the directory
-    # we're archiving (which causes infinite growth / corruption)
+    # Create a staging directory with .app + companion files
     zip_name = f"DJs_KB_maskin_v{version}-macos"
-    zip_path_no_ext = project_root / zip_name
-    shutil.make_archive(str(zip_path_no_ext), "zip", dist_dir, output_name)
+    staging_dir = project_root / f"_staging_{zip_name}"
+    if staging_dir.exists():
+        shutil.rmtree(staging_dir)
+    staging_dir.mkdir()
 
-    # Move zip into dist/ (don't use .with_suffix — dots in version break it)
+    # Copy .app bundle into staging
+    dest_app = staging_dir / app_bundle.name
+    shutil.copytree(str(app_bundle), str(dest_app))
+    print(f"  Staged: {app_bundle.name}")
+
+    # Copy companion files into staging
+    copy_companion_files(project_root, staging_dir)
+
+    # Create zip from staging (written to project root to avoid self-inclusion)
+    zip_path_no_ext = project_root / zip_name
+    shutil.make_archive(str(zip_path_no_ext), "zip", staging_dir)
+
+    # Move zip into dist/
     final_zip = dist_dir / f"{zip_name}.zip"
     shutil.move(f"{zip_path_no_ext}.zip", str(final_zip))
+
+    # Clean up staging
+    shutil.rmtree(staging_dir)
+
     print(f"Created: {final_zip}")
     return final_zip
 
