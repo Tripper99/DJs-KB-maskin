@@ -36,35 +36,39 @@ def get_icon_path(project_root):
         return project_root / "Agg-med-smor-v4-transperent.png"
 
 
-def get_data_files(project_root):
-    """Get list of data files to bundle"""
+def get_bundled_data(project_root):
+    """Get files to bundle INSIDE the executable (icons only)"""
     datas = []
-
-    # Icon files - bundle all formats
     for ext in ("ico", "png", "icns"):
         icon = project_root / f"Agg-med-smor-v4-transperent.{ext}"
         if icon.exists():
             datas.append((str(icon), "."))
+    return datas
+
+
+def get_companion_files(project_root):
+    """Get files to place NEXT TO the executable (CSV, Manual, etc.)"""
+    files = []
 
     # Manual (PDF preferred, fallback to docx)
     manual_pdf = project_root / "Manual.pdf"
     manual_docx = project_root / "Manual.docx"
     if manual_pdf.exists():
-        datas.append((str(manual_pdf), "."))
+        files.append(manual_pdf)
     elif manual_docx.exists():
-        datas.append((str(manual_docx), "."))
+        files.append(manual_docx)
 
     # CSV files
     for csv_file in project_root.glob("titles_bibids*.csv"):
-        datas.append((str(csv_file), "."))
+        files.append(csv_file)
 
-    return datas
+    return files
 
 
 def build_pyinstaller_args(project_root, version):
     """Build PyInstaller command-line arguments"""
     icon_path = get_icon_path(project_root)
-    data_files = get_data_files(project_root)
+    bundled_data = get_bundled_data(project_root)
     output_name = f"DJs_KB_maskin_v{version}"
 
     args = [
@@ -79,8 +83,8 @@ def build_pyinstaller_args(project_root, version):
     if icon_path.exists():
         args.extend(["--icon", str(icon_path)])
 
-    # Data files
-    for src, dst in data_files:
+    # Bundled data (icons only)
+    for src, dst in bundled_data:
         args.extend(["--add-data", f"{src}{os.pathsep}{dst}"])
 
     # Hidden imports needed by the app
@@ -105,35 +109,46 @@ def build_pyinstaller_args(project_root, version):
     return args
 
 
-def post_build_macos(dist_dir, version):
-    """Post-build steps for macOS: create .zip of .app bundle"""
-    app_name = f"DJs_KB_maskin_v{version}"
-    app_path = dist_dir / f"{app_name}.app"
-
-    if app_path.exists():
-        zip_name = f"DJs_KB_maskin_v{version}-macos"
-        shutil.make_archive(str(dist_dir / zip_name), "zip", dist_dir, f"{app_name}.app")
-        print(f"Created: {dist_dir / zip_name}.zip")
-        return dist_dir / f"{zip_name}.zip"
-
-    # For --onefile mode, the output is a single binary
-    binary = dist_dir / app_name
-    if binary.exists():
-        zip_name = f"DJs_KB_maskin_v{version}-macos"
-        shutil.make_archive(str(dist_dir / zip_name), "zip", dist_dir, app_name)
-        print(f"Created: {dist_dir / zip_name}.zip")
-        return dist_dir / f"{zip_name}.zip"
-
-    return None
+def copy_companion_files(project_root, dist_dir):
+    """Copy companion files (CSV, Manual) next to the executable"""
+    files = get_companion_files(project_root)
+    copied = []
+    for f in files:
+        dest = dist_dir / f.name
+        shutil.copy2(str(f), str(dest))
+        copied.append(dest)
+        print(f"  Copied: {f.name}")
+    return copied
 
 
-def post_build_linux(dist_dir, version):
-    """Post-build steps for Linux: make binary executable"""
+def post_build_macos(project_root, dist_dir, version):
+    """Post-build steps for macOS: copy companion files, create .zip"""
+    print("Copying companion files next to executable...")
+    copy_companion_files(project_root, dist_dir)
+
+    # Create zip of the entire dist contents (binary + companion files)
+    zip_name = f"DJs_KB_maskin_v{version}-macos"
+    shutil.make_archive(str(dist_dir / zip_name), "zip", dist_dir)
+    print(f"Created: {dist_dir / zip_name}.zip")
+    return dist_dir / f"{zip_name}.zip"
+
+
+def post_build_linux(project_root, dist_dir, version):
+    """Post-build steps for Linux: make binary executable, copy companion files"""
     binary = dist_dir / f"DJs_KB_maskin_v{version}"
     if binary.exists():
         binary.chmod(0o755)
         print(f"Made executable: {binary}")
+
+    print("Copying companion files next to executable...")
+    copy_companion_files(project_root, dist_dir)
     return binary
+
+
+def post_build_windows(project_root, dist_dir):
+    """Post-build steps for Windows: copy companion files"""
+    print("Copying companion files next to executable...")
+    copy_companion_files(project_root, dist_dir)
 
 
 def build():
@@ -161,13 +176,15 @@ def build():
 
     print()
     print("Build completed successfully!")
+    print()
 
     # Platform-specific post-build
     if sys.platform == "darwin":
-        artifact = post_build_macos(dist_dir, version)
+        artifact = post_build_macos(project_root, dist_dir, version)
     elif sys.platform.startswith("linux"):
-        artifact = post_build_linux(dist_dir, version)
+        artifact = post_build_linux(project_root, dist_dir, version)
     else:
+        post_build_windows(project_root, dist_dir)
         artifact = dist_dir / f"DJs_KB_maskin_v{version}.exe"
 
     if artifact and Path(artifact).exists():
@@ -175,7 +192,6 @@ def build():
         print(f"Output: {artifact} ({size_mb:.1f} MB)")
     else:
         print(f"Output directory: {dist_dir}")
-        # List what was produced
         for f in dist_dir.iterdir():
             print(f"  {f.name}")
 
@@ -186,6 +202,7 @@ if __name__ == "__main__":
         print(f"Version: {version}")
         print(f"Platform: {platform.system()}")
         print(f"Icon: {get_icon_path(Path(__file__).parent)}")
-        print(f"Data files: {get_data_files(Path(__file__).parent)}")
+        print(f"Bundled data: {get_bundled_data(Path(__file__).parent)}")
+        print(f"Companion files: {get_companion_files(Path(__file__).parent)}")
     else:
         build()

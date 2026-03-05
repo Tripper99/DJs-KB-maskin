@@ -1398,10 +1398,10 @@ class CombinedApp:
         """Find and validate CSV file automatically"""
         from pathlib import Path
         app_dir = Path(get_app_directory())
-        
+
         # Try to find CSV file
         csv_file = self.kb_processor.csv_handler.find_csv_file(app_dir)
-        
+
         if csv_file:
             # Validate and load the CSV file
             success, message, count = self.kb_processor.csv_handler.load_csv_file(csv_file)
@@ -1419,7 +1419,7 @@ class CombinedApp:
             self.csv_status_var.set("Ingen CSV-fil hittades i programmappen")
             self.csv_status_label.config(foreground="orange")
             return None
-    
+
     def _load_alias_file(self, app_dir):
         """Load alias file and update status label"""
         success, message, count = self.kb_processor.csv_handler.load_alias_file(app_dir)

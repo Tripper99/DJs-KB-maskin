@@ -13,13 +13,10 @@ jobs:
         include:
           - os: windows-latest
             platform_name: windows
-            artifact_ext: .exe
           - os: macos-latest
             platform_name: macos
-            artifact_ext: -macos.zip
           - os: ubuntu-latest
             platform_name: linux
-            artifact_ext: ""
 
     runs-on: ${{ matrix.os }}
 
@@ -64,7 +61,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DJs_KB_maskin-windows
-          path: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}.exe
+          path: |
+            dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}.exe
+            dist/*.csv
+            dist/Manual.pdf
+            dist/Manual.docx
 
       - name: Upload macOS artifact
         if: runner.os == 'macOS'
@@ -78,7 +79,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DJs_KB_maskin-linux
-          path: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}
+          path: |
+            dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}
+            dist/*.csv
+            dist/Manual.pdf
+            dist/Manual.docx
 
       - name: Attach to release (Windows)
         if: github.event_name == 'release' && runner.os == 'Windows'
