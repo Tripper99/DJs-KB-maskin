@@ -124,7 +124,7 @@ def copy_companion_files(project_root, dist_dir):
 
 
 def post_build_macos(project_root, dist_dir, version):
-    """Post-build steps for macOS: package .app bundle + companion files into .zip"""
+    """Post-build steps for macOS: create DMG with .app bundle + companion files"""
     output_name = f"DJs_KB_maskin_v{version}"
     app_bundle = dist_dir / f"{output_name}.app"
 
@@ -133,9 +133,9 @@ def post_build_macos(project_root, dist_dir, version):
         print("Falling back to onedir output...")
         app_bundle = dist_dir / output_name
 
-    # Create a staging directory with .app + companion files
-    zip_name = f"DJs_KB_maskin_v{version}-macos"
-    staging_dir = project_root / f"_staging_{zip_name}"
+    # Create staging directory for DMG contents
+    dmg_name = f"DJs_KB_maskin_v{version}-macos"
+    staging_dir = project_root / f"_staging_{dmg_name}"
     if staging_dir.exists():
         shutil.rmtree(staging_dir)
     staging_dir.mkdir()
@@ -145,22 +145,30 @@ def post_build_macos(project_root, dist_dir, version):
     shutil.copytree(str(app_bundle), str(dest_app))
     print(f"  Staged: {app_bundle.name}")
 
+    # Create Applications symlink for drag-to-install
+    apps_link = staging_dir / "Applications"
+    apps_link.symlink_to("/Applications")
+    print("  Created: Applications symlink")
+
     # Copy companion files into staging
     copy_companion_files(project_root, staging_dir)
 
-    # Create zip from staging (written to project root to avoid self-inclusion)
-    zip_path_no_ext = project_root / zip_name
-    shutil.make_archive(str(zip_path_no_ext), "zip", staging_dir)
-
-    # Move zip into dist/
-    final_zip = dist_dir / f"{zip_name}.zip"
-    shutil.move(f"{zip_path_no_ext}.zip", str(final_zip))
+    # Create DMG using hdiutil (preserves permissions and executable bits)
+    dmg_path = dist_dir / f"{dmg_name}.dmg"
+    subprocess.run([
+        "hdiutil", "create",
+        "-volname", f"DJs KB-maskin v{version}",
+        "-srcfolder", str(staging_dir),
+        "-ov",
+        "-format", "UDZO",  # compressed DMG
+        str(dmg_path),
+    ], check=True)
 
     # Clean up staging
     shutil.rmtree(staging_dir)
 
-    print(f"Created: {final_zip}")
-    return final_zip
+    print(f"Created: {dmg_path}")
+    return dmg_path
 
 
 def post_build_linux(project_root, dist_dir, version):

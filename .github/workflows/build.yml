@@ -72,7 +72,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DJs_KB_maskin-macos
-          path: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}-macos.zip
+          path: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}-macos.dmg
 
       - name: Upload Linux artifact
         if: runner.os == 'Linux'
@@ -95,7 +95,7 @@ jobs:
         if: github.event_name == 'release' && runner.os == 'macOS'
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}-macos.zip
+          files: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}-macos.dmg
 
       - name: Attach to release (Linux)
         if: github.event_name == 'release' && runner.os == 'Linux'
