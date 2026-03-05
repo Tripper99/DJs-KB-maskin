@@ -101,7 +101,9 @@ def build_pyinstaller_args(project_root, version):
 
     # Platform-specific options
     if sys.platform == "darwin":
-        args.append("--argv-emulation")
+        # Use --onedir on macOS to produce a proper .app bundle
+        # (--onefile + --windowed is deprecated and causes CI hangs)
+        args[args.index("--onefile")] = "--onedir"
 
     # Entry point
     args.append(str(project_root / "app.py"))
@@ -122,15 +124,24 @@ def copy_companion_files(project_root, dist_dir):
 
 
 def post_build_macos(project_root, dist_dir, version):
-    """Post-build steps for macOS: copy companion files, create .zip"""
-    print("Copying companion files next to executable...")
-    copy_companion_files(project_root, dist_dir)
+    """Post-build steps for macOS: copy companion files into bundle dir, create .zip"""
+    output_name = f"DJs_KB_maskin_v{version}"
+    bundle_dir = dist_dir / output_name  # --onedir output directory
 
-    # Create zip of the entire dist contents (binary + companion files)
+    print("Copying companion files into bundle directory...")
+    copy_companion_files(project_root, bundle_dir)
+
+    # Create zip in project root first to avoid writing into the directory
+    # we're archiving (which causes infinite growth / corruption)
     zip_name = f"DJs_KB_maskin_v{version}-macos"
-    shutil.make_archive(str(dist_dir / zip_name), "zip", dist_dir)
-    print(f"Created: {dist_dir / zip_name}.zip")
-    return dist_dir / f"{zip_name}.zip"
+    zip_path_no_ext = project_root / zip_name
+    shutil.make_archive(str(zip_path_no_ext), "zip", dist_dir, output_name)
+
+    # Move zip into dist/
+    final_zip = dist_dir / f"{zip_name}.zip"
+    shutil.move(str(zip_path_no_ext.with_suffix(".zip")), str(final_zip))
+    print(f"Created: {final_zip}")
+    return final_zip
 
 
 def post_build_linux(project_root, dist_dir, version):
