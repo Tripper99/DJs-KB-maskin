@@ -268,21 +268,21 @@ class CombinedApp:
         self.end_date_has_placeholder = False
         
         # Bind checkbox events
-        self.gmail_enabled.trace('w', self.on_gmail_toggle)
-        self.kb_enabled.trace('w', self.on_kb_toggle)
-        self.use_same_output_dir_var.trace('w', self.on_same_output_dir_toggle)
-        
+        self.gmail_enabled.trace_add('write', self.on_gmail_toggle)
+        self.kb_enabled.trace_add('write', self.on_kb_toggle)
+        self.use_same_output_dir_var.trace_add('write', self.on_same_output_dir_toggle)
+
         # Bind field change events to update status
-        self.gmail_account_var.trace('w', self.update_status_message)
-        self.credentials_file_var.trace('w', self.update_status_message)
-        self.start_date_var.trace('w', self.update_status_message)
-        self.kb_input_dir_var.trace('w', self.update_status_message)
-        self.kb_output_dir_var.trace('w', self.update_status_message)
-        self.gmail_output_dir_var.trace('w', self.update_status_message)
-        self.gmail_output_dir_var.trace('w', self.on_gmail_output_dir_change)
-        
+        self.gmail_account_var.trace_add('write', self.update_status_message)
+        self.credentials_file_var.trace_add('write', self.update_status_message)
+        self.start_date_var.trace_add('write', self.update_status_message)
+        self.kb_input_dir_var.trace_add('write', self.update_status_message)
+        self.kb_output_dir_var.trace_add('write', self.update_status_message)
+        self.gmail_output_dir_var.trace_add('write', self.update_status_message)
+        self.gmail_output_dir_var.trace_add('write', self.on_gmail_output_dir_change)
+
         # Bind input directory changes to auto-update output if same dir is selected
-        self.kb_input_dir_var.trace('w', self.on_kb_input_dir_change)
+        self.kb_input_dir_var.trace_add('write', self.on_kb_input_dir_change)
     
     def create_widgets(self):
         """Create all GUI widgets"""
