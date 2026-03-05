@@ -111,20 +111,32 @@ class CombinedApp:
         except Exception as e:
             logger.warning(f"Could not create default download folder: {e}")
     
+    def _get_icon_base_dir(self):
+        """Get base directory for icon files"""
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            return Path(sys._MEIPASS)
+        return get_app_directory()
+
     def set_window_icon(self, window):
-        """Set application icon on a window"""
+        """Set application icon on a window (cross-platform)"""
         try:
-            if getattr(sys, 'frozen', False):
-                # Running as PyInstaller executable
-                icon_path = Path(sys._MEIPASS) / "Agg-med-smor-v4-transperent.ico"
+            base = self._get_icon_base_dir()
+            if sys.platform == 'darwin':
+                # macOS: Use PNG with iconphoto (iconbitmap doesn't work well)
+                icon_path = base / "Agg-med-smor-v4-transperent.png"
+                if icon_path.exists():
+                    icon = tk.PhotoImage(file=str(icon_path))
+                    window.iconphoto(True, icon)
+                    # Keep reference to prevent garbage collection
+                    window._icon_image = icon
+                else:
+                    logger.warning(f"Icon file not found: {icon_path}")
             else:
-                # Running as Python script - icon is in app directory
-                icon_path = get_app_directory() / "Agg-med-smor-v4-transperent.ico"
-            
-            if icon_path.exists():
-                window.iconbitmap(str(icon_path))
-            else:
-                logger.warning(f"Icon file not found: {icon_path}")
+                icon_path = base / "Agg-med-smor-v4-transperent.ico"
+                if icon_path.exists():
+                    window.iconbitmap(str(icon_path))
+                else:
+                    logger.warning(f"Icon file not found: {icon_path}")
         except Exception as e:
             logger.warning(f"Could not set window icon: {e}")
     
@@ -144,22 +156,8 @@ class CombinedApp:
         self.root = tb.Window(themename="superhero")
         self.root.title("DJs app för hantering av filer från 'Svenska Tidningar'")
         
-        # Set window icon
-        try:
-            # Check if running as PyInstaller bundle
-            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-                # Running as PyInstaller bundle - icon is in temp extraction folder
-                icon_path = Path(sys._MEIPASS) / "Agg-med-smor-v4-transperent.ico"
-            else:
-                # Running as script - icon is in app directory
-                icon_path = get_app_directory() / "Agg-med-smor-v4-transperent.ico"
-            
-            if icon_path.exists():
-                self.root.iconbitmap(str(icon_path))
-            else:
-                logger.warning(f"Icon file not found: {icon_path}")
-        except Exception as e:
-            logger.warning(f"Could not set window icon: {e}")
+        # Set window icon (cross-platform)
+        self.set_window_icon(self.root)
         
         # Set a more reasonable window size (reduce width and height significantly)
         window_width = 800
@@ -383,7 +381,7 @@ class CombinedApp:
         help_label = tb.Label(cred_label_frame, text=" ?", font=('Arial', 10, "bold"), foreground="green", cursor="hand2")
         help_label.pack(side="left")
         def open_manual_event(event=None):
-            manual_path = get_app_directory() / "Manual.docx"
+            manual_path = get_app_directory() / "Manual.pdf"
             if manual_path.exists():
                 try:
                     if sys.platform.startswith('win'):
@@ -395,9 +393,9 @@ class CombinedApp:
                     else:
                         self.secure_ops.safe_subprocess_run(['xdg-open'], file_arg=str(manual_path))
                 except Exception as e:
-                    messagebox.showerror("Fel", f"Kunde inte öppna Manual.docx: {e}")
+                    messagebox.showerror("Fel", f"Kunde inte öppna Manual.pdf: {e}")
             else:
-                messagebox.showerror("Fel", f"Manual.docx hittades inte i programmets mapp.\nSökte i: {manual_path}")
+                messagebox.showerror("Fel", f"Manual.pdf hittades inte i programmets mapp.\nSökte i: {manual_path}")
         help_label.bind("<Button-1>", open_manual_event)
         
         creds_path_frame = tb.Frame(creds_frame)
@@ -927,10 +925,10 @@ class CombinedApp:
         tb.Button(content_frame, text="Stäng", command=help_win.destroy, bootstyle=PRIMARY).pack(side="right", pady=10)
     
     def open_manual(self):
-        """Open Manual.docx with the default application"""
-        manual_path = get_app_directory() / "Manual.docx"
+        """Open Manual.pdf with the default application"""
+        manual_path = get_app_directory() / "Manual.pdf"
         if not manual_path.exists():
-            messagebox.showerror("Fel", f"Manual.docx hittades inte i programmets mapp.\nSökte i: {manual_path}")
+            messagebox.showerror("Fel", f"Manual.pdf hittades inte i programmets mapp.\nSökte i: {manual_path}")
             return
         try:
             if sys.platform.startswith('win'):
@@ -942,7 +940,7 @@ class CombinedApp:
             else:
                 self.secure_ops.safe_subprocess_run(['xdg-open'], file_arg=str(manual_path))
         except Exception as e:
-            messagebox.showerror("Fel", f"Kunde inte öppna Manual.docx: {e}")
+            messagebox.showerror("Fel", f"Kunde inte öppna Manual.pdf: {e}")
 
     def toggle_auto_check(self):
         """Toggle automatic update checking setting"""

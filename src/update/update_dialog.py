@@ -337,23 +337,30 @@ class UpdateDialog:
             )
             
     def _set_window_icon(self, window):
-        """Set application icon on window"""
+        """Set application icon on window (cross-platform)"""
         try:
-            # Get icon path (same logic as main app)
-            if getattr(sys, 'frozen', False):
-                # Running as PyInstaller executable
-                app_dir = Path(sys.executable).parent
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                base = Path(sys._MEIPASS)
+            elif getattr(sys, 'frozen', False):
+                base = Path(sys.executable).parent
             else:
-                # Running as Python script - go up from src/update to project root
-                app_dir = Path(__file__).parent.parent.parent
-                
-            icon_path = app_dir / "Agg-med-smor-v4-transperent.ico"
-            
-            if icon_path.exists():
-                window.iconbitmap(str(icon_path))
+                base = Path(__file__).parent.parent.parent
+
+            if sys.platform == 'darwin':
+                icon_path = base / "Agg-med-smor-v4-transperent.png"
+                if icon_path.exists():
+                    icon = tk.PhotoImage(file=str(icon_path))
+                    window.iconphoto(True, icon)
+                    window._icon_image = icon
+                else:
+                    logger.warning(f"Icon file not found: {icon_path}")
             else:
-                logger.warning(f"Icon file not found: {icon_path}")
-                
+                icon_path = base / "Agg-med-smor-v4-transperent.ico"
+                if icon_path.exists():
+                    window.iconbitmap(str(icon_path))
+                else:
+                    logger.warning(f"Icon file not found: {icon_path}")
+
         except Exception as e:
             logger.warning(f"Could not set window icon: {e}")
             

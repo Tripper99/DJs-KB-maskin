@@ -1,0 +1,99 @@
+name: Build Executables
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform_name: windows
+            artifact_ext: .exe
+          - os: macos-latest
+            platform_name: macos
+            artifact_ext: -macos.zip
+          - os: ubuntu-latest
+            platform_name: linux
+            artifact_ext: ""
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Install Linux display dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
+
+      - name: Read version
+        id: version
+        shell: python
+        run: |
+          import os
+          with open("src/version.py") as f:
+              for line in f:
+                  if line.startswith("__version__"):
+                      version = line.split('"')[1]
+                      break
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"version={version}\n")
+
+      - name: Build executable
+        run: python build.py
+
+      - name: Upload Windows artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DJs_KB_maskin-windows
+          path: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}.exe
+
+      - name: Upload macOS artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DJs_KB_maskin-macos
+          path: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}-macos.zip
+
+      - name: Upload Linux artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DJs_KB_maskin-linux
+          path: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}
+
+      - name: Attach to release (Windows)
+        if: github.event_name == 'release' && runner.os == 'Windows'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}.exe
+
+      - name: Attach to release (macOS)
+        if: github.event_name == 'release' && runner.os == 'macOS'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}-macos.zip
+
+      - name: Attach to release (Linux)
+        if: github.event_name == 'release' && runner.os == 'Linux'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/DJs_KB_maskin_v${{ steps.version.outputs.version }}
