@@ -209,6 +209,7 @@ def load_config():
         "gmail_output_dir": str(default_download_dir.resolve()),  # Always use absolute path
         "kb_output_dir": "",
         "keep_renamed": False,
+        "use_alias": True,
         "update_settings": {
             "github_repo_owner": "Tripper99",  # TODO: Replace with actual GitHub username
             "github_repo_name": "DJs-KB-maskin",

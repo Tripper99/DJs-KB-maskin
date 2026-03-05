@@ -14,11 +14,15 @@ logger = logging.getLogger(__name__)
 
 class CSVHandler:
     """Handles reading and validation of CSV files containing bib-code mappings"""
-    
+
+    ALIAS_FILENAME = "titles_bibids_aliases.csv"
+
     def __init__(self):
         self.csv_pattern = "titles_bibids_*.csv"
         self.bib_dict: Dict[str, str] = {}
+        self.alias_dict: Dict[str, str] = {}  # bib_code -> alias
         self.loaded_file: Optional[Path] = None
+        self.alias_file: Optional[Path] = None
     
     def find_csv_file(self, app_directory: Path) -> Optional[Path]:
         """
@@ -31,8 +35,9 @@ class CSVHandler:
             Path to the most recent CSV file, or None if not found
         """
         try:
-            # Find all matching CSV files
-            csv_files = list(app_directory.glob(self.csv_pattern))
+            # Find all matching CSV files, excluding alias file
+            csv_files = [f for f in app_directory.glob(self.csv_pattern)
+                         if f.name != self.ALIAS_FILENAME]
             
             if not csv_files:
                 logger.warning(f"No CSV files matching pattern '{self.csv_pattern}' found in {app_directory}")
@@ -184,3 +189,64 @@ class CSVHandler:
     def get_bib_code_count(self) -> int:
         """Get the number of loaded bib-codes"""
         return len(self.bib_dict)
+
+    def load_alias_file(self, app_directory: Path) -> Tuple[bool, str, int]:
+        """
+        Load the alias CSV file (titles_bibids_aliases.csv) from app directory.
+
+        The file has 3 columns: Tidningsnamn, bib-kod, alias
+        Builds alias_dict: bib_code -> alias
+
+        Returns:
+            Tuple of (success, message, count)
+        """
+        self.alias_dict.clear()
+        self.alias_file = None
+
+        alias_path = app_directory / self.ALIAS_FILENAME
+        if not alias_path.exists():
+            logger.info(f"No alias file found at {alias_path}")
+            return False, "Ingen alias-fil hittades", 0
+
+        try:
+            with open(alias_path, 'r', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                header = next(reader, None)
+
+                if not header or len(header) < 3:
+                    return False, "Alias-filen har fel format (behöver 3 kolumner)", 0
+
+                for row_num, row in enumerate(reader, 2):
+                    if len(row) < 3:
+                        logger.warning(f"Alias file: skipping row {row_num} with {len(row)} columns")
+                        continue
+
+                    _newspaper_name, bib_code, alias = row[0], row[1].strip(), row[2].strip()
+
+                    if bib_code and alias:
+                        self.alias_dict[bib_code] = alias
+
+            self.alias_file = alias_path
+            count = len(self.alias_dict)
+            logger.info(f"Loaded {count} aliases from {alias_path.name}")
+            return True, f"Laddade {count} alias från {alias_path.name}", count
+
+        except Exception as e:
+            logger.error(f"Error loading alias file: {e}")
+            return False, f"Kunde inte ladda alias-filen: {str(e)}", 0
+
+    def get_display_name(self, bib_code: str, use_alias: bool = False) -> str:
+        """
+        Get the display name for a bib-code, optionally using alias.
+
+        Returns alias if use_alias=True and alias exists, otherwise full newspaper name.
+        Returns "OKÄND" if bib-code not found at all.
+        """
+        bib_code = bib_code.strip()
+        if use_alias and bib_code in self.alias_dict:
+            return self.alias_dict[bib_code]
+        return self.bib_dict.get(bib_code, "OKÄND")
+
+    def is_alias_loaded(self) -> bool:
+        """Check if alias file has been loaded"""
+        return bool(self.alias_dict) and self.alias_file is not None

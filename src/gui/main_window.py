@@ -248,6 +248,7 @@ class CombinedApp:
         self.keep_renamed_var = tk.BooleanVar(value=False)  # Default OFF - don't save renamed JPGs
         self.use_same_output_dir_var = tk.BooleanVar(value=True)  # Default to True
         self.delete_original_files_var = tk.BooleanVar(value=False)  # Default to False (delete originals when OFF)
+        self.use_alias_var = tk.BooleanVar(value=True)  # Default ON - use short alias names
 
         # Update checking
         self.auto_check_enabled_var = tk.BooleanVar(value=True)  # Default ON - automatic update checking enabled
@@ -728,6 +729,28 @@ class CombinedApp:
                                    bootstyle="info-outline")
         delete_help_btn.pack(side="left", padx=(10, 0))
         
+        # Use alias checkbox
+        alias_frame = tb.Frame(self.kb_frame)
+        alias_frame.pack(fill="x", pady=(10, 0))
+
+        alias_checkbox_frame = tb.Frame(alias_frame)
+        alias_checkbox_frame.pack(anchor="w")
+
+        self.use_alias_checkbox = tb.Checkbutton(
+            alias_checkbox_frame, text="Använd kortnamn (alias) i filnamn",
+            variable=self.use_alias_var,
+            bootstyle="info-round-toggle")
+        self.use_alias_checkbox.pack(side="left")
+        self.add_tooltip(self.use_alias_checkbox,
+                         "Använd korta alias (t.ex. 'DN' istället för 'DAGENS NYHETER') "
+                         "i filnamn och PDF:er. Kräver filen titles_bibids_aliases.csv.")
+
+        # Alias status label
+        self.alias_status_var = tk.StringVar(value="")
+        self.alias_status_label = tb.Label(alias_checkbox_frame, textvariable=self.alias_status_var,
+                                           font=('Arial', 9), foreground="gray")
+        self.alias_status_label.pack(side="left", padx=(10, 0))
+
         # CSV status information (moved to bottom)
         csv_frame = tb.Frame(self.kb_frame)
         csv_frame.pack(fill="x", pady=(20, 0))
@@ -1241,7 +1264,10 @@ class CombinedApp:
         
         # Always start with delete_original_files disabled (don't save this setting)
         self.delete_original_files_var.set(False)
-        
+
+        # Load use_alias setting (default True)
+        self.use_alias_var.set(self.config.get("use_alias", True))
+
         self.update_ui_state()
 
         # Load update check setting
@@ -1285,7 +1311,8 @@ class CombinedApp:
             "kb_input_dir": self.kb_input_dir_var.get(),
             "kb_output_dir": self.kb_output_dir_var.get(),
             "keep_renamed": self.keep_renamed_var.get(),
-            "use_same_output_dir": self.use_same_output_dir_var.get()
+            "use_same_output_dir": self.use_same_output_dir_var.get(),
+            "use_alias": self.use_alias_var.get()
             # Note: delete_original_files is not saved - always defaults to True at startup
         })
         save_config(self.config)
@@ -1384,6 +1411,7 @@ class CombinedApp:
                 self.csv_status_var.set(f"✓ {csv_file.name} - {count} bib-koder laddade")
                 self.csv_status_label.config(foreground="green")
                 self.csv_file_path = csv_file
+                self._load_alias_file(app_dir)
                 return csv_file
             else:
                 self.csv_status_var.set(f"✗ {csv_file.name} - {message}")
@@ -1394,6 +1422,16 @@ class CombinedApp:
             self.csv_status_label.config(foreground="orange")
             return None
     
+    def _load_alias_file(self, app_dir):
+        """Load alias file and update status label"""
+        success, message, count = self.kb_processor.csv_handler.load_alias_file(app_dir)
+        if success:
+            self.alias_status_var.set(f"({count} alias laddade)")
+            self.alias_status_label.config(foreground="green")
+        else:
+            self.alias_status_var.set("(ingen alias-fil)")
+            self.alias_status_label.config(foreground="gray")
+
     def browse_for_csv_file(self):
         """Allow user to manually select CSV file if auto-detection fails"""
         from pathlib import Path
@@ -1891,6 +1929,7 @@ class CombinedApp:
                     output_dir=output_dir,
                     keep_renamed=self.keep_renamed_var.get(),
                     keep_originals=self.delete_original_files_var.get(),
+                    use_alias=self.use_alias_var.get(),
                     progress_callback=kb_progress_callback,
                     gui_update_callback=self.gui_update
                 )

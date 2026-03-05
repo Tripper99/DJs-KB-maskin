@@ -197,8 +197,9 @@ class KBProcessor:
         
         return len(errors) == 0, errors
     
-    def process_files(self, csv_path: Union[Path, str], input_dir: str, output_dir: str, 
+    def process_files(self, csv_path: Union[Path, str], input_dir: str, output_dir: str,
                      keep_renamed: bool = False, keep_originals: bool = False,
+                     use_alias: bool = False,
                      progress_callback=None, gui_update_callback=None) -> Dict:
         """Process KB files - real implementation"""
         self.reset_cancel_state()
@@ -218,6 +219,7 @@ class KBProcessor:
             logger.info(f"Output dir: {output_dir}")
             logger.info(f"Keep renamed: {keep_renamed}")
             logger.info(f"Keep originals: {keep_originals}")
+            logger.info(f"Use alias: {use_alias}")
             
             # Additional path debugging
             logger.debug(f"Input dir absolute: {Path(input_dir).is_absolute()}")
@@ -238,8 +240,6 @@ class KBProcessor:
                     raise Exception(f"Kunde inte läsa CSV-filen: {message}")
                 logger.info(f"Loaded {count} bib codes from CSV")
                 logger.info(f"Sample CSV entries: {list(self.csv_handler.bib_dict.items())[:3]}...")  # Show first 3 for debugging
-            
-            bib_dict = self.csv_handler.bib_dict
             
             # Setup directories
             input_path = Path(input_dir)
@@ -334,7 +334,7 @@ class KBProcessor:
                         logger.warning(f"Could not parse date from: {date_raw}")
                     
                     siffergrupper = "_".join(parts[2:5])
-                    tidning = bib_dict.get(bib_code, "OKÄND").upper()
+                    tidning = self.csv_handler.get_display_name(bib_code, use_alias=use_alias).upper()
                     
                     # Debug logging for bib-code lookup
                     logger.debug(f"File: {file.name} | Bib: {bib_full} -> {bib_code} -> {tidning}")
