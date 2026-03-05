@@ -4,8 +4,8 @@
 Centralized version management for DJs KB-maskin application
 """
 
-__version__ = "1.11.1"
-__version_info__ = (1, 11, 1)
+__version__ = "1.12.0"
+__version_info__ = (1, 12, 0)
 __release_date__ = "2026-03-05"
 
 def get_version():
@@ -22,6 +22,7 @@ def get_full_version():
 
 # Version history
 VERSION_HISTORY = """
+1.12.0 (2026-03-05): Cross-platform builds via GitHub Actions - Added CI/CD workflow for Windows/macOS/Linux builds, cross-platform icon loading, Manual.pdf support, and build.py script.
 1.11.1 (2026-03-05): Alias support for newspaper names - Uses titles_bibids_aliases.csv for short names in PDF filenames, toggle via GUI checkbox. Fixed Python 3.13 trace_add compatibility.
 1.10.0 (2026-01-10): Cross-platform compatibility improvements - Fixed folder opening to work on Windows/Linux/macOS, implemented platform-specific config persistence (Windows: %APPDATA%, Linux/macOS: ~/.djs_kb_maskin), added automatic migration from old config location
 1.9.0 (2025-12-10): Automatic update checking at startup - Added non-blocking notification system that checks GitHub for updates once per week, with user control via Help menu checkbox
